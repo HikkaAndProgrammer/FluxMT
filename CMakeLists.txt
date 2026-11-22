@@ -25,10 +25,10 @@ option(FLUXMT_INSTALL "Generate target for installing fluxmt" ${IS_TOP_LEVEL})
 option(FLUXMT_BUILD_PSQL "Build fluxmt::psql (PostgreSQL through libpqxx)" OFF)
 
 
-set(FLUXMT_ERSLIB_REPOSITORY "https://github.com/EilRoviSoft/erslib.git"
+set(FLUXMT_ERSLIB_REPOSITORY "https://github.com/HikkaAndProgrammer/erslib.git"
 	CACHE STRING "Where to fetch erslib from when find_package can't find it"
 )
-set(FLUXMT_ERSLIB_TAG "v1.2.11"
+set(FLUXMT_ERSLIB_TAG "v1.2.13"
 	CACHE STRING "erslib branch, tag or commit to fetch"
 )
 

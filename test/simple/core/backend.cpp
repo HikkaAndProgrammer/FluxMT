@@ -20,7 +20,7 @@ namespace {
 }
 
 template<>
-struct flux::backend_traits<fake_backend> {
+struct flux::impl::backend_traits<fake_backend> {
     static constexpr std::string_view name = "fake";
     static constexpr feature_set features { EFeature::Sql, EFeature::Returning };
 
@@ -36,6 +36,21 @@ FLUXMT_TEST_CASE("backend traits", "[core]") {
 
     STATIC_REQUIRE(flux::Supports<fake_backend, flux::EFeature::Returning>);
     STATIC_REQUIRE(!flux::Supports<fake_backend, flux::EFeature::Upsert>);
+    STATIC_REQUIRE(!flux::Supports<not_a_backend, flux::EFeature::Sql>);
+
+    STATIC_REQUIRE(std::same_as<flux::connection_t<fake_backend>, int>);
+}
+
+FLUXMT_TEST_CASE("feature set", "[core]") {
+    constexpr flux::feature_set none {};
+    constexpr flux::feature_set some { flux::EFeature::Sql, flux::EFeature::Upsert };
+
+    STATIC_REQUIRE(none.bits == 0);
+    STATIC_REQUIRE(!none.contains(flux::EFeature::Sql));
+
+    STATIC_REQUIRE(some.contains(flux::EFeature::Sql));
+    STATIC_REQUIRE(some.contains(flux::EFeature::Upsert));
+    STATIC_REQUIRE(!some.contains(flux::EFeature::Returning));
 }
 
 FLUXMT_TEST_CASE("library version matches headers", "[core]") {

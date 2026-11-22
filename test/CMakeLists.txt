@@ -67,3 +67,70 @@ foreach(MODULE IN LISTS SIMPLE_MODULES)
         add_simple_test(${TEST_NAME})
     endforeach()
 endforeach()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# must-not-compile tests
+#----------------------------------------------------------------------------------------------------------------------
+
+
+# compile_fail/<name>.cpp is built on demand; the test passes only if the error output matches EXPECTED.
+function(add_compile_fail_test NAME EXPECTED)
+    string(MAKE_C_IDENTIFIER "compile_fail_${NAME}" TARGET)
+
+    add_library(${TARGET} OBJECT EXCLUDE_FROM_ALL "${CMAKE_CURRENT_SOURCE_DIR}/compile_fail/${NAME}.cpp")
+    target_link_libraries(${TARGET} PRIVATE fluxmt::core)
+
+    add_test(NAME "compile_fail::${NAME}"
+        COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target ${TARGET} --config $<CONFIG>
+    )
+    set_tests_properties("compile_fail::${NAME}" PROPERTIES PASS_REGULAR_EXPRESSION "${EXPECTED}")
+endfunction()
+
+add_compile_fail_test(supports_missing "satisfaction of .*Supports")
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# header self-containment
+#----------------------------------------------------------------------------------------------------------------------
+
+
+# One translation unit per public header, so a header that misses its own includes fails the build.
+function(add_header_check MODULE)
+    set(HEADERS "fluxmt/${MODULE}.hpp")
+    file(GLOB MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
+    )
+    list(APPEND HEADERS ${MODULE_HEADERS})
+
+    set(SOURCES "")
+    foreach(HEADER IN LISTS HEADERS)
+        string(MAKE_C_IDENTIFIER "${HEADER}" ID)
+        set(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/header_check/${ID}.cpp")
+        file(CONFIGURE OUTPUT "${SOURCE}" CONTENT "#include <@HEADER@>\n" @ONLY)
+        list(APPEND SOURCES "${SOURCE}")
+    endforeach()
+
+    add_library(header_check_${MODULE} OBJECT ${SOURCES})
+    target_link_libraries(header_check_${MODULE} PRIVATE fluxmt::${MODULE})
+endfunction()
+
+add_header_check(core)
+
+if(TARGET fluxmt::psql)
+    add_header_check(psql)
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# layering
+#----------------------------------------------------------------------------------------------------------------------
+
+
+add_test(NAME layering::core_has_no_pqxx
+    COMMAND "${CMAKE_COMMAND}"
+        "-DROOT=${PROJECT_SOURCE_DIR}"
+        "-DMODULE=core"
+        "-DPATTERN=pqxx/"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+)
