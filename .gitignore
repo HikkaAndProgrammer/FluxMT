@@ -1,0 +1,16 @@
+.vs
+.idea
+out
+build
+**/__pycache__
+
+vcpkg_installed
+
+# Local copies of generated headers, only for IDE include resolution; the real ones live in the build dir
+include/fluxmt/export_static.hpp
+include/fluxmt/export_shared.hpp
+include/fluxmt/version.hpp
+
+CMakeUserPresets.json
+*.code-workspace
+*.DotSettings.user

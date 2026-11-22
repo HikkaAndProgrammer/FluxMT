@@ -1,0 +1,13 @@
+#pragma once
+
+// std
+#include <string_view>
+
+
+namespace flux {
+    inline constexpr std::string_view version = "@PROJECT_VERSION@";
+
+    inline constexpr unsigned version_major = @PROJECT_VERSION_MAJOR@;
+    inline constexpr unsigned version_minor = @PROJECT_VERSION_MINOR@;
+    inline constexpr unsigned version_patch = @PROJECT_VERSION_PATCH@;
+}
