@@ -148,6 +148,7 @@ list(APPEND FLUXMT_TARGETS fluxmt_core)
 if(FLUXMT_BUILD_PSQL)
 	fluxmt_add_driver(psql
 		SOURCES
+			"src/fluxmt/psql/error.cpp"
 			"src/fluxmt/psql/options.cpp"
 	)
 
