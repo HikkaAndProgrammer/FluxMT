@@ -125,6 +125,8 @@ target_sources(fluxmt_core
 		"src/fluxmt/core/version.cpp"
 )
 
+fluxmt_required_package(fluxmt_core boost_uuid Boost::uuid)
+
 target_link_libraries(fluxmt_core
 	PUBLIC
 		erslib::core
@@ -150,6 +152,7 @@ if(FLUXMT_BUILD_PSQL)
 		SOURCES
 			"src/fluxmt/psql/error.cpp"
 			"src/fluxmt/psql/options.cpp"
+			"src/fluxmt/psql/params.cpp"
 	)
 
 	find_package(PostgreSQL)
