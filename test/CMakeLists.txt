@@ -7,8 +7,9 @@ find_package(Catch2 3 CONFIG REQUIRED)
 include(Catch)
 
 
-add_library(test_support INTERFACE)
-target_include_directories(test_support INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(test_support STATIC "support/fake_backend.cpp")
+target_include_directories(test_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(test_support PUBLIC fluxmt::core)
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -70,7 +71,7 @@ endforeach()
 
 
 #----------------------------------------------------------------------------------------------------------------------
-# live tests (need a real database; skipped when FLUXMT_TEST_PG_DB is not set)
+# live tests
 #----------------------------------------------------------------------------------------------------------------------
 
 
@@ -78,6 +79,17 @@ set(LIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/live")
 
 if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
     add_custom_target(test_live)
+
+    add_library(test_support_psql STATIC "support/psql_live.cpp")
+    target_link_libraries(test_support_psql PUBLIC test_support fluxmt::psql Catch2::Catch2)
+    target_compile_definitions(test_support_psql PRIVATE
+        FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
+        FLUXMT_TEST_PG_PORT_DEFAULT="${FLUXMT_TEST_PG_PORT}"
+        FLUXMT_TEST_PG_DB_DEFAULT="${FLUXMT_TEST_PG_DB}"
+        FLUXMT_TEST_PG_USER_DEFAULT="${FLUXMT_TEST_PG_USER}"
+        FLUXMT_TEST_PG_PASSWORD_DEFAULT="${FLUXMT_TEST_PG_PASSWORD}"
+    )
+    set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
 
     file(GLOB_RECURSE LIVE_SOURCES CONFIGURE_DEPENDS "${LIVE_DIR}/psql/*.cpp")
 
@@ -87,17 +99,8 @@ if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
         string(MAKE_C_IDENTIFIER "test_live_${NAME}" TARGET)
 
         add_executable(${TARGET} "${SOURCE}")
-        target_link_libraries(${TARGET} PRIVATE test_simple_main fluxmt::psql)
-        
-		target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[live]")
-		target_compile_definitions(${TARGET} PRIVATE
-			FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
-			FLUXMT_TEST_PG_PORT_DEFAULT="${FLUXMT_TEST_PG_PORT}"
-			FLUXMT_TEST_PG_DB_DEFAULT="${FLUXMT_TEST_PG_DB}"
-			FLUXMT_TEST_PG_USER_DEFAULT="${FLUXMT_TEST_PG_USER}"
-			FLUXMT_TEST_PG_PASSWORD_DEFAULT="${FLUXMT_TEST_PG_PASSWORD}"
-		)
-
+        target_link_libraries(${TARGET} PRIVATE test_simple_main test_support_psql)
+        target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[live]")
         set_target_properties(${TARGET} PROPERTIES FOLDER "tests/live")
 
         catch_discover_tests(${TARGET}

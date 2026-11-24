@@ -4,6 +4,9 @@
 #include <erslib/core/type/diagnostic.hpp>
 #include <erslib/core/type/error_code.hpp>
 
+// export
+#include <fluxmt/export.hpp>
+
 
 // Macros ----------------------------------------------------------------------
 
@@ -28,11 +31,7 @@ ERS_MAKE_ERROR_CODES(flux::impl, EDbError, "db", FLUXMT_DB_ERRORS)
 #undef FLUXMT_DB_ERRORS
 
 namespace flux::impl {
-    inline bool is_retryable(const std::error_code& code) noexcept {
-        return code == EDbError::SerializationFailure
-            || code == EDbError::Deadlock
-            || code == EDbError::Busy;
-    }
+    FLUXMT_EXPORT bool is_retryable(const std::error_code& code) noexcept;
 }
 
 

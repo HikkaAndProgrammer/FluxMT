@@ -11,8 +11,10 @@
 #include <erslib/core/type/diagnostic.hpp>
 
 // fluxmt
-#include <fluxmt/export.hpp>
 #include <fluxmt/psql/options.hpp>
+
+// export
+#include <fluxmt/export.hpp>
 
 
 namespace flux::impl::psql {

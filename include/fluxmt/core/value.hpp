@@ -16,6 +16,9 @@
 #include <erslib/core/type/time.hpp>
 #include <erslib/core/type/uuid.hpp>
 
+// export
+#include <fluxmt/export.hpp>
+
 
 // Implementation --------------------------------------------------------------
 
@@ -34,7 +37,7 @@ namespace flux::impl {
     };
 
 
-    class Value {
+    class FLUXMT_EXPORT Value {
     public:
         using storage_t = std::variant<
             std::monostate,
@@ -64,8 +67,8 @@ namespace flux::impl {
 
         // Observers
 
-        bool is_null() const noexcept { return std::holds_alternative<std::monostate>(_storage); }
-        size_t index() const noexcept { return _storage.index(); }
+        bool is_null() const noexcept;
+        size_t index() const noexcept;
 
         template<typename T>
         const T* get_if() const noexcept {
@@ -80,9 +83,7 @@ namespace flux::impl {
 
         // Member operators
 
-        bool operator==(const Value& other) const {
-            return _storage == other._storage;
-        }
+        bool operator==(const Value& other) const;
 
 
     private:

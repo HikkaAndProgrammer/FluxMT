@@ -124,6 +124,7 @@ target_sources(fluxmt_core
 		"include/fluxmt/export.hpp"
 
 		"src/fluxmt/core/error.cpp"
+		"src/fluxmt/core/value.cpp"
 		"src/fluxmt/core/version.cpp"
 )
 

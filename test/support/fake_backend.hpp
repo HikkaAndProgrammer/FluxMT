@@ -1,7 +1,6 @@
 #pragma once
 
 // std
-#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -34,27 +33,14 @@ namespace test {
 
     class fake_tx {
     public:
-        fake_tx(fake_connection& conn, std::string_view) :
-            _conn(conn) {
-            _conn.log.push_back("begin");
-        }
+        fake_tx(fake_connection& conn, std::string_view);
+        ~fake_tx();
 
         fake_tx(const fake_tx&) = delete;
         fake_tx& operator=(const fake_tx&) = delete;
 
-        ~fake_tx() {
-            if (!_done)
-                _conn.log.push_back("rollback");
-        }
-
-        void commit() {
-            _done = true;
-            _conn.log.push_back("commit");
-        }
-        void abort() {
-            _done = true;
-            _conn.log.push_back("abort");
-        }
+        void commit();
+        void abort();
 
 
     private:
@@ -74,28 +60,8 @@ struct flux::impl::backend_traits<test::fake_backend> {
     static constexpr feature_set features { EFeature::Sql, EFeature::Transactions };
 
 
-    static std::unique_ptr<connection> open(const options& opts) {
-        if (opts.fail)
-            throw std::runtime_error("down");
-
-        return std::make_unique<connection>();
-    }
-
+    static std::unique_ptr<connection> open(const options& opts);
     static bool alive(const connection& conn) noexcept { return conn.open; }
-
-    static ers::Diagnostic diagnose(std::string_view label) try {
-        throw;
-    } catch (const test::fake_retryable& e) {
-        return ers::make_error(EDbError::Deadlock, "'{}': {}", label, e.what());
-    } catch (const std::exception& e) {
-        return ers::make_error(EDbError::Other, "'{}': {}", label, e.what());
-    }
-
-    static bool retryable() noexcept try {
-        throw;
-    } catch (const test::fake_retryable&) {
-        return true;
-    } catch (...) {
-        return false;
-    }
+    static ers::Diagnostic diagnose(std::string_view label);
+    static bool retryable() noexcept;
 };
