@@ -6,6 +6,8 @@ project(fluxmt
 	LANGUAGES CXX
 )
 
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 
 #----------------------------------------------------------------------------------------------------------------------
 # general settings and options
@@ -23,6 +25,7 @@ option(FLUXMT_BUILD_TESTS "Build fluxmt tests" OFF)
 option(FLUXMT_INSTALL "Generate target for installing fluxmt" ${IS_TOP_LEVEL})
 
 option(FLUXMT_BUILD_PSQL "Build fluxmt::psql (PostgreSQL through libpqxx)" OFF)
+option(FLUXMT_BUILD_REDIS "Build fluxmt::redis (Redis through hiredis)" OFF)
 option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite (SQLite through the C API)" OFF)
 
 
@@ -160,6 +163,24 @@ if(FLUXMT_BUILD_PSQL)
 	)
 
 	fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# fluxmt::redis
+#----------------------------------------------------------------------------------------------------------------------
+
+
+if(FLUXMT_BUILD_REDIS)
+	fluxmt_add_driver(redis
+		SOURCES
+			"src/fluxmt/drivers/redis/args.cpp"
+			"src/fluxmt/drivers/redis/connection.cpp"
+			"src/fluxmt/drivers/redis/error.cpp"
+			"src/fluxmt/drivers/redis/transaction.cpp"
+	)
+
+	fluxmt_required_package(fluxmt_redis hiredis hiredis::hiredis)
 endif()
 
 

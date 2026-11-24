@@ -34,6 +34,17 @@ if(TARGET fluxmt::psql)
     set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
 endif()
 
+if(TARGET fluxmt::redis)
+    add_library(test_support_redis STATIC "support/redis/live.cpp")
+    target_link_libraries(test_support_redis PUBLIC test_support fluxmt::redis Catch2::Catch2)
+    target_compile_definitions(test_support_redis PRIVATE
+        FLUXMT_TEST_REDIS_HOST_DEFAULT="${FLUXMT_TEST_REDIS_HOST}"
+        FLUXMT_TEST_REDIS_PORT_DEFAULT="${FLUXMT_TEST_REDIS_PORT}"
+        FLUXMT_TEST_REDIS_DB_DEFAULT="${FLUXMT_TEST_REDIS_DB}"
+    )
+    set_target_properties(test_support_redis PROPERTIES FOLDER "tests/support")
+endif()
+
 if(TARGET fluxmt::sqlite)
     add_library(test_support_sqlite STATIC "support/sqlite/db.cpp")
     target_link_libraries(test_support_sqlite PUBLIC test_support fluxmt::sqlite)
@@ -128,3 +139,75 @@ foreach(KIND IN ITEMS simple live)
         add_dependencies(test_${KIND} test_${KIND}_${MODULE})
     endforeach()
 endforeach()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# header self-containment
+#----------------------------------------------------------------------------------------------------------------------
+
+
+# One translation unit per public header, so a header that misses its own includes fails the build.
+function(add_header_check MODULE)
+    set(HEADERS "fluxmt/${MODULE}.hpp")
+    file(GLOB MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
+        "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}/*.hpp"
+    )
+    list(APPEND HEADERS ${MODULE_HEADERS})
+
+    set(SOURCES "")
+    foreach(HEADER IN LISTS HEADERS)
+        string(MAKE_C_IDENTIFIER "${HEADER}" ID)
+        set(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/header_check/${ID}.cpp")
+        file(CONFIGURE OUTPUT "${SOURCE}" CONTENT "#include <@HEADER@>\n" @ONLY)
+        list(APPEND SOURCES "${SOURCE}")
+    endforeach()
+
+    add_library(header_check_${MODULE} OBJECT ${SOURCES})
+    target_link_libraries(header_check_${MODULE} PRIVATE fluxmt::${MODULE})
+endfunction()
+
+
+add_header_check(core)
+
+if(TARGET fluxmt::psql)
+    add_header_check(psql)
+endif()
+
+if(TARGET fluxmt::sqlite)
+    add_header_check(sqlite)
+endif()
+
+if(TARGET fluxmt::redis)
+    add_header_check(redis)
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# layering
+#----------------------------------------------------------------------------------------------------------------------
+
+
+add_test(NAME layering::core_has_no_pqxx
+    COMMAND "${CMAKE_COMMAND}"
+        "-DROOT=${PROJECT_SOURCE_DIR}"
+        "-DMODULE=core"
+        "-DPATTERN=pqxx/"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+)
+
+add_test(NAME layering::core_has_no_sqlite3
+    COMMAND "${CMAKE_COMMAND}"
+        "-DROOT=${PROJECT_SOURCE_DIR}"
+        "-DMODULE=core"
+        "-DPATTERN=sqlite3"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+)
+
+add_test(NAME layering::core_has_no_hiredis
+    COMMAND "${CMAKE_COMMAND}"
+        "-DROOT=${PROJECT_SOURCE_DIR}"
+        "-DMODULE=core"
+        "-DPATTERN=hiredis"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+)

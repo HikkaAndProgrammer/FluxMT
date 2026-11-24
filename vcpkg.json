@@ -18,6 +18,12 @@
                 "libpqxx"
             ]
         },
+        "redis": {
+            "description": "fluxmt::redis, Redis through hiredis",
+            "dependencies": [
+                "hiredis"
+            ]
+        },
         "sqlite": {
             "description": "fluxmt::sqlite, SQLite through the C API",
             "dependencies": [
