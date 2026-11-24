@@ -12,7 +12,7 @@
 #include <fluxmt/psql.hpp>
 
 // test
-#include "support/psql_live.hpp"
+#include "support/psql/live.hpp"
 #include "support/test_case.hpp"
 
 

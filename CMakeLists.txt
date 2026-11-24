@@ -159,8 +159,26 @@ if(FLUXMT_BUILD_PSQL)
 			"src/fluxmt/drivers/psql/params.cpp"
 	)
 
-	find_package(PostgreSQL)
 	fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# fluxmt::sqlite
+#----------------------------------------------------------------------------------------------------------------------
+
+
+if(FLUXMT_BUILD_SQLITE)
+	fluxmt_add_driver(sqlite
+		SOURCES
+			"src/fluxmt/drivers/sqlite/connection.cpp"
+			"src/fluxmt/drivers/sqlite/error.cpp"
+			"src/fluxmt/drivers/sqlite/options.cpp"
+			"src/fluxmt/drivers/sqlite/params.cpp"
+			"src/fluxmt/drivers/sqlite/transaction.cpp"
+	)
+
+	fluxmt_required_package(fluxmt_sqlite unofficial-sqlite3 unofficial::sqlite3::sqlite3)
 endif()
 
 

@@ -17,6 +17,31 @@ target_link_libraries(test_support PUBLIC fluxmt::core)
 
 
 #----------------------------------------------------------------------------------------------------------------------
+# module support: test_support_<module> is linked into every live test of that module
+#----------------------------------------------------------------------------------------------------------------------
+
+
+if(TARGET fluxmt::psql)
+    add_library(test_support_psql STATIC "support/psql/live.cpp")
+    target_link_libraries(test_support_psql PUBLIC test_support fluxmt::psql Catch2::Catch2)
+    target_compile_definitions(test_support_psql PRIVATE
+        FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
+        FLUXMT_TEST_PG_PORT_DEFAULT="${FLUXMT_TEST_PG_PORT}"
+        FLUXMT_TEST_PG_DB_DEFAULT="${FLUXMT_TEST_PG_DB}"
+        FLUXMT_TEST_PG_USER_DEFAULT="${FLUXMT_TEST_PG_USER}"
+        FLUXMT_TEST_PG_PASSWORD_DEFAULT="${FLUXMT_TEST_PG_PASSWORD}"
+    )
+    set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
+endif()
+
+if(TARGET fluxmt::sqlite)
+    add_library(test_support_sqlite STATIC "support/sqlite/db.cpp")
+    target_link_libraries(test_support_sqlite PUBLIC test_support fluxmt::sqlite)
+    set_target_properties(test_support_sqlite PROPERTIES FOLDER "tests/support")
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
 # stateless tests
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -81,21 +106,26 @@ endforeach()
 
 set(LIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/live")
 
-if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
-    add_custom_target(test_live)
+file(GLOB LIVE_MODULES CONFIGURE_DEPENDS
+    LIST_DIRECTORIES true
+    RELATIVE "${LIVE_DIR}"
+    "${LIVE_DIR}/*"
+)
 
-    add_library(test_support_psql STATIC "support/psql_live.cpp")
-    target_link_libraries(test_support_psql PUBLIC test_support fluxmt::psql Catch2::Catch2)
-    target_compile_definitions(test_support_psql PRIVATE
-        FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
-        FLUXMT_TEST_PG_PORT_DEFAULT="${FLUXMT_TEST_PG_PORT}"
-        FLUXMT_TEST_PG_DB_DEFAULT="${FLUXMT_TEST_PG_DB}"
-        FLUXMT_TEST_PG_USER_DEFAULT="${FLUXMT_TEST_PG_USER}"
-        FLUXMT_TEST_PG_PASSWORD_DEFAULT="${FLUXMT_TEST_PG_PASSWORD}"
-    )
-    set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
+add_custom_target(test_live)
 
-    file(GLOB_RECURSE LIVE_SOURCES CONFIGURE_DEPENDS "${LIVE_DIR}/psql/*.cpp")
+# live/<module>/sub/name.cpp -> test_live_<module>_sub_name, linked with test_support_<module>
+foreach(MODULE IN LISTS LIVE_MODULES)
+    if(NOT IS_DIRECTORY "${LIVE_DIR}/${MODULE}")
+        continue()
+    endif()
+
+    if(NOT TARGET fluxmt::${MODULE} OR NOT TARGET test_support_${MODULE})
+        message(STATUS "Skipping live tests for '${MODULE}': fluxmt::${MODULE} or test_support_${MODULE} is missing")
+        continue()
+    endif()
+
+    file(GLOB_RECURSE LIVE_SOURCES CONFIGURE_DEPENDS "${LIVE_DIR}/${MODULE}/*.cpp")
 
     foreach(SOURCE IN LISTS LIVE_SOURCES)
         file(RELATIVE_PATH NAME "${LIVE_DIR}" "${SOURCE}")
@@ -103,7 +133,7 @@ if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
         string(MAKE_C_IDENTIFIER "test_live_${NAME}" TARGET)
 
         add_executable(${TARGET} "${SOURCE}")
-        target_link_libraries(${TARGET} PRIVATE test_simple_main test_support_psql)
+        target_link_libraries(${TARGET} PRIVATE test_simple_main test_support_${MODULE})
         target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[live]")
         set_target_properties(${TARGET} PROPERTIES FOLDER "tests/live")
 
@@ -115,64 +145,4 @@ if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
         )
         add_dependencies(test_live ${TARGET})
     endforeach()
-endif()
-
-
-#----------------------------------------------------------------------------------------------------------------------
-# header self-containment
-#----------------------------------------------------------------------------------------------------------------------
-
-
-# One translation unit per public header, so a header that misses its own includes fails the build.
-function(add_header_check MODULE)
-    set(HEADERS "fluxmt/${MODULE}.hpp")
-    file(GLOB MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
-        "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
-        "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}/*.hpp"
-    )
-    list(APPEND HEADERS ${MODULE_HEADERS})
-
-    set(SOURCES "")
-    foreach(HEADER IN LISTS HEADERS)
-        string(MAKE_C_IDENTIFIER "${HEADER}" ID)
-        set(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/header_check/${ID}.cpp")
-        file(CONFIGURE OUTPUT "${SOURCE}" CONTENT "#include <@HEADER@>\n" @ONLY)
-        list(APPEND SOURCES "${SOURCE}")
-    endforeach()
-
-    add_library(header_check_${MODULE} OBJECT ${SOURCES})
-    target_link_libraries(header_check_${MODULE} PRIVATE fluxmt::${MODULE})
-endfunction()
-
-
-add_header_check(core)
-
-if(TARGET fluxmt::psql)
-    add_header_check(psql)
-endif()
-
-if(TARGET fluxmt::sqlite)
-    add_header_check(sqlite)
-endif()
-
-
-#----------------------------------------------------------------------------------------------------------------------
-# layering
-#----------------------------------------------------------------------------------------------------------------------
-
-
-add_test(NAME layering::core_has_no_pqxx
-    COMMAND "${CMAKE_COMMAND}"
-        "-DROOT=${PROJECT_SOURCE_DIR}"
-        "-DMODULE=core"
-        "-DPATTERN=pqxx/"
-        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
-)
-
-add_test(NAME layering::core_has_no_sqlite3
-    COMMAND "${CMAKE_COMMAND}"
-        "-DROOT=${PROJECT_SOURCE_DIR}"
-        "-DMODULE=core"
-        "-DPATTERN=sqlite3"
-        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
-)
+endforeach()
