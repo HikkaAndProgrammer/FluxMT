@@ -42,107 +42,89 @@ endif()
 
 
 #----------------------------------------------------------------------------------------------------------------------
-# stateless tests
+# test groups
 #----------------------------------------------------------------------------------------------------------------------
 
+
+option(FLUXMT_TESTS_PER_CASE "Register every test case as its own ctest entry" OFF)
 
 add_library(test_simple_main OBJECT "simple.cpp")
 target_link_libraries(test_simple_main PUBLIC Catch2::Catch2WithMain test_support)
 
-set(SIMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/simple")
+# add_test_group(<kind> <module> SOURCES <...> LIBRARIES <...>) -> executable test_<kind>_<module>
+function(add_test_group KIND MODULE)
+    cmake_parse_arguments(ARG "" "" "SOURCES;LIBRARIES" ${ARGN})
 
-file(GLOB SIMPLE_MODULES CONFIGURE_DEPENDS
-    LIST_DIRECTORIES true
-    RELATIVE "${SIMPLE_DIR}"
-    "${SIMPLE_DIR}/*"
-)
+    set(TARGET "test_${KIND}_${MODULE}")
 
-add_custom_target(test_simple)
+    add_executable(${TARGET} ${ARG_SOURCES})
+    target_link_libraries(${TARGET} PRIVATE test_simple_main ${ARG_LIBRARIES})
+    target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[${KIND}]")
+    set_target_properties(${TARGET} PROPERTIES FOLDER "tests/${KIND}")
 
-# simple/<module>/sub/name.cpp -> test_simple_<module>_sub_name, linked with fluxmt::<module>
-function(add_simple_test TEST_NAME)
-    string(REGEX MATCH "^[^/]+" MODULE "${TEST_NAME}")
-    string(MAKE_C_IDENTIFIER "test_simple_${TEST_NAME}" TEST_TARGET)
-
-    add_executable(${TEST_TARGET} "${SIMPLE_DIR}/${TEST_NAME}.cpp")
-    target_link_libraries(${TEST_TARGET} PRIVATE test_simple_main fluxmt::${MODULE})
-    set_target_properties(${TEST_TARGET} PROPERTIES FOLDER "tests/simple/${MODULE}")
-    target_compile_definitions(${TEST_TARGET} PRIVATE TEST_TAGS="[simple]")
-
-    catch_discover_tests(${TEST_TARGET} TEST_PREFIX "${TEST_NAME}::" DISCOVERY_MODE PRE_TEST ADD_TAGS_AS_LABELS)
-    add_dependencies(test_simple_${MODULE} ${TEST_TARGET})
-
-    message(STATUS "Discovered simple test: ${TEST_NAME} -> Target: ${TEST_TARGET}")
-endfunction()
-
-foreach(MODULE IN LISTS SIMPLE_MODULES)
-    if(NOT IS_DIRECTORY "${SIMPLE_DIR}/${MODULE}")
-        continue()
+    set(SERIAL FALSE)
+    if(KIND STREQUAL "live")
+        set(SERIAL TRUE)
     endif()
 
-    if(NOT TARGET fluxmt::${MODULE})
-        message(STATUS "Skipping simple tests for '${MODULE}': fluxmt::${MODULE} is not built")
-        continue()
-    endif()
-
-    add_custom_target(test_simple_${MODULE})
-    add_dependencies(test_simple test_simple_${MODULE})
-
-    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "${SIMPLE_DIR}/${MODULE}/*.cpp")
-
-    foreach(TEST_SOURCE IN LISTS TEST_SOURCES)
-        file(RELATIVE_PATH TEST_NAME "${SIMPLE_DIR}" "${TEST_SOURCE}")
-        string(REGEX REPLACE "\\.cpp$" "" TEST_NAME "${TEST_NAME}")
-
-        add_simple_test(${TEST_NAME})
-    endforeach()
-endforeach()
-
-
-#----------------------------------------------------------------------------------------------------------------------
-# live tests
-#----------------------------------------------------------------------------------------------------------------------
-
-
-set(LIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/live")
-
-file(GLOB LIVE_MODULES CONFIGURE_DEPENDS
-    LIST_DIRECTORIES true
-    RELATIVE "${LIVE_DIR}"
-    "${LIVE_DIR}/*"
-)
-
-add_custom_target(test_live)
-
-# live/<module>/sub/name.cpp -> test_live_<module>_sub_name, linked with test_support_<module>
-foreach(MODULE IN LISTS LIVE_MODULES)
-    if(NOT IS_DIRECTORY "${LIVE_DIR}/${MODULE}")
-        continue()
-    endif()
-
-    if(NOT TARGET fluxmt::${MODULE} OR NOT TARGET test_support_${MODULE})
-        message(STATUS "Skipping live tests for '${MODULE}': fluxmt::${MODULE} or test_support_${MODULE} is missing")
-        continue()
-    endif()
-
-    file(GLOB_RECURSE LIVE_SOURCES CONFIGURE_DEPENDS "${LIVE_DIR}/${MODULE}/*.cpp")
-
-    foreach(SOURCE IN LISTS LIVE_SOURCES)
-        file(RELATIVE_PATH NAME "${LIVE_DIR}" "${SOURCE}")
-        string(REGEX REPLACE "\\.cpp$" "" NAME "${NAME}")
-        string(MAKE_C_IDENTIFIER "test_live_${NAME}" TARGET)
-
-        add_executable(${TARGET} "${SOURCE}")
-        target_link_libraries(${TARGET} PRIVATE test_simple_main test_support_${MODULE})
-        target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[live]")
-        set_target_properties(${TARGET} PROPERTIES FOLDER "tests/live")
-
+    if(FLUXMT_TESTS_PER_CASE)
         catch_discover_tests(${TARGET}
-            TEST_PREFIX "live::${NAME}::"
+            TEST_PREFIX "${KIND}::${MODULE}::"
             DISCOVERY_MODE PRE_TEST
             ADD_TAGS_AS_LABELS
-            PROPERTIES RUN_SERIAL TRUE
+            PROPERTIES RUN_SERIAL ${SERIAL}
         )
-        add_dependencies(test_live ${TARGET})
+    else()
+        add_test(NAME "${KIND}::${MODULE}" COMMAND ${TARGET})
+        set_tests_properties("${KIND}::${MODULE}" PROPERTIES
+            LABELS "${KIND}"
+            RUN_SERIAL ${SERIAL}
+            SKIP_RETURN_CODE 4
+        )
+    endif()
+
+    message(STATUS "Test group: ${KIND}::${MODULE} -> Target: ${TARGET}")
+endfunction()
+
+
+foreach(KIND IN ITEMS simple live)
+    set(KIND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${KIND}")
+
+    add_custom_target(test_${KIND})
+
+    file(GLOB KIND_MODULES CONFIGURE_DEPENDS
+        LIST_DIRECTORIES true
+        RELATIVE "${KIND_DIR}"
+        "${KIND_DIR}/*"
+    )
+
+    foreach(MODULE IN LISTS KIND_MODULES)
+        if(NOT IS_DIRECTORY "${KIND_DIR}/${MODULE}")
+            continue()
+        endif()
+
+        if(NOT TARGET fluxmt::${MODULE})
+            message(STATUS "Skipping ${KIND} tests for '${MODULE}': fluxmt::${MODULE} is not built")
+            continue()
+        endif()
+
+        set(GROUP_LIBRARIES fluxmt::${MODULE})
+
+        if(KIND STREQUAL "live")
+            if(NOT TARGET test_support_${MODULE})
+                message(STATUS "Skipping live tests for '${MODULE}': test_support_${MODULE} is missing")
+                continue()
+            endif()
+
+            set(GROUP_LIBRARIES test_support_${MODULE})
+        endif()
+
+        file(GLOB_RECURSE GROUP_SOURCES CONFIGURE_DEPENDS "${KIND_DIR}/${MODULE}/*.cpp")
+        if(NOT GROUP_SOURCES)
+            continue()
+        endif()
+
+        add_test_group(${KIND} ${MODULE} SOURCES ${GROUP_SOURCES} LIBRARIES ${GROUP_LIBRARIES})
+        add_dependencies(test_${KIND} test_${KIND}_${MODULE})
     endforeach()
 endforeach()
