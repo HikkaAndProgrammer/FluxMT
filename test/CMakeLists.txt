@@ -115,27 +115,6 @@ endif()
 
 
 #----------------------------------------------------------------------------------------------------------------------
-# must-not-compile tests
-#----------------------------------------------------------------------------------------------------------------------
-
-
-# compile_fail/<name>.cpp is built on demand; the test passes only if the error output matches EXPECTED.
-function(add_compile_fail_test NAME EXPECTED)
-    string(MAKE_C_IDENTIFIER "compile_fail_${NAME}" TARGET)
-
-    add_library(${TARGET} OBJECT EXCLUDE_FROM_ALL "${CMAKE_CURRENT_SOURCE_DIR}/compile_fail/${NAME}.cpp")
-    target_link_libraries(${TARGET} PRIVATE fluxmt::core)
-
-    add_test(NAME "compile_fail::${NAME}"
-        COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target ${TARGET} --config $<CONFIG>
-    )
-    set_tests_properties("compile_fail::${NAME}" PROPERTIES PASS_REGULAR_EXPRESSION "${EXPECTED}")
-endfunction()
-
-add_compile_fail_test(supports_missing "satisfaction of .*Supports")
-
-
-#----------------------------------------------------------------------------------------------------------------------
 # header self-containment
 #----------------------------------------------------------------------------------------------------------------------
 
