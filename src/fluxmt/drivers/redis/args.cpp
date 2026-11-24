@@ -1,14 +1,13 @@
 #include "fluxmt/drivers/redis/args.hpp"
 
 // std
-#include <chrono>
 #include <concepts>
 #include <format>
 #include <stdexcept>
 #include <type_traits>
 
-// ers
-#include <erslib/core/type/uuid.hpp>
+// fluxmt
+#include <fluxmt/core/value_text.hpp>
 
 
 // Implementation --------------------------------------------------------------
@@ -27,12 +26,8 @@ std::string flux::impl::redis::to_arg(const Value& value) {
             return v;
         else if constexpr (std::same_as<T, value_bytes_t>)
             return { reinterpret_cast<const char*>(v.data()), v.size() };
-        else if constexpr (std::same_as<T, ers::date_t>)
-            return std::format("{:%F}", v);
-        else if constexpr (std::same_as<T, ers::timestamp_t>)
-            return std::format("{:%F %T}", std::chrono::floor<std::chrono::microseconds>(v));
-        else if constexpr (std::same_as<T, ers::uuid>)
-            return ers::uuid_to_string(v);
+        else if constexpr (std::same_as<T, ers::date_t> || std::same_as<T, ers::timestamp_t> || std::same_as<T, ers::uuid>)
+            return to_text(v);
         else if constexpr (std::same_as<T, value_array_t>)
             throw std::invalid_argument("Redis arguments cannot be arrays");
         else if constexpr (std::same_as<T, custom_value_t>)

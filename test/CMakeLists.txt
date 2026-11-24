@@ -169,6 +169,7 @@ endfunction()
 
 
 add_header_check(core)
+add_header_check(sql)
 
 if(TARGET fluxmt::psql)
     add_header_check(psql)
@@ -188,26 +189,22 @@ endif()
 #----------------------------------------------------------------------------------------------------------------------
 
 
-add_test(NAME layering::core_has_no_pqxx
-    COMMAND "${CMAKE_COMMAND}"
-        "-DROOT=${PROJECT_SOURCE_DIR}"
-        "-DMODULE=core"
-        "-DPATTERN=pqxx/"
-        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
-)
+function(add_layering_check MODULE FORBIDDEN PATTERN)
+    add_test(NAME layering::${MODULE}_has_no_${FORBIDDEN}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DROOT=${PROJECT_SOURCE_DIR}"
+            "-DMODULE=${MODULE}"
+            "-DPATTERN=${PATTERN}"
+            -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+    )
+endfunction()
 
-add_test(NAME layering::core_has_no_sqlite3
-    COMMAND "${CMAKE_COMMAND}"
-        "-DROOT=${PROJECT_SOURCE_DIR}"
-        "-DMODULE=core"
-        "-DPATTERN=sqlite3"
-        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
-)
 
-add_test(NAME layering::core_has_no_hiredis
-    COMMAND "${CMAKE_COMMAND}"
-        "-DROOT=${PROJECT_SOURCE_DIR}"
-        "-DMODULE=core"
-        "-DPATTERN=hiredis"
-        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
-)
+add_layering_check(core pqxx "pqxx/")
+add_layering_check(core sqlite3 "sqlite3")
+add_layering_check(core hiredis "hiredis")
+add_layering_check(core sql "fluxmt/sql")
+
+add_layering_check(sql pqxx "pqxx/")
+add_layering_check(sql sqlite3 "sqlite3")
+add_layering_check(sql hiredis "hiredis")

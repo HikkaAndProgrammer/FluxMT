@@ -92,13 +92,18 @@ endfunction()
 
 
 # A driver is fluxmt::<name>: fluxmt::core plus the client library of one database.
+# A driver with the SQL keyword also links fluxmt::sql.
 function(fluxmt_add_driver name)
-	cmake_parse_arguments(ARG "" "" "SOURCES" ${ARGN})
+	cmake_parse_arguments(ARG "SQL" "" "SOURCES" ${ARGN})
 
 	fluxmt_add_library(fluxmt_${name} ${name})
 
 	target_sources(fluxmt_${name} PRIVATE ${ARG_SOURCES})
 	target_link_libraries(fluxmt_${name} PUBLIC fluxmt_core)
+
+	if(ARG_SQL)
+		target_link_libraries(fluxmt_${name} PUBLIC fluxmt_sql)
+	endif()
 
 	set(FLUXMT_TARGETS ${FLUXMT_TARGETS} fluxmt_${name} PARENT_SCOPE)
 	set(FLUXMT_DRIVERS ${FLUXMT_DRIVERS} ${name} PARENT_SCOPE)
@@ -128,6 +133,7 @@ target_sources(fluxmt_core
 
 		"src/fluxmt/core/error.cpp"
 		"src/fluxmt/core/value.cpp"
+		"src/fluxmt/core/value_text.cpp"
 		"src/fluxmt/core/version.cpp"
 )
 
@@ -149,12 +155,33 @@ list(APPEND FLUXMT_TARGETS fluxmt_core)
 
 
 #----------------------------------------------------------------------------------------------------------------------
+# fluxmt::sql
+#----------------------------------------------------------------------------------------------------------------------
+
+
+fluxmt_add_library(fluxmt_sql sql)
+
+target_sources(fluxmt_sql
+	PRIVATE
+		"src/fluxmt/sql/identifier.cpp"
+)
+
+target_link_libraries(fluxmt_sql
+	PUBLIC
+		fluxmt_core
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_sql)
+
+
+#----------------------------------------------------------------------------------------------------------------------
 # fluxmt::psql
 #----------------------------------------------------------------------------------------------------------------------
 
 
 if(FLUXMT_BUILD_PSQL)
 	fluxmt_add_driver(psql
+		SQL
 		SOURCES
 			"src/fluxmt/drivers/psql/connection.cpp"
 			"src/fluxmt/drivers/psql/error.cpp"

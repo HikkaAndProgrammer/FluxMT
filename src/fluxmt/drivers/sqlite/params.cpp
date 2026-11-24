@@ -1,9 +1,7 @@
 #include "fluxmt/drivers/sqlite/params.hpp"
 
 // std
-#include <chrono>
 #include <concepts>
-#include <format>
 #include <limits>
 #include <stdexcept>
 #include <string_view>
@@ -12,10 +10,8 @@
 // sqlite
 #include <sqlite3.h>
 
-// ers
-#include <erslib/core/type/uuid.hpp>
-
 // fluxmt
+#include <fluxmt/core/value_text.hpp>
 #include <fluxmt/drivers/sqlite/error.hpp>
 
 
@@ -54,12 +50,8 @@ void flux::impl::sqlite::bind(sqlite3_stmt* stmt, int index, const Value& value)
                 return sqlite3_bind_zeroblob64(stmt, index, 0);
 
             return sqlite3_bind_blob64(stmt, index, v.data(), v.size(), SQLITE_TRANSIENT);
-        } else if constexpr (std::same_as<T, ers::date_t>)
-            return bind_text(stmt, index, std::format("{:%F}", v));
-        else if constexpr (std::same_as<T, ers::timestamp_t>)
-            return bind_text(stmt, index, std::format("{:%F %T}", std::chrono::floor<std::chrono::microseconds>(v)));
-        else if constexpr (std::same_as<T, ers::uuid>)
-            return bind_text(stmt, index, ers::uuid_to_string(v));
+        } else if constexpr (std::same_as<T, ers::date_t> || std::same_as<T, ers::timestamp_t> || std::same_as<T, ers::uuid>)
+            return bind_text(stmt, index, to_text(v));
         else if constexpr (std::same_as<T, value_array_t>)
             throw std::invalid_argument("SQLite has not array type");
         else if constexpr (std::same_as<T, custom_value_t>)
