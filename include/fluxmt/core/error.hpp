@@ -17,7 +17,8 @@
     X(NotNullViolation, "Not-null constraint violated") \
     X(SerializationFailure, "Serialization failure") \
     X(Deadlock, "Deadlock detected") \
-    X(Timeout, "Statement timed out")
+    X(Timeout, "Statement timed out") \
+    X(Busy, "Database is busy or locked")
 
 
 // Implementation --------------------------------------------------------------
@@ -28,7 +29,9 @@ ERS_MAKE_ERROR_CODES(flux::impl, EDbError, "db", FLUXMT_DB_ERRORS)
 
 namespace flux::impl {
     inline bool is_retryable(const std::error_code& code) noexcept {
-        return code == EDbError::SerializationFailure || code == EDbError::Deadlock;
+        return code == EDbError::SerializationFailure
+            || code == EDbError::Deadlock
+            || code == EDbError::Busy;
     }
 }
 

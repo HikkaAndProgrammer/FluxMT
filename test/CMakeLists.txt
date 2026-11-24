@@ -157,10 +157,15 @@ function(add_header_check MODULE)
     target_link_libraries(header_check_${MODULE} PRIVATE fluxmt::${MODULE})
 endfunction()
 
+
 add_header_check(core)
 
 if(TARGET fluxmt::psql)
     add_header_check(psql)
+endif()
+
+if(TARGET fluxmt::sqlite)
+    add_header_check(sqlite)
 endif()
 
 
@@ -174,5 +179,13 @@ add_test(NAME layering::core_has_no_pqxx
         "-DROOT=${PROJECT_SOURCE_DIR}"
         "-DMODULE=core"
         "-DPATTERN=pqxx/"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
+)
+
+add_test(NAME layering::core_has_no_sqlite3
+    COMMAND "${CMAKE_COMMAND}"
+        "-DROOT=${PROJECT_SOURCE_DIR}"
+        "-DMODULE=core"
+        "-DPATTERN=sqlite3"
         -P "${PROJECT_SOURCE_DIR}/cmake/check_no_include.cmake"
 )

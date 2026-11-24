@@ -23,6 +23,7 @@ option(FLUXMT_BUILD_TESTS "Build fluxmt tests" OFF)
 option(FLUXMT_INSTALL "Generate target for installing fluxmt" ${IS_TOP_LEVEL})
 
 option(FLUXMT_BUILD_PSQL "Build fluxmt::psql (PostgreSQL through libpqxx)" OFF)
+option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite (SQLite through the C API)" OFF)
 
 
 set(FLUXMT_ERSLIB_REPOSITORY "https://github.com/HikkaAndProgrammer/erslib.git"
@@ -122,6 +123,7 @@ target_sources(fluxmt_core
 	PRIVATE
 		"include/fluxmt/export.hpp"
 
+		"src/fluxmt/core/error.cpp"
 		"src/fluxmt/core/version.cpp"
 )
 

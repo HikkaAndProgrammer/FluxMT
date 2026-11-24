@@ -13,10 +13,11 @@
                 "CMAKE_CXX_EXTENSIONS": "OFF",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
 
-                "VCPKG_MANIFEST_FEATURES": "psql;tests",
+                "VCPKG_MANIFEST_FEATURES": "psql;sqlite;tests",
 
                 "FLUXMT_BUILD_TESTS": "ON",
-                "FLUXMT_BUILD_PSQL": "ON"
+                "FLUXMT_BUILD_PSQL": "ON",
+                "FLUXMT_BUILD_SQLITE": "ON"
             }
         },
         {

@@ -18,6 +18,12 @@
                 "libpqxx"
             ]
         },
+        "sqlite": {
+            "description": "fluxmt::sqlite, SQLite through the C API",
+            "dependencies": [
+                "sqlite3"
+            ]
+        },
         "tests": {
             "description": "fluxmt tests",
             "dependencies": [

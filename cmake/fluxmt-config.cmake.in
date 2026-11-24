@@ -22,6 +22,10 @@ if(NOT TARGET fluxmt::core)
         find_dependency(libpqxx CONFIG)
     endif()
 
+	if(@FLUXMT_BUILD_SQLITE@)
+        find_dependency(unofficial-sqlite3 CONFIG)
+    endif()
+
     if(DEFINED FLUXMT_SHARED_LIBS)
         if(FLUXMT_SHARED_LIBS)
             set(type "shared")
