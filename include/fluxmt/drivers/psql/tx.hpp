@@ -9,7 +9,7 @@
 
 // fluxmt
 #include <fluxmt/core.hpp>
-#include <fluxmt/psql/backend.hpp>
+#include <fluxmt/drivers/psql/backend.hpp>
 
 
 // Implementation --------------------------------------------------------------

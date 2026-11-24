@@ -9,8 +9,8 @@
 
 // fluxmt
 #include <fluxmt/core/backend.hpp>
-#include <fluxmt/psql/connection.hpp>
-#include <fluxmt/psql/options.hpp>
+#include <fluxmt/drivers/psql/connection.hpp>
+#include <fluxmt/drivers/psql/options.hpp>
 
 
 // Implementation --------------------------------------------------------------

@@ -3,12 +3,12 @@
 // Includes --------------------------------------------------------------------
 
 #include <fluxmt/core.hpp>
-#include <fluxmt/psql/backend.hpp>
-#include <fluxmt/psql/connection.hpp>
-#include <fluxmt/psql/error.hpp>
-#include <fluxmt/psql/options.hpp>
-#include <fluxmt/psql/params.hpp>
-#include <fluxmt/psql/tx.hpp>
+#include <fluxmt/drivers/psql/backend.hpp>
+#include <fluxmt/drivers/psql/connection.hpp>
+#include <fluxmt/drivers/psql/error.hpp>
+#include <fluxmt/drivers/psql/options.hpp>
+#include <fluxmt/drivers/psql/params.hpp>
+#include <fluxmt/drivers/psql/tx.hpp>
 
 
 // Exports ---------------------------------------------------------------------

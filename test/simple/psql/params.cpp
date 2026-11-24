@@ -6,7 +6,7 @@
 
 // fluxmt
 #include <fluxmt/psql.hpp>
-#include <fluxmt/psql/params.hpp>
+#include <fluxmt/drivers/psql/params.hpp>
 
 // test
 #include "support/test_case.hpp"

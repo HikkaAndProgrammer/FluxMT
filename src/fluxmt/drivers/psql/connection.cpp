@@ -1,4 +1,4 @@
-#include "fluxmt/psql/connection.hpp"
+#include "fluxmt/drivers/psql/connection.hpp"
 
 // std
 #include <exception>
@@ -8,7 +8,7 @@
 
 // fluxmt
 #include <fluxmt/core/error.hpp>
-#include <fluxmt/psql/error.hpp>
+#include <fluxmt/drivers/psql/error.hpp>
 
 
 std::unique_ptr<pqxx::connection> flux::impl::psql::open_connection(const options_t& options) {

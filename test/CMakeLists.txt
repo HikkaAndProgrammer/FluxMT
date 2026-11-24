@@ -128,6 +128,7 @@ function(add_header_check MODULE)
     set(HEADERS "fluxmt/${MODULE}.hpp")
     file(GLOB MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
+        "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}/*.hpp"
     )
     list(APPEND HEADERS ${MODULE_HEADERS})
 

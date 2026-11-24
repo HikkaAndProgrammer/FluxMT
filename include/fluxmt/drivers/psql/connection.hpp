@@ -11,7 +11,7 @@
 #include <erslib/core/type/diagnostic.hpp>
 
 // fluxmt
-#include <fluxmt/psql/options.hpp>
+#include <fluxmt/drivers/psql/options.hpp>
 
 // export
 #include <fluxmt/export.hpp>

@@ -153,10 +153,10 @@ list(APPEND FLUXMT_TARGETS fluxmt_core)
 if(FLUXMT_BUILD_PSQL)
 	fluxmt_add_driver(psql
 		SOURCES
-			"src/fluxmt/psql/connection.cpp"
-			"src/fluxmt/psql/error.cpp"
-			"src/fluxmt/psql/options.cpp"
-			"src/fluxmt/psql/params.cpp"
+			"src/fluxmt/drivers/psql/connection.cpp"
+			"src/fluxmt/drivers/psql/error.cpp"
+			"src/fluxmt/drivers/psql/options.cpp"
+			"src/fluxmt/drivers/psql/params.cpp"
 	)
 
 	find_package(PostgreSQL)
