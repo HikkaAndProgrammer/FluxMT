@@ -163,6 +163,7 @@ fluxmt_add_library(fluxmt_sql sql)
 
 target_sources(fluxmt_sql
 	PRIVATE
+		"src/fluxmt/sql/context.cpp"
 		"src/fluxmt/sql/identifier.cpp"
 )
 
@@ -184,6 +185,7 @@ if(FLUXMT_BUILD_PSQL)
 		SQL
 		SOURCES
 			"src/fluxmt/drivers/psql/connection.cpp"
+			"src/fluxmt/drivers/psql/dialect.cpp"
 			"src/fluxmt/drivers/psql/error.cpp"
 			"src/fluxmt/drivers/psql/options.cpp"
 			"src/fluxmt/drivers/psql/params.cpp"

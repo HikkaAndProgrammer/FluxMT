@@ -5,6 +5,7 @@
 #include <fluxmt/core.hpp>
 #include <fluxmt/drivers/psql/backend.hpp>
 #include <fluxmt/drivers/psql/connection.hpp>
+#include <fluxmt/drivers/psql/dialect.hpp>
 #include <fluxmt/drivers/psql/error.hpp>
 #include <fluxmt/drivers/psql/options.hpp>
 #include <fluxmt/drivers/psql/params.hpp>
@@ -31,4 +32,8 @@ namespace flux::psql {
     using impl::psql::with_tx;
     using impl::with_conn;
     using impl::with_tx;
+
+    using impl::psql::dialect;
+    using impl::psql::postgres_dialect;
+    using impl::psql::reserved_words;
 }
