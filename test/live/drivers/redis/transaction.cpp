@@ -10,7 +10,7 @@
 #include <fluxmt/redis.hpp>
 
 // test
-#include "support/redis/live.hpp"
+#include "support/drivers/redis/live.hpp"
 #include "support/test_case.hpp"
 
 

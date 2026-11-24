@@ -14,7 +14,7 @@
 #include <fluxmt/psql.hpp>
 
 // test
-#include "support/psql/live.hpp"
+#include "support/drivers/psql/live.hpp"
 #include "support/test_case.hpp"
 
 

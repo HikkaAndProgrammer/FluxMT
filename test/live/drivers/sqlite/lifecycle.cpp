@@ -10,7 +10,7 @@
 #include <fluxmt/sqlite.hpp>
 
 // test
-#include "support/sqlite/db.hpp"
+#include "support/drivers/sqlite/db.hpp"
 #include "support/test_case.hpp"
 
 

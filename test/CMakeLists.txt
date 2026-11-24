@@ -22,7 +22,7 @@ target_link_libraries(test_support PUBLIC fluxmt::core)
 
 
 if(TARGET fluxmt::psql)
-    add_library(test_support_psql STATIC "support/psql/live.cpp")
+    add_library(test_support_psql STATIC "support/drivers/psql/live.cpp")
     target_link_libraries(test_support_psql PUBLIC test_support fluxmt::psql Catch2::Catch2)
     target_compile_definitions(test_support_psql PRIVATE
         FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
@@ -35,7 +35,7 @@ if(TARGET fluxmt::psql)
 endif()
 
 if(TARGET fluxmt::redis)
-    add_library(test_support_redis STATIC "support/redis/live.cpp")
+    add_library(test_support_redis STATIC "support/drivers/redis/live.cpp")
     target_link_libraries(test_support_redis PUBLIC test_support fluxmt::redis Catch2::Catch2)
     target_compile_definitions(test_support_redis PRIVATE
         FLUXMT_TEST_REDIS_HOST_DEFAULT="${FLUXMT_TEST_REDIS_HOST}"
@@ -46,7 +46,7 @@ if(TARGET fluxmt::redis)
 endif()
 
 if(TARGET fluxmt::sqlite)
-    add_library(test_support_sqlite STATIC "support/sqlite/db.cpp")
+    add_library(test_support_sqlite STATIC "support/drivers/sqlite/db.cpp")
     target_link_libraries(test_support_sqlite PUBLIC test_support fluxmt::sqlite)
     set_target_properties(test_support_sqlite PROPERTIES FOLDER "tests/support")
 endif()
@@ -103,16 +103,26 @@ foreach(KIND IN ITEMS simple live)
 
     add_custom_target(test_${KIND})
 
-    file(GLOB KIND_MODULES CONFIGURE_DEPENDS
+    # core, sql, ... lie directly in the kind directory, drivers in drivers/<name>
+    file(GLOB KIND_GROUPS CONFIGURE_DEPENDS
         LIST_DIRECTORIES true
         RELATIVE "${KIND_DIR}"
         "${KIND_DIR}/*"
     )
+    list(REMOVE_ITEM KIND_GROUPS "drivers")
 
-    foreach(MODULE IN LISTS KIND_MODULES)
-        if(NOT IS_DIRECTORY "${KIND_DIR}/${MODULE}")
+    file(GLOB DRIVER_GROUPS CONFIGURE_DEPENDS
+        LIST_DIRECTORIES true
+        RELATIVE "${KIND_DIR}"
+        "${KIND_DIR}/drivers/*"
+    )
+
+    foreach(GROUP_PATH IN LISTS KIND_GROUPS DRIVER_GROUPS)
+        if(NOT IS_DIRECTORY "${KIND_DIR}/${GROUP_PATH}")
             continue()
         endif()
+
+        cmake_path(GET GROUP_PATH FILENAME MODULE)
 
         if(NOT TARGET fluxmt::${MODULE})
             message(STATUS "Skipping ${KIND} tests for '${MODULE}': fluxmt::${MODULE} is not built")
@@ -130,7 +140,7 @@ foreach(KIND IN ITEMS simple live)
             set(GROUP_LIBRARIES test_support_${MODULE})
         endif()
 
-        file(GLOB_RECURSE GROUP_SOURCES CONFIGURE_DEPENDS "${KIND_DIR}/${MODULE}/*.cpp")
+        file(GLOB_RECURSE GROUP_SOURCES CONFIGURE_DEPENDS "${KIND_DIR}/${GROUP_PATH}/*.cpp")
         if(NOT GROUP_SOURCES)
             continue()
         endif()
