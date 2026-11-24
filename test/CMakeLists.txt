@@ -70,6 +70,48 @@ endforeach()
 
 
 #----------------------------------------------------------------------------------------------------------------------
+# live tests (need a real database; skipped when FLUXMT_TEST_PG_DB is not set)
+#----------------------------------------------------------------------------------------------------------------------
+
+
+set(LIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/live")
+
+if(TARGET fluxmt::psql AND IS_DIRECTORY "${LIVE_DIR}/psql")
+    add_custom_target(test_live)
+
+    file(GLOB_RECURSE LIVE_SOURCES CONFIGURE_DEPENDS "${LIVE_DIR}/psql/*.cpp")
+
+    foreach(SOURCE IN LISTS LIVE_SOURCES)
+        file(RELATIVE_PATH NAME "${LIVE_DIR}" "${SOURCE}")
+        string(REGEX REPLACE "\\.cpp$" "" NAME "${NAME}")
+        string(MAKE_C_IDENTIFIER "test_live_${NAME}" TARGET)
+
+        add_executable(${TARGET} "${SOURCE}")
+        target_link_libraries(${TARGET} PRIVATE test_simple_main fluxmt::psql)
+        
+		target_compile_definitions(${TARGET} PRIVATE TEST_TAGS="[live]")
+		target_compile_definitions(${TARGET} PRIVATE
+			FLUXMT_TEST_PG_HOST_DEFAULT="${FLUXMT_TEST_PG_HOST}"
+			FLUXMT_TEST_PG_PORT_DEFAULT="${FLUXMT_TEST_PG_PORT}"
+			FLUXMT_TEST_PG_DB_DEFAULT="${FLUXMT_TEST_PG_DB}"
+			FLUXMT_TEST_PG_USER_DEFAULT="${FLUXMT_TEST_PG_USER}"
+			FLUXMT_TEST_PG_PASSWORD_DEFAULT="${FLUXMT_TEST_PG_PASSWORD}"
+		)
+
+        set_target_properties(${TARGET} PROPERTIES FOLDER "tests/live")
+
+        catch_discover_tests(${TARGET}
+            TEST_PREFIX "live::${NAME}::"
+            DISCOVERY_MODE PRE_TEST
+            ADD_TAGS_AS_LABELS
+            PROPERTIES RUN_SERIAL TRUE
+        )
+        add_dependencies(test_live ${TARGET})
+    endforeach()
+endif()
+
+
+#----------------------------------------------------------------------------------------------------------------------
 # must-not-compile tests
 #----------------------------------------------------------------------------------------------------------------------
 

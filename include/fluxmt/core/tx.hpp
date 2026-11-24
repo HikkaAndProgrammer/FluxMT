@@ -165,8 +165,6 @@ namespace flux::impl {
                 tx.commit();
                 return result;
             }
-
-            std::unreachable();
         };
 
         for (ers::u8 round = 0;; ++round) {
