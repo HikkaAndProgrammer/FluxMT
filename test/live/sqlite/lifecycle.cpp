@@ -139,15 +139,22 @@ FLUXMT_TEST_CASE("sqlite retries a busy writer", "[sqlite]") {
     auto holder = db.acquire_or_throw();
     sq::write_transaction lock(*holder, "lock");
 
-    std::thread release([&] {
+    std::jthread release([&] {
         std::this_thread::sleep_for(100ms);
         lock.commit();
-        });
+    });
 
-    sq::with_tx(db, [](sq::write_transaction& tx) { add(tx, "alice"); },
-        flux::tx_options_t{ .label = "retry", .retries = 20, .backoff = 20ms });
+    sq::with_tx(db,
+        [](sq::write_transaction& tx) {
+            add(tx, "alice");
+        },
+        flux::tx_options_t {
+            .label   = "retry",
+            .retries = 20,
+            .backoff = 20ms
+        }
+    );
 
-    release.join();
     REQUIRE(accounts(db) == 1);
 }
 

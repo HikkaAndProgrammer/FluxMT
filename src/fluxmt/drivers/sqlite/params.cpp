@@ -55,15 +55,17 @@ void flux::impl::sqlite::bind(sqlite3_stmt* stmt, int index, const Value& value)
 
             return sqlite3_bind_blob64(stmt, index, v.data(), v.size(), SQLITE_TRANSIENT);
         } else if constexpr (std::same_as<T, ers::date_t>)
-            return bind_text(stmt, index, std::format(":%F", v));
+            return bind_text(stmt, index, std::format("{:%F}", v));
         else if constexpr (std::same_as<T, ers::timestamp_t>)
-            return bind_text(stmt, index, std::format("{:%F %T}", std::chrono::floor<std::chrono::milliseconds>(v)));
+            return bind_text(stmt, index, std::format("{:%F %T}", std::chrono::floor<std::chrono::microseconds>(v)));
         else if constexpr (std::same_as<T, ers::uuid>)
             return bind_text(stmt, index, ers::uuid_to_string(v));
-        else if constexpr (std::same_as<T, custom_value_t>)
-            return bind_text(stmt, index, v.text);
         else if constexpr (std::same_as<T, value_array_t>)
             throw std::invalid_argument("SQLite has not array type");
+        else if constexpr (std::same_as<T, custom_value_t>)
+            return bind_text(stmt, index, v.text);
+
+        std::unreachable();
     });
 
     if (rc != SQLITE_OK)

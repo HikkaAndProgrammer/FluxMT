@@ -61,8 +61,6 @@ std::string flux::impl::psql::to_text(const Value& value) {
             return ers::date_to_iso8601(v);
         else if constexpr (std::same_as<T, ers::uuid>)
             return ers::uuid_to_string(v);
-        else if constexpr (std::same_as<T, custom_value_t>)
-            return v.text;
         else if constexpr (std::same_as<T, value_array_t>) {
             std::string out = "{";
             bool first = true;
@@ -81,7 +79,8 @@ std::string flux::impl::psql::to_text(const Value& value) {
             }
 
             return out += "}";
-        }
+        } else if constexpr (std::same_as<T, custom_value_t>)
+            return v.text;
 
         std::unreachable();
     });

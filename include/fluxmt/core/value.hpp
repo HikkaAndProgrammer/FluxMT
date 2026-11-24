@@ -60,7 +60,7 @@ namespace flux::impl {
         Value() = default;
 
         template<typename T>
-            requires (!std::same_as<std::remove_cvref_t<T>, Value> && std::constructible_from<storage_t>)
+            requires (!std::same_as<std::remove_cvref_t<T>, Value> && std::constructible_from<storage_t, T>)
         Value(T&& what) : _storage(std::forward<T>(what)) {
         }
 

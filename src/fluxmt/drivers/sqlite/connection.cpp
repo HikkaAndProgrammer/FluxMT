@@ -145,7 +145,7 @@ flux::impl::sqlite::result_t flux::impl::sqlite::connection::exec(std::string_vi
 
 
     for (size_t i = 0; i < params.size(); ++i)
-        bind(stmt.get(), static_cast<int>(i) + i, params[i]);
+        bind(stmt.get(), static_cast<int>(i) + 1, params[i]);
 
     int columns = sqlite3_column_count(stmt.get());
     for (int i = 0; i < columns; ++i)
