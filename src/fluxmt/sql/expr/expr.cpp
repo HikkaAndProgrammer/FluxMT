@@ -19,6 +19,8 @@
 #include "nodes/predicate/any.hpp"
 #include "nodes/predicate/between.hpp"
 #include "nodes/predicate/in.hpp"
+#include "nodes/subquery/in_query.hpp"
+#include "nodes/subquery/subquery.hpp"
 #include "nodes/terminal/column.hpp"
 #include "nodes/terminal/const.hpp"
 #include "nodes/terminal/param.hpp"
@@ -129,6 +131,10 @@ flux::impl::Expr flux::impl::make_in(Expr operand, std::vector<Expr> items) {
     return make_expr<nodes::InNode>(std::move(operand), std::move(items));
 }
 
+flux::impl::Expr flux::impl::make_in(Expr operand, Query subquery) {
+    return make_expr<nodes::InQueryNode>(std::move(operand), std::move(subquery));
+}
+
 flux::impl::Expr flux::impl::make_any(Expr operand, Expr array) {
     return make_expr<nodes::AnyNode>(std::move(operand), std::move(array));
 }
@@ -193,4 +199,12 @@ flux::impl::Expr flux::impl::clauses::null() {
 
 flux::impl::Expr flux::impl::clauses::sql_bool(bool value) {
     return value ? make_const("TRUE") : make_const("FALSE");
+}
+
+flux::impl::Expr flux::impl::clauses::exists(Query subquery) {
+    return make_expr<nodes::SubqueryNode>(std::move(subquery), true);
+}
+
+flux::impl::Expr flux::impl::clauses::subquery(Query query) {
+    return make_expr<nodes::SubqueryNode>(std::move(query), false);
 }

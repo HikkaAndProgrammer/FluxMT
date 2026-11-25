@@ -12,4 +12,6 @@ namespace flux::impl {
 
     class Expr;
     struct Aliased;
+
+    class Query;
 }

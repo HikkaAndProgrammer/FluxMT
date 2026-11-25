@@ -1,0 +1,25 @@
+#include "fluxmt/sql/query/clauses/conflict.hpp"
+
+// fluxmt
+#include <fluxmt/sql/query/clauses/raw.hpp>
+
+// clauses
+#include "conflict_update.inl"
+
+
+// Implementation --------------------------------------------------------------
+
+flux::impl::Clause flux::impl::make_conflict_update_clause(std::vector<std::string> columns) {
+    return make_clause<ConflictUpdateClause>(std::move(columns));
+}
+
+
+// Shortcuts
+
+flux::impl::Clause flux::impl::clauses::on_conflict_constraint(std::string name) {
+    return identifier(&slots::conflict_constraint, std::move(name));
+}
+
+flux::impl::Clause flux::impl::clauses::do_nothing() {
+    return make_raw_clause(&slots::conflict_action, "DO NOTHING", {});
+}

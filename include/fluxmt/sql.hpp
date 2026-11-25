@@ -13,6 +13,7 @@
 #include <fluxmt/sql/expr/named.hpp>
 #include <fluxmt/sql/expr/operators.hpp>
 #include <fluxmt/sql/identifier.hpp>
+#include <fluxmt/sql/query.hpp>
 #include <fluxmt/sql/statement.hpp>
 
 
@@ -24,11 +25,15 @@ namespace flux::sql {
     using impl::Context;
     using impl::Dialect;
     using impl::ECastStyle;
+    using impl::EOrder;
     using impl::Expr;
     using impl::ExprMethods;
     using impl::IsExprSource;
+    using impl::Query;
     using impl::SqlBackend;
     using impl::Statement;
+    using impl::WithCte;
+    using impl::WithUnion;
     using impl::dialect_caps_t;
 
     using impl::is_plain_identifier;
@@ -38,51 +43,36 @@ namespace flux::sql {
 }
 
 
-// Extension points: your own nodes, operators and functions.
+namespace flux {
+    namespace slots = impl::slots;
+    namespace bindings = impl::bindings;
+}
+
+
+// Extension points: your own nodes, operators, functions and clauses.
 namespace flux::ext {
+    using impl::Clause;
     using impl::Context;
+    using impl::EArity;
     using impl::EPrecedence;
+    using impl::IClause;
     using impl::IExprNode;
+    using impl::Layout;
+    using impl::Slot;
+    using impl::SlotBinding;
+    using impl::SlotRef;
     using impl::binary_op_t;
     using impl::fn_t;
+    using impl::make_clause;
     using impl::make_expr;
     using impl::sql_text;
 }
 
 
-// The expression language: 'using namespace flux::orm;'.
+// The query language: 'using namespace flux::orm;'.
 namespace flux::orm {
-    using impl::clauses::agg;
-    using impl::clauses::agg_distinct;
-    using impl::clauses::array_agg_of;
-    using impl::clauses::avg_of;
-    using impl::clauses::bool_and_of;
-    using impl::clauses::bool_or_of;
-    using impl::clauses::coalesce;
-    using impl::clauses::col;
-    using impl::clauses::concat;
-    using impl::clauses::corr_of;
-    using impl::clauses::count_all;
-    using impl::clauses::count_distinct;
-    using impl::clauses::count_of;
-    using impl::clauses::greatest;
-    using impl::clauses::json_rows;
-    using impl::clauses::least;
-    using impl::clauses::max_of;
-    using impl::clauses::min_of;
-    using impl::clauses::mode_of;
-    using impl::clauses::now;
-    using impl::clauses::null;
-    using impl::clauses::nullif;
-    using impl::clauses::param;
-    using impl::clauses::percentile_cont;
-    using impl::clauses::percentile_disc;
-    using impl::clauses::row;
-    using impl::clauses::sql;
-    using impl::clauses::sql_bool;
-    using impl::clauses::stddev_of;
-    using impl::clauses::string_agg;
-    using impl::clauses::sum_of;
-    using impl::clauses::val;
-    using impl::clauses::variance_of;
+    using namespace impl::clauses;
+    using namespace impl::layouts;
+
+    using impl::EOrder;
 }

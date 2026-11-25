@@ -24,6 +24,7 @@ namespace flux::impl {
     FLUXMT_EXPORT Expr make_postfix(Expr operand, sql_text suffix, EPrecedence precedence);
     FLUXMT_EXPORT Expr make_between(Expr operand, Expr low, Expr high);
     FLUXMT_EXPORT Expr make_in(Expr operand, std::vector<Expr> items);
+    FLUXMT_EXPORT Expr make_in(Expr operand, Query subquery);
     FLUXMT_EXPORT Expr make_any(Expr operand, Expr array);
     FLUXMT_EXPORT Expr make_cast(Expr operand, std::string_view type);
     FLUXMT_EXPORT Expr make_ilike(Expr lhs, Expr rhs);
@@ -40,5 +41,8 @@ namespace flux::impl {
         FLUXMT_EXPORT Expr col(std::string_view table, std::string_view name);
         FLUXMT_EXPORT Expr null();
         FLUXMT_EXPORT Expr sql_bool(bool value);
+
+        FLUXMT_EXPORT Expr exists(Query subquery);
+        FLUXMT_EXPORT Expr subquery(Query query);
     }
 }

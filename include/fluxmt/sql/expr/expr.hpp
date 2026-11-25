@@ -81,6 +81,11 @@ namespace flux::impl {
             return make_in(*this, std::move(items));
         }
 
+        template<std::same_as<Query> Q>
+        Expr in(Q subquery) const {
+            return make_in(*this, std::move(subquery));
+        }
+
 
         Expr any(Expr array) const;
 
@@ -149,6 +154,9 @@ namespace flux::impl {
 
         template<std::ranges::input_range R>
         Expr in(this const auto& self, R&& values) { return self.to_expr().in(std::forward<R>(values)); }
+
+        template<std::same_as<Query> Q>
+        Expr in(this const auto& self, Q subquery) { return self.to_expr().in(std::move(subquery)); }
 
 
         Expr any(this const auto& self, Expr array) { return self.to_expr().any(std::move(array)); }

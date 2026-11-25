@@ -1,0 +1,18 @@
+#pragma once
+
+// std
+#include <string>
+
+// fluxmt
+#include <fluxmt/sql/query/clause.hpp>
+
+// export
+#include <fluxmt/export.hpp>
+
+
+namespace flux::impl::clauses {
+    // Names: a table, an alias, a conflict target
+    FLUXMT_EXPORT Clause identifier(SlotRef slot, std::string name, std::string alias = "");
+
+    FLUXMT_EXPORT Clause from(std::string name, std::string alias = "");
+}
