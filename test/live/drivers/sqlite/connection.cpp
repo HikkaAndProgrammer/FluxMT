@@ -9,7 +9,7 @@
 #include <sqlite3.h>
 
 // fluxmt
-#include <fluxmt/sqlite.hpp>
+#include <fluxmt/drivers/sqlite.hpp>
 
 // test
 #include "support/test_case.hpp"
@@ -73,6 +73,14 @@ FLUXMT_TEST_CASE("sqlite enables foreign keys by default", "[sqlite]") {
     connection conn(options_t{});
 
     REQUIRE(first(conn.exec("PRAGMA foreign_keys")) == 1);
+}
+
+FLUXMT_TEST_CASE("sqlite double quotes are identifiers, not strings", "[sqlite]") {
+    connection conn(options_t{});
+    conn.exec_script("CREATE TABLE t (a)");
+
+    REQUIRE_NOTHROW(conn.exec("SELECT \"a\" FROM t"));
+    REQUIRE_THROWS_AS(conn.exec("SELECT \"nope\" FROM t"), error);
 }
 
 FLUXMT_TEST_CASE("sqlite open failure is a connection error", "[sqlite]") {

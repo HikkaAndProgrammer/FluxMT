@@ -86,6 +86,8 @@ flux::impl::sqlite::connection::connection(const options_t& options) {
 
     try {
         sqlite3_busy_timeout(_db, static_cast<int>(options.busy_timeout.count()));
+        sqlite3_db_config(_db, SQLITE_DBCONFIG_DQS_DML, 0, nullptr);
+        sqlite3_db_config(_db, SQLITE_DBCONFIG_DQS_DDL, 0, nullptr);
         exec_script(options.foreign_keys ? "PRAGMA foreign_keys = ON" : "PRAGMA foreign_keys = OFF");
 
         if (options.wal && !options.read_only && !options.in_memory())

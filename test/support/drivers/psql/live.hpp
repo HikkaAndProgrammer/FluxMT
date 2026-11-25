@@ -5,7 +5,7 @@
 #include <utility>
 
 // fluxmt
-#include <fluxmt/psql.hpp>
+#include <fluxmt/drivers/psql.hpp>
 
 
 namespace test::live {

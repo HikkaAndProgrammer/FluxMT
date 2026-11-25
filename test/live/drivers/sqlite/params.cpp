@@ -7,7 +7,7 @@
 #include <string>
 
 // fluxmt
-#include <fluxmt/sqlite.hpp>
+#include <fluxmt/drivers/sqlite.hpp>
 
 // test
 #include "support/test_case.hpp"

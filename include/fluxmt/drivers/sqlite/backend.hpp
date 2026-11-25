@@ -7,6 +7,7 @@
 // fluxmt
 #include <fluxmt/core/backend.hpp>
 #include <fluxmt/drivers/sqlite/connection.hpp>
+#include <fluxmt/drivers/sqlite/dialect.hpp>
 #include <fluxmt/drivers/sqlite/error.hpp>
 #include <fluxmt/drivers/sqlite/options.hpp>
 #include <fluxmt/drivers/sqlite/transaction.hpp>
@@ -41,4 +42,5 @@ struct flux::impl::backend_traits<flux::impl::sqlite::backend> {
     static bool alive(const connection& conn) noexcept { return conn.is_open(); }
     static ers::Diagnostic diagnose(std::string_view label) { return sqlite::diagnose(label); }
     static bool retryable() noexcept { return sqlite::retryable(); }
+    static const Dialect& dialect() noexcept { return sqlite::dialect(); }
 };

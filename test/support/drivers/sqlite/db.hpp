@@ -4,7 +4,7 @@
 #include <filesystem>
 
 // fluxmt
-#include <fluxmt/sqlite.hpp>
+#include <fluxmt/drivers/sqlite.hpp>
 
 
 namespace test {

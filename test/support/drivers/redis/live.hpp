@@ -5,7 +5,7 @@
 #include <string_view>
 
 // fluxmt
-#include <fluxmt/redis.hpp>
+#include <fluxmt/drivers/redis.hpp>
 
 
 namespace test::live {

@@ -241,8 +241,10 @@ endif()
 
 if(FLUXMT_BUILD_SQLITE)
 	fluxmt_add_driver(sqlite
+		SQL
 		SOURCES
 			"src/fluxmt/drivers/sqlite/connection.cpp"
+			"src/fluxmt/drivers/sqlite/dialect.cpp"
 			"src/fluxmt/drivers/sqlite/error.cpp"
 			"src/fluxmt/drivers/sqlite/options.cpp"
 			"src/fluxmt/drivers/sqlite/params.cpp"

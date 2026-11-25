@@ -2,7 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 // fluxmt
-#include <fluxmt/sqlite.hpp>
+#include <fluxmt/drivers/sqlite.hpp>
 
 // test
 #include "support/test_case.hpp"

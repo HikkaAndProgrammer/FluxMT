@@ -5,6 +5,7 @@
 #include <fluxmt/core.hpp>
 #include <fluxmt/drivers/sqlite/backend.hpp>
 #include <fluxmt/drivers/sqlite/connection.hpp>
+#include <fluxmt/drivers/sqlite/dialect.hpp>
 #include <fluxmt/drivers/sqlite/error.hpp>
 #include <fluxmt/drivers/sqlite/options.hpp>
 #include <fluxmt/drivers/sqlite/params.hpp>
@@ -40,4 +41,8 @@ namespace flux::sqlite {
     using impl::sqlite::with_tx;
     using impl::with_conn;
     using impl::with_tx;
+
+    using impl::sqlite::dialect;
+    using impl::sqlite::reserved_words;
+    using impl::sqlite::sqlite_dialect;
 }

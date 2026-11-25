@@ -5,7 +5,7 @@
 #include <algorithm>
 
 // fluxmt
-#include <fluxmt/psql.hpp>
+#include <fluxmt/drivers/psql.hpp>
 #include <fluxmt/sql.hpp>
 
 // test

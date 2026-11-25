@@ -59,6 +59,20 @@ endif()
 
 option(FLUXMT_TESTS_PER_CASE "Register every test case as its own ctest entry" OFF)
 
+# Command that starts and stops the databases: it is run as "<command> up" before and "<command> down" after live tests
+set(FLUXMT_TEST_LIVEDB_COMMAND "" CACHE STRING "Command line of scripts/livedb.sh, empty to manage the databases by hand")
+set(LIVEDB_MODULES psql redis)
+
+if(FLUXMT_TEST_LIVEDB_COMMAND)
+    separate_arguments(LIVEDB_COMMAND UNIX_COMMAND "${FLUXMT_TEST_LIVEDB_COMMAND}")
+
+    add_test(NAME livedb::up COMMAND ${LIVEDB_COMMAND} up)
+    add_test(NAME livedb::down COMMAND ${LIVEDB_COMMAND} down)
+
+    set_tests_properties(livedb::up PROPERTIES FIXTURES_SETUP livedb)
+    set_tests_properties(livedb::down PROPERTIES FIXTURES_CLEANUP livedb)
+endif()
+
 add_library(test_simple_main OBJECT "simple.cpp")
 target_link_libraries(test_simple_main PUBLIC Catch2::Catch2WithMain test_support)
 
@@ -78,12 +92,17 @@ function(add_test_group KIND MODULE)
         set(SERIAL TRUE)
     endif()
 
+    set(FIXTURES "")
+    if(KIND STREQUAL "live" AND FLUXMT_TEST_LIVEDB_COMMAND AND MODULE IN_LIST LIVEDB_MODULES)
+        set(FIXTURES FIXTURES_REQUIRED livedb)
+    endif()
+
     if(FLUXMT_TESTS_PER_CASE)
         catch_discover_tests(${TARGET}
             TEST_PREFIX "${KIND}::${MODULE}::"
             DISCOVERY_MODE PRE_TEST
             ADD_TAGS_AS_LABELS
-            PROPERTIES RUN_SERIAL ${SERIAL}
+            PROPERTIES RUN_SERIAL ${SERIAL} ${FIXTURES}
         )
     else()
         add_test(NAME "${KIND}::${MODULE}" COMMAND ${TARGET})
@@ -91,6 +110,7 @@ function(add_test_group KIND MODULE)
             LABELS "${KIND}"
             RUN_SERIAL ${SERIAL}
             SKIP_RETURN_CODE 4
+            ${FIXTURES}
         )
     endif()
 
@@ -158,7 +178,12 @@ endforeach()
 
 # One translation unit per public header, so a header that misses its own includes fails the build.
 function(add_header_check MODULE)
-    set(HEADERS "fluxmt/${MODULE}.hpp")
+    if(EXISTS "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}.hpp")
+        set(HEADERS "fluxmt/drivers/${MODULE}.hpp")
+    else()
+        set(HEADERS "fluxmt/${MODULE}.hpp")
+    endif()
+
     file(GLOB_RECURSE MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
         "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}/*.hpp"

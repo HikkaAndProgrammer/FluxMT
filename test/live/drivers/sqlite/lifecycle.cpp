@@ -7,7 +7,7 @@
 #include <thread>
 
 // fluxmt
-#include <fluxmt/sqlite.hpp>
+#include <fluxmt/drivers/sqlite.hpp>
 
 // test
 #include "support/drivers/sqlite/db.hpp"

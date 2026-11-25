@@ -5,7 +5,7 @@
 #include <string>
 
 // fluxmt
-#include <fluxmt/redis.hpp>
+#include <fluxmt/drivers/redis.hpp>
 
 // test
 #include "support/drivers/redis/live.hpp"

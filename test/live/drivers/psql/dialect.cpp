@@ -11,7 +11,7 @@
 #include <pqxx/pqxx>
 
 // fluxmt
-#include <fluxmt/psql.hpp>
+#include <fluxmt/drivers/psql.hpp>
 
 // test
 #include "support/drivers/psql/live.hpp"

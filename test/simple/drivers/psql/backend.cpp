@@ -8,7 +8,7 @@
 #include <pqxx/connection>
 
 // fluxmt
-#include <fluxmt/psql.hpp>
+#include <fluxmt/drivers/psql.hpp>
 
 // test
 #include "support/test_case.hpp"
