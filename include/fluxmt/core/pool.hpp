@@ -62,10 +62,14 @@ namespace flux::impl {
         }
 
 
-        // Checkers
+        // Observers
 
         bool is_stale(const entry_type& entry, ers::timestamp_t now) const noexcept {
             return now - entry.last_used > pool_opts.idle_timeout;
+        }
+
+        bool is_expired(const entry_type& entry, ers::timestamp_t now) const noexcept {
+            return is_stale(entry, now) && all.size() > pool_opts.min_size;
         }
 
 
@@ -119,7 +123,7 @@ namespace flux::impl {
                 auto entry = idle.front();
                 idle.pop_front();
 
-                if (!is_stale(entry, now) && Traits::alive(*entry.conn))
+                if (!is_expired(entry, now) && Traits::alive(*entry.conn))
                     return entry.conn;
 
                 discard(entry.conn);
@@ -145,7 +149,7 @@ namespace flux::impl {
             auto now = ers::clock_t::now();
 
             for (const auto& entry : idle) {
-                if (is_stale(entry, now) && all.size() > pool_opts.min_size)
+                if (is_expired(entry, now))
                     discard(entry.conn);
                 else
                     kept.push_back(entry);
