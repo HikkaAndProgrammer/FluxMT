@@ -65,14 +65,22 @@ FLUXMT_TEST_CASE("sql context rejects empty identifier parts", "[sql]") {
     REQUIRE(ctx.query.empty());
 }
 
-FLUXMT_TEST_CASE("sql context rejects empty identifier parts", "[sql]") {
+FLUXMT_TEST_CASE("sql context writes identifiers by the dialect policy", "[sql]") {
     test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
 
-    REQUIRE_THROWS_AS(ctx.append_identifier(""), std::invalid_argument);
-    REQUIRE_THROWS_AS(ctx.append_identifier("a..b"), std::invalid_argument);
-    REQUIRE_THROWS_AS(ctx.append_identifier(".a"), std::invalid_argument);
-    REQUIRE_THROWS_AS(ctx.append_identifier("a."), std::invalid_argument);
+    const auto render = [&](std::string_view name) {
+        flux::sql::Context ctx(dialect);
+        REQUIRE(ctx.append_identifier(name));
 
-    REQUIRE(ctx.query.empty());
+        return ctx.query;
+    };
+
+    REQUIRE(render("users") == "users");
+    REQUIRE(render("order") == "order");
+    REQUIRE(render("item") == "\"item\"");
+    REQUIRE(render("Users") == "\"Users\"");
+    REQUIRE(render("a b") == "\"a b\"");
+    REQUIRE(render("public.users") == "public.users");
+    REQUIRE(render("public.group") == "public.\"group\"");
+    REQUIRE(render("Public.Users") == "\"Public\".\"Users\"");
 }

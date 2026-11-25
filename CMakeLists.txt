@@ -165,6 +165,8 @@ target_sources(fluxmt_sql
 	PRIVATE
 		"src/fluxmt/sql/context.cpp"
 		"src/fluxmt/sql/identifier.cpp"
+		"src/fluxmt/sql/expr/aggregate.cpp"
+		"src/fluxmt/sql/expr/expr.cpp"
 )
 
 target_link_libraries(fluxmt_sql

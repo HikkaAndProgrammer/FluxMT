@@ -159,7 +159,7 @@ endforeach()
 # One translation unit per public header, so a header that misses its own includes fails the build.
 function(add_header_check MODULE)
     set(HEADERS "fluxmt/${MODULE}.hpp")
-    file(GLOB MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
+    file(GLOB_RECURSE MODULE_HEADERS CONFIGURE_DEPENDS RELATIVE "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/include/fluxmt/${MODULE}/*.hpp"
         "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}/*.hpp"
     )

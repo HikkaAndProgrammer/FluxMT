@@ -13,7 +13,7 @@ namespace test {
     // Differs from PostgreSQL on purpose: "?N" placeholders and its own reserved words.
     class AntiDialect final : public flux::sql::Dialect {
     public:
-        AntiDialect() noexcept : Dialect({}) {}
+        AntiDialect() noexcept : Dialect(flux::sql::dialect_caps_t {}) {}
 
         std::string_view name() const noexcept override { return "anti"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }

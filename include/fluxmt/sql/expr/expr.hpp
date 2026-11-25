@@ -48,44 +48,28 @@ namespace flux::impl {
         // Observers
 
         EPrecedence precedence() const noexcept;
-        const IExprNode& node() const noexcept { return *_node; }
+        const IExprNode& node() const noexcept;
 
 
         // Generators
 
-        Expr is_null() const {
-            return make_postfix(*this, " IS NULL", EPrecedence::Is);
-        }
+        Expr is_null() const;
 
-        Expr is_not_null() const {
-            return make_postfix(*this, " IS NOT NULL", EPrecedence::Is);
-        }
+        Expr is_not_null() const;
 
-        Expr is_distinct_from(Expr other) const {
-            return make_binary("IS DISTINCT FROM", *this, std::move(other), EPrecedence::Is);
-        }
+        Expr is_distinct_from(Expr other) const;
 
 
-        Expr like(Expr pattern) const {
-            return make_binary("LIKE", *this, std::move(pattern), EPrecedence::Like);
-        }
+        Expr like(Expr pattern) const;
 
-        Expr ilike(Expr pattern) const {
-            return make_ilike(*this, std::move(pattern));
-        }
+        Expr ilike(Expr pattern) const;
 
-        Expr between(Expr low, Expr high) const {
-            return make_between(*this, std::move(low), std::move(high));
-        }
+        Expr between(Expr low, Expr high) const;
 
-        Expr contains(Expr other) const {
-            return make_binary("@>", *this, std::move(other), EPrecedence::Other);
-        }
+        Expr contains(Expr other) const;
 
 
-        Expr in(std::initializer_list<Expr> values) const {
-            return make_in(*this, std::vector<Expr>(values));
-        }
+        Expr in(std::initializer_list<Expr> values) const;
 
         template<std::ranges::input_range R>
         Expr in(R&& values) const {
@@ -98,13 +82,9 @@ namespace flux::impl {
         }
 
 
-        Expr any(Expr array) const {
-            return make_any(*this, std::move(array));
-        }
+        Expr any(Expr array) const;
 
-        Expr cast(std::string_view type) const {
-            return make_cast(*this, type);
-        }
+        Expr cast(std::string_view type) const;
 
 
         // For columns() and returning(): "<expr> AS <alias>"
