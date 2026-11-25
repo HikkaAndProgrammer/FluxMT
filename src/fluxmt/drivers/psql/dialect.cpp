@@ -32,6 +32,15 @@ namespace {
 
 // postgres_dialect
 
+flux::impl::psql::postgres_dialect::postgres_dialect() noexcept :
+    Dialect({
+        .native_arrays = true,
+        .ilike         = true,
+        .cast          = ECastStyle::Postfix,
+    }) {
+}
+
+
 std::string_view flux::impl::psql::postgres_dialect::name() const noexcept {
     return "postgres";
 }

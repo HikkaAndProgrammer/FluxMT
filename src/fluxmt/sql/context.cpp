@@ -2,11 +2,12 @@
 
 // std
 #include <ranges>
-#include <stdexcept>
 #include <utility>
 
 // fluxmt
 #include <fluxmt/sql/identifier.hpp>
+
+#include "fluxmt/sql/error.hpp"
 
 
 // Implementation --------------------------------------------------------------
@@ -44,15 +45,21 @@ std::string flux::impl::Context::bind_once(const void* key, Value value) {
         .first->second;
 }
 
-void flux::impl::Context::append_identifier(std::string_view name) {
+ers::Status flux::impl::Context::append_identifier(std::string_view name) {
     if (name.empty())
-        throw std::invalid_argument("an identifier cannot be empty");
+        return ers::make_error(ESqlError::InvalidIdentifier, "an empty name");
+
 
     std::string out;
     bool first = true;
 
     for (auto piece : std::views::split(name, '.')) {
         std::string_view part(piece.begin(), piece.end());
+
+        if (part.empty() || part.contains('\0')) {
+            return ers::make_error(ESqlError::InvalidIdentifier, "'{}'",
+                name);
+        }
 
         if (!first)
             out += '.';
@@ -65,6 +72,9 @@ void flux::impl::Context::append_identifier(std::string_view name) {
     }
 
     query += out;
+
+
+    return ers::ok;
 }
 
 flux::impl::Statement flux::impl::Context::finish() && {

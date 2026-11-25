@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+// ers
+#include <erslib/core/type/result.hpp>
+
 // fluxmt
 #include <fluxmt/core/value.hpp>
 #include <fluxmt/sql/dialect.hpp>
@@ -36,7 +39,8 @@ namespace flux::impl {
 
         std::string bind_once(const void* key, Value value);
 
-        void append_identifier(std::string_view name);
+        // name[.name...]: a part stays bare when it is plain and not reserved, otherwise it is quoted.
+        ers::Status append_identifier(std::string_view name);
 
         Statement finish() &&;
 

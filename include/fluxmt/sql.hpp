@@ -20,4 +20,6 @@ namespace flux::sql {
 
     using impl::is_plain_identifier;
     using impl::quote_identifier;
+    using impl::is_valid_name;
+    using impl::is_type_name;
 }

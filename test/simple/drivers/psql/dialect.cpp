@@ -35,11 +35,11 @@ FLUXMT_TEST_CASE("psql knows its reserved words", "[psql]") {
 FLUXMT_TEST_CASE("psql quotes only what needs it", "[psql]") {
     flux::sql::Context ctx(flux::psql::dialect());
 
-    ctx.append_identifier("public.order");
+    REQUIRE(ctx.append_identifier("public.order"));
     ctx.query += ' ';
-    ctx.append_identifier("Account");
+    REQUIRE(ctx.append_identifier("Account"));
     ctx.query += ' ';
-    ctx.append_identifier("created_at");
+    REQUIRE(ctx.append_identifier("created_at"));
 
     REQUIRE(ctx.query == "public.\"order\" \"Account\" created_at");
     REQUIRE(ctx.bind("x") == "$1");

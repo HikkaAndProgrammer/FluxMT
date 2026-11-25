@@ -42,3 +42,23 @@ FLUXMT_TEST_CASE("sql refuses identifiers it cannot quote", "[sql]") {
     REQUIRE_THROWS_AS(quote_identifier(""), std::invalid_argument);
     REQUIRE_THROWS_AS(quote_identifier(std::string_view("a\0b", 3)), std::invalid_argument);
 }
+
+FLUXMT_TEST_CASE("sql function and type names", "[sql]") {
+    using flux::sql::is_type_name;
+    using flux::sql::is_valid_name;
+
+    REQUIRE(is_valid_name("lower"));
+    REQUIRE(is_valid_name("Coalesce"));
+    REQUIRE(is_valid_name("pg_catalog.now"));
+    REQUIRE(!is_valid_name(""));
+    REQUIRE(!is_valid_name("1a"));
+    REQUIRE(!is_valid_name("a b"));
+    REQUIRE(!is_valid_name("a.."));
+    REQUIRE(!is_valid_name("a; --"));
+
+    REQUIRE(is_type_name("BIGINT"));
+    REQUIRE(is_type_name("text[]"));
+    REQUIRE(is_type_name("int[][]"));
+    REQUIRE(!is_type_name("int; --"));
+    REQUIRE(!is_type_name("[]"));
+}

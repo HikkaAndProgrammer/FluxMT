@@ -16,6 +16,8 @@
 namespace flux::impl::psql {
     class FLUXMT_EXPORT postgres_dialect final : public Dialect {
     public:
+        postgres_dialect() noexcept;
+
         std::string_view name() const noexcept override;
         std::string placeholder(size_t index) const override;
         bool is_reserved(std::string_view word) const noexcept override;

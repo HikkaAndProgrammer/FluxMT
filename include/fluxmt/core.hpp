@@ -8,3 +8,4 @@
 #include <fluxmt/core/tx.hpp>
 #include <fluxmt/core/tx_try.hpp>
 #include <fluxmt/core/value.hpp>
+#include <fluxmt/core/value_traits.hpp>
