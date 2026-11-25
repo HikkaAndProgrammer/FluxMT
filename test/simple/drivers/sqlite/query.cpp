@@ -57,6 +57,30 @@ FLUXMT_TEST_CASE("sqlite query quotes reserved words", "[sqlite]") {
     CHECK(sql_of(select_from("t") | column(col("a").as("limit"))) == "SELECT a AS \"limit\"\nFROM t");
 }
 
+FLUXMT_TEST_CASE("sqlite query writes OFFSET after a LIMIT", "[sqlite]") {
+    CHECK(sql_of(select_from("t") | with_offset(5)) == "SELECT *\nFROM t\nLIMIT -1\nOFFSET ?1");
+    CHECK(sql_of(select_from("t") | with_limit(2) | with_offset(5)) == "SELECT *\nFROM t\nLIMIT ?1\nOFFSET ?2");
+    CHECK(sql_of(select_from("t") | with_limit(2)) == "SELECT *\nFROM t\nLIMIT ?1");
+
+    CHECK(sql_of(select_from("u") | where(col("id").in(select_from("o") | columns("user_id") | with_offset(1))))
+        == "SELECT *\nFROM u"
+           "\nWHERE id IN (SELECT user_id\nFROM o\nLIMIT -1\nOFFSET ?1)");
+}
+
+FLUXMT_TEST_CASE("sqlite query refuses ON CONSTRAINT", "[sqlite]") {
+    const auto refused = statement_of(insert_into("t")
+        | columns("a")
+        | values(1)
+        | on_conflict_constraint("t_a_key")
+        | do_nothing());
+
+    REQUIRE(!refused);
+    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
+
+    CHECK(sql_of(insert_into("t") | columns("a") | values(1) | on_conflict("a") | do_nothing())
+        == "INSERT INTO t (a)\nVALUES (?1)\nON CONFLICT (a)\nDO NOTHING");
+}
+
 FLUXMT_TEST_CASE("sqlite query spreads an array into parameters", "[sqlite]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 

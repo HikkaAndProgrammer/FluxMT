@@ -7,9 +7,18 @@
 
 // ers
 #include <erslib/core/type/general.hpp>
+#include <erslib/core/type/result.hpp>
 
 // export
 #include <fluxmt/export.hpp>
+
+
+namespace flux::impl {
+    class Context;
+    class Query;
+    struct Slot;
+    struct SlotBinding;
+}
 
 
 namespace flux::impl {
@@ -22,6 +31,14 @@ namespace flux::impl {
         bool native_arrays = false;
         bool ilike = false;
         ECastStyle cast = ECastStyle::Function;
+    };
+
+    struct function_spelling_t {
+        // Empty: the function keeps its own name.
+        std::string_view name;
+
+        // False: written as a bare keyword, like CURRENT_TIMESTAMP.
+        bool call = true;
     };
 }
 
@@ -48,6 +65,19 @@ namespace flux::impl {
         virtual std::string placeholder(size_t index) const = 0;
 
         virtual bool is_reserved(std::string_view word) const noexcept = 0;
+
+
+        // Syntax hooks: the defaults write PostgreSQL-like SQL.
+
+        // A statement with a clause in an unsupported slot fails with Unsupported.
+        virtual bool supports(const Slot*) const noexcept { return true; }
+
+        // Runs before a slot is rendered and may write text in front of it.
+        virtual ers::Status before_slot(Context&, const Query&, const SlotBinding&) const { return ers::ok; }
+
+        virtual ers::Result<function_spelling_t> function_spelling(std::string_view, size_t) const {
+            return function_spelling_t {};
+        }
 
 
     private:

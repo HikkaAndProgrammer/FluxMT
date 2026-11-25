@@ -21,6 +21,10 @@ namespace flux::impl::sqlite {
         std::string_view name() const noexcept override;
         std::string placeholder(size_t index) const override;
         bool is_reserved(std::string_view word) const noexcept override;
+
+        bool supports(const Slot* slot) const noexcept override;
+        ers::Status before_slot(Context& ctx, const Query& query, const SlotBinding& binding) const override;
+        ers::Result<function_spelling_t> function_spelling(std::string_view name, size_t arity) const override;
     };
 
 

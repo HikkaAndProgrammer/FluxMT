@@ -36,6 +36,12 @@ FLUXMT_TEST_CASE("psql expr uses its capabilities", "[psql]") {
     CHECK(sql_of((col("a") + col("b")).cast("int") > 1) == "(a + b)::int > $1");
 }
 
+FLUXMT_TEST_CASE("psql expr keeps function names", "[psql]") {
+    CHECK(sql_of(now()) == "now()");
+    CHECK(sql_of(greatest(col("a"), col("b"))) == "greatest(a, b)");
+    CHECK(sql_of(least(col("a"), 3)) == "least(a, $1)");
+}
+
 FLUXMT_TEST_CASE("psql expr binds an array as one parameter", "[psql]") {
     flux::sql::Context ctx(flux::psql::dialect());
 

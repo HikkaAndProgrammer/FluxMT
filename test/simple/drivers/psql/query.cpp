@@ -57,6 +57,19 @@ FLUXMT_TEST_CASE("psql query quotes reserved words", "[psql]") {
     CHECK(sql_of(select_from("t") | column(col("a").as("limit"))) == "SELECT a AS \"limit\"\nFROM t");
 }
 
+FLUXMT_TEST_CASE("psql query takes OFFSET without LIMIT", "[psql]") {
+    CHECK(sql_of(select_from("t") | with_offset(5)) == "SELECT *\nFROM t\nOFFSET $1");
+}
+
+FLUXMT_TEST_CASE("psql query accepts ON CONSTRAINT", "[psql]") {
+    CHECK(sql_of(insert_into("t")
+        | columns("a")
+        | values(1)
+        | on_conflict_constraint("t_a_key")
+        | do_nothing())
+        == "INSERT INTO t (a)\nVALUES ($1)\nON CONFLICT ON CONSTRAINT t_a_key\nDO NOTHING");
+}
+
 FLUXMT_TEST_CASE("psql query binds an array as one parameter", "[psql]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 

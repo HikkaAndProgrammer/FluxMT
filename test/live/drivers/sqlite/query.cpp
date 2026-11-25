@@ -107,6 +107,29 @@ FLUXMT_TEST_CASE("sqlite runs the fallbacks for missing features", "[sqlite]") {
     CHECK(run(conn, select_from("images") | where(col("id").cast("text") == "1")).rows.size() == 1);
 }
 
+FLUXMT_TEST_CASE("sqlite runs OFFSET without LIMIT", "[sqlite]") {
+    flux::sqlite::connection conn(flux::sqlite::options_t{});
+    seed(conn);
+
+    const auto skipped = run(conn, select_from("images") | order_by("id") | with_offset(2));
+
+    REQUIRE(skipped.rows.size() == 1);
+    CHECK(integer(skipped) == 3);
+}
+
+FLUXMT_TEST_CASE("sqlite runs its own spelling of functions", "[sqlite]") {
+    flux::sqlite::connection conn(flux::sqlite::options_t{});
+    seed(conn);
+
+    const auto stamp = run(conn, select_from("images") | column(now()) | with_limit(1));
+
+    REQUIRE(stamp.rows.size() == 1);
+    CHECK(stamp.rows[0][0].get_if<std::string>()->size() == 19);
+
+    CHECK(integer(run(conn, select_from("images") | column(greatest(1, 5)) | with_limit(1))) == 5);
+    CHECK(integer(run(conn, select_from("images") | column(least(7, 2, 9)) | with_limit(1))) == 2);
+}
+
 FLUXMT_TEST_CASE("sqlite runs quoted reserved words", "[sqlite]") {
     flux::sqlite::connection conn(flux::sqlite::options_t{});
     conn.exec_script(R"(

@@ -10,6 +10,7 @@
 
 // fluxmt
 #include <fluxmt/sql/context.hpp>
+#include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/error.hpp>
 #include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/expr/node.hpp>
@@ -38,7 +39,13 @@ namespace flux::impl::nodes {
                     _name);
             }
 
-            ctx.query += _name;
+            const auto spelling = ERS_TRY(ctx.dialect().function_spelling(_name, _args.size()));
+
+            ctx.query += spelling.name.empty() ? _name : spelling.name;
+
+            if (!spelling.call)
+                return ers::ok;
+
             ctx.query += '(';
             ERS_TRY(render_list(ctx, _args));
 

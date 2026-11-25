@@ -36,6 +36,23 @@ FLUXMT_TEST_CASE("sqlite expr falls back where it lacks a feature", "[sqlite]") 
     CHECK(sql_of(col("a").cast("text") == col("b")) == "CAST(a AS text) = b");
 }
 
+FLUXMT_TEST_CASE("sqlite expr spells functions its own way", "[sqlite]") {
+    CHECK(sql_of(now()) == "CURRENT_TIMESTAMP");
+    CHECK(sql_of(col("a") < now()) == "a < CURRENT_TIMESTAMP");
+    CHECK(sql_of(greatest(col("a"), col("b"))) == "max(a, b)");
+    CHECK(sql_of(least(col("a"), col("b"), 3)) == "min(a, b, ?1)");
+    CHECK(sql_of(coalesce(col("a"), 0)) == "coalesce(a, ?1)");
+}
+
+FLUXMT_TEST_CASE("sqlite expr refuses greatest and least of one argument", "[sqlite]") {
+    flux::sql::Context ctx(flux::sqlite::dialect());
+
+    const auto r = greatest(col("a")).render(ctx);
+
+    REQUIRE(!r);
+    CHECK(r.error().code() == flux::ESqlError::Unsupported);
+}
+
 FLUXMT_TEST_CASE("sqlite expr spreads an array into parameters", "[sqlite]") {
     flux::sql::Context ctx(flux::sqlite::dialect());
 

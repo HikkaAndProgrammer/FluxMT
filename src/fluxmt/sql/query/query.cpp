@@ -9,6 +9,15 @@
 
 // Implementation --------------------------------------------------------------
 
+// Observers
+
+bool flux::impl::Query::has(SlotRef slot) const {
+    return std::ranges::any_of(_clauses, [&](const Clause& it) {
+        return same_slot(it->slot(), slot);
+    });
+}
+
+
 // Modifiers
 
 void flux::impl::Query::add(Clause clause) {
@@ -38,7 +47,7 @@ void flux::impl::Query::add(WithUnion with_union) {
 // Executors
 
 ers::Status flux::impl::Query::build(Context& ctx) const {
-    ERS_TRY(_validate());
+    ERS_TRY(_validate(ctx.dialect()));
 
     if (!_ctes.empty()) {
         const bool recursive = std::ranges::any_of(_ctes, [](const WithCte& c) { return c.recursive; });
@@ -84,6 +93,8 @@ ers::Result<flux::impl::Statement> flux::impl::Query::to_statement(const Dialect
 // Rendering
 
 ers::Status flux::impl::Query::_render_slot(Context& ctx, const SlotBinding& binding) const {
+    ERS_TRY(ctx.dialect().before_slot(ctx, *this, binding));
+
     if (binding.renderer)
         return _render_custom(ctx, binding);
 
@@ -137,18 +148,23 @@ ers::Status flux::impl::Query::_render_custom(Context& ctx, const SlotBinding& b
 
 // Validators
 
-ers::Status flux::impl::Query::_validate() const {
+ers::Status flux::impl::Query::_validate(const Dialect& dialect) const {
     for (const auto& it : _clauses) {
         if (!_layout.contains(it->slot()))
             return ers::make_error(ESqlError::ForeignSlot, "'{}'", it->slot()->name);
+
+        if (!dialect.supports(it->slot())) {
+            return ers::make_error(ESqlError::Unsupported, "'{}' in '{}'",
+                it->slot()->name, dialect.name());
+        }
     }
 
     for (const auto& binding : _layout.bindings()) {
-        if (!_has(binding.slot))
+        if (!has(binding.slot))
             continue;
 
         for (const auto other : binding.excludes) {
-            if (_has(other)) {
+            if (has(other)) {
                 return ers::make_error(ESqlError::SlotConflict, "'{}' and '{}'",
                     binding.slot->name, other->name);
             }
@@ -156,12 +172,6 @@ ers::Status flux::impl::Query::_validate() const {
     }
 
     return ers::ok;
-}
-
-bool flux::impl::Query::_has(SlotRef slot) const {
-    return std::ranges::any_of(_clauses, [&](const Clause& it) {
-        return same_slot(it->slot(), slot);
-    });
 }
 
 

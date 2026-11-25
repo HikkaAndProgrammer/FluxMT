@@ -35,6 +35,7 @@ namespace flux::sql {
     using impl::WithCte;
     using impl::WithUnion;
     using impl::dialect_caps_t;
+    using impl::function_spelling_t;
 
     using impl::is_plain_identifier;
     using impl::quote_identifier;

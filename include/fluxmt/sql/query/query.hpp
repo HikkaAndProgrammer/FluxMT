@@ -45,6 +45,8 @@ namespace flux::impl {
         Layout& layout() noexcept { return _layout; }
         const Layout& layout() const noexcept { return _layout; }
 
+        bool has(SlotRef slot) const;
+
 
         // Modifiers
 
@@ -72,9 +74,7 @@ namespace flux::impl {
         ers::Status _render_slot(Context& ctx, const SlotBinding& binding) const;
         ers::Status _render_custom(Context& ctx, const SlotBinding& binding) const;
 
-        ers::Status _validate() const;
-
-        bool _has(SlotRef slot) const;
+        ers::Status _validate(const Dialect& dialect) const;
     };
 }
 
