@@ -1,5 +1,8 @@
 #include "support/drivers/psql/live.hpp"
 
+// support
+#include "support/livedb.hpp"
+
 // catch2
 #include <catch2/catch_test_macros.hpp>
 
@@ -43,6 +46,8 @@ flux::psql::options_t test::live::require_options() {
     auto dbname = setting("FLUXMT_TEST_PG_DB", FLUXMT_TEST_PG_DB_DEFAULT);
     if (dbname.empty())
         SKIP("FLUXMT_TEST_PG_DB is not set");
+
+    test::live::start_database("pg");
 
 
     flux::psql::options_t opts;

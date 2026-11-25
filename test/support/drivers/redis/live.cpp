@@ -1,5 +1,8 @@
 #include "support/drivers/redis/live.hpp"
 
+// support
+#include "support/livedb.hpp"
+
 // catch2
 #include <catch2/catch_test_macros.hpp>
 
@@ -39,6 +42,8 @@ flux::redis::options_t test::live::require_options() {
     auto host = setting("FLUXMT_TEST_REDIS_HOST", FLUXMT_TEST_REDIS_HOST_DEFAULT);
     if (host.empty())
         SKIP("FLUXMT_TEST_REDIS_HOST is not set");
+
+    test::live::start_database("redis");
 
 
     flux::redis::options_t opts;

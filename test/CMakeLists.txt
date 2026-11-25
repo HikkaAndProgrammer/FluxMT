@@ -7,13 +7,20 @@ find_package(Catch2 3 CONFIG REQUIRED)
 include(Catch)
 
 
+# Command line of scripts/livedb.sh: live tests run "<command> up <pg|redis>" before the first connection
+set(FLUXMT_TEST_LIVEDB_COMMAND "" CACHE STRING "Starts the databases of live tests, empty to manage them by hand")
+
 add_library(test_support
 	STATIC
 		"support/fake_backend.cpp"
+		"support/livedb.cpp"
 		"support/test_case.cpp"
 )
 target_include_directories(test_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(test_support PUBLIC fluxmt::core)
+target_compile_definitions(test_support PRIVATE
+	FLUXMT_TEST_LIVEDB_COMMAND_DEFAULT="${FLUXMT_TEST_LIVEDB_COMMAND}"
+)
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -59,20 +66,6 @@ endif()
 
 option(FLUXMT_TESTS_PER_CASE "Register every test case as its own ctest entry" OFF)
 
-# Command that starts and stops the databases: it is run as "<command> up" before and "<command> down" after live tests
-set(FLUXMT_TEST_LIVEDB_COMMAND "" CACHE STRING "Command line of scripts/livedb.sh, empty to manage the databases by hand")
-set(LIVEDB_MODULES psql redis)
-
-if(FLUXMT_TEST_LIVEDB_COMMAND)
-    separate_arguments(LIVEDB_COMMAND UNIX_COMMAND "${FLUXMT_TEST_LIVEDB_COMMAND}")
-
-    add_test(NAME livedb::up COMMAND ${LIVEDB_COMMAND} up)
-    add_test(NAME livedb::down COMMAND ${LIVEDB_COMMAND} down)
-
-    set_tests_properties(livedb::up PROPERTIES FIXTURES_SETUP livedb)
-    set_tests_properties(livedb::down PROPERTIES FIXTURES_CLEANUP livedb)
-endif()
-
 add_library(test_simple_main OBJECT "simple.cpp")
 target_link_libraries(test_simple_main PUBLIC Catch2::Catch2WithMain test_support)
 
@@ -92,17 +85,12 @@ function(add_test_group KIND MODULE)
         set(SERIAL TRUE)
     endif()
 
-    set(FIXTURES "")
-    if(KIND STREQUAL "live" AND FLUXMT_TEST_LIVEDB_COMMAND AND MODULE IN_LIST LIVEDB_MODULES)
-        set(FIXTURES FIXTURES_REQUIRED livedb)
-    endif()
-
     if(FLUXMT_TESTS_PER_CASE)
         catch_discover_tests(${TARGET}
             TEST_PREFIX "${KIND}::${MODULE}::"
             DISCOVERY_MODE PRE_TEST
             ADD_TAGS_AS_LABELS
-            PROPERTIES RUN_SERIAL ${SERIAL} ${FIXTURES}
+            PROPERTIES RUN_SERIAL ${SERIAL}
         )
     else()
         add_test(NAME "${KIND}::${MODULE}" COMMAND ${TARGET})
@@ -110,7 +98,6 @@ function(add_test_group KIND MODULE)
             LABELS "${KIND}"
             RUN_SERIAL ${SERIAL}
             SKIP_RETURN_CODE 4
-            ${FIXTURES}
         )
     endif()
 
