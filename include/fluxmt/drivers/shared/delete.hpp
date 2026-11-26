@@ -1,12 +1,12 @@
 #pragma once
 
 // fluxmt
-#include <fluxmt/sql/query/slot.hpp>
-#include <fluxmt/sql/query/slots/head.hpp>
+#include <fluxmt/query/slot.hpp>
+#include <fluxmt/sql/slots/head.hpp>
 
 
 namespace flux::impl::shared {
-    inline constexpr SlotBinding delete_from {
+    inline constexpr slot_info_t delete_from {
         .slot   = &slots::delete_target,
         .prefix = "DELETE FROM ",
     };

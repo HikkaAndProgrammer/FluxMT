@@ -34,7 +34,7 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             if (!is_valid_name(_name)) {
                 return ers::make_error(ESqlError::InvalidName, "function '{}'",
                     _name);
@@ -43,19 +43,19 @@ namespace flux::impl::nodes {
             const auto spelling = spelling_of(ctx.dialect().syntax(), _name, _args.size());
 
             if (!spelling.supported) {
-                return ers::make_error(ESqlError::Unsupported, "{}() in '{}': {}",
+                return ers::make_error(EQueryError::Unsupported, "{}() in '{}': {}",
                     _name, ctx.dialect().name(), spelling.reason);
             }
 
-            ctx.query += spelling.name.empty() ? _name : spelling.name;
+            ctx.text += spelling.name.empty() ? _name : spelling.name;
 
             if (!spelling.call)
                 return ers::ok;
 
-            ctx.query += '(';
+            ctx.text += '(';
             ERS_TRY(render_list(ctx, _args));
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             return ers::ok;
         }

@@ -155,6 +155,28 @@ list(APPEND FLUXMT_TARGETS fluxmt_core)
 
 
 #----------------------------------------------------------------------------------------------------------------------
+# fluxmt::query
+#----------------------------------------------------------------------------------------------------------------------
+
+
+fluxmt_add_library(fluxmt_query query)
+
+target_sources(fluxmt_query
+	PRIVATE
+		"src/fluxmt/query/context.cpp"
+		"src/fluxmt/query/layout.cpp"
+		"src/fluxmt/query/query.cpp"
+)
+
+target_link_libraries(fluxmt_query
+	PUBLIC
+		fluxmt_core
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_query)
+
+
+#----------------------------------------------------------------------------------------------------------------------
 # fluxmt::sql
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -168,30 +190,29 @@ target_sources(fluxmt_sql
 		"src/fluxmt/sql/syntax.cpp"
 		"src/fluxmt/sql/expr/aggregate.cpp"
 		"src/fluxmt/sql/expr/expr.cpp"
-		"src/fluxmt/sql/query/layout.cpp"
-		"src/fluxmt/sql/query/query.cpp"
-		"src/fluxmt/sql/query/clauses/assign.cpp"
-		"src/fluxmt/sql/query/clauses/bound.cpp"
-		"src/fluxmt/sql/query/clauses/column.cpp"
-		"src/fluxmt/sql/query/clauses/conflict.cpp"
-		"src/fluxmt/sql/query/clauses/distinct.cpp"
-		"src/fluxmt/sql/query/clauses/identity.cpp"
-		"src/fluxmt/sql/query/clauses/join.cpp"
-		"src/fluxmt/sql/query/clauses/order.cpp"
-		"src/fluxmt/sql/query/clauses/raw.cpp"
-		"src/fluxmt/sql/query/clauses/returning.cpp"
-		"src/fluxmt/sql/query/clauses/values.cpp"
-		"src/fluxmt/sql/query/clauses/where.cpp"
-		"src/fluxmt/sql/query/layouts/delete.cpp"
-		"src/fluxmt/sql/query/layouts/exists.cpp"
-		"src/fluxmt/sql/query/layouts/insert.cpp"
-		"src/fluxmt/sql/query/layouts/select.cpp"
-		"src/fluxmt/sql/query/layouts/update.cpp"
+		"src/fluxmt/sql/clauses/assign.cpp"
+		"src/fluxmt/sql/clauses/bound.cpp"
+		"src/fluxmt/sql/clauses/column.cpp"
+		"src/fluxmt/sql/clauses/conflict.cpp"
+		"src/fluxmt/sql/clauses/distinct.cpp"
+		"src/fluxmt/sql/clauses/identity.cpp"
+		"src/fluxmt/sql/clauses/join.cpp"
+		"src/fluxmt/sql/clauses/order.cpp"
+		"src/fluxmt/sql/clauses/raw.cpp"
+		"src/fluxmt/sql/clauses/returning.cpp"
+		"src/fluxmt/sql/clauses/values.cpp"
+		"src/fluxmt/sql/clauses/where.cpp"
+		"src/fluxmt/sql/clauses/with.cpp"
+		"src/fluxmt/sql/layouts/delete.cpp"
+		"src/fluxmt/sql/layouts/exists.cpp"
+		"src/fluxmt/sql/layouts/insert.cpp"
+		"src/fluxmt/sql/layouts/select.cpp"
+		"src/fluxmt/sql/layouts/update.cpp"
 )
 
 target_link_libraries(fluxmt_sql
 	PUBLIC
-		fluxmt_core
+		fluxmt_query
 )
 
 list(APPEND FLUXMT_TARGETS fluxmt_sql)

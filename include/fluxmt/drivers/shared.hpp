@@ -8,3 +8,4 @@
 #include <fluxmt/drivers/shared/select.hpp>
 #include <fluxmt/drivers/shared/update.hpp>
 #include <fluxmt/drivers/shared/where.hpp>
+#include <fluxmt/drivers/shared/with.hpp>

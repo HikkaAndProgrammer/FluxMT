@@ -33,7 +33,7 @@ namespace {
 // postgres_dialect
 
 flux::impl::psql::postgres_dialect::postgres_dialect() noexcept :
-    Dialect(postgres_syntax) {
+    SqlDialect(postgres_syntax) {
 }
 
 

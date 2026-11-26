@@ -33,7 +33,7 @@ namespace {
     std::string sql_of(const flux::sql::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? (*r).text : std::string("<error>");
     }
 
     bool contains(std::string_view haystack, std::string_view needle) {
@@ -47,17 +47,19 @@ namespace {
             _on(std::move(on)) {
         }
 
-        ers::Status render(flux::ext::Context& ctx) const override {
-            ctx.query += " DISTINCT ON (";
+        ers::Status render(flux::ext::Context& base) const override {
+            auto& ctx = flux::ext::sql_of(base);
+
+            ctx.text += " DISTINCT ON (";
 
             for (size_t i = 0; i < _on.size(); ++i) {
                 if (i > 0)
-                    ctx.query += ", ";
+                    ctx.text += ", ";
 
                 ERS_TRY(_on[i].render(ctx));
             }
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             return ers::ok;
         }
@@ -92,7 +94,7 @@ FLUXMT_TEST_CASE("query statement carries the parameters", "[sql]") {
     const auto r = statement_of(select_from("t") | where(col("a") == 5 && col("b") == "x"s) | with_limit(10));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE a = ?1 AND b = ?2\nLIMIT ?3");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE a = ?1 AND b = ?2\nLIMIT ?3");
     CHECK((*r).params == std::vector<flux::Value>{ 5, std::string("x"), 10 });
 }
 
@@ -209,7 +211,7 @@ FLUXMT_TEST_CASE("query insert mistakes", "[sql]") {
     const auto mixed = statement_of(insert_into("t") | columns("a") | values(1) | set("b", 2, "c", 3));
 
     REQUIRE_FALSE(mixed);
-    CHECK(mixed.error().code() == flux::ESqlError::SlotConflict);
+    CHECK(mixed.error().code() == flux::EQueryError::SlotConflict);
 
     CHECK_FALSE(statement_of(insert_into("t") | columns("a") | values()));
 }
@@ -249,12 +251,12 @@ FLUXMT_TEST_CASE("query rejects what the layout of the dialect does not have", "
     const auto unsupported = statement_of(delete_from("t") | order_by("a"));
 
     REQUIRE_FALSE(unsupported);
-    CHECK(unsupported.error().code() == flux::ESqlError::Unsupported);
+    CHECK(unsupported.error().code() == flux::EQueryError::Unsupported);
     CHECK(unsupported.error().message().contains("anti"));
 }
 
 FLUXMT_TEST_CASE("query with a layout of its own", "[sql]") {
-    static constexpr flux::ext::SlotBinding own[] = {
+    static constexpr flux::ext::slot_info_t own[] = {
         flux::impl::shared::select_keyword,
         flux::impl::shared::from,
     };
@@ -267,7 +269,7 @@ FLUXMT_TEST_CASE("query with a layout of its own", "[sql]") {
     const auto foreign = statement_of(q | order_by("a"));
 
     REQUIRE_FALSE(foreign);
-    CHECK(foreign.error().code() == flux::ESqlError::ForeignSlot);
+    CHECK(foreign.error().code() == flux::EQueryError::ForeignSlot);
 }
 
 FLUXMT_TEST_CASE("query bounds are not negative", "[sql]") {
@@ -281,7 +283,7 @@ FLUXMT_TEST_CASE("query raw clause binds its values", "[sql]") {
     const auto r = statement_of(select_from("t") | raw(&flux::slots::where, "a = ? AND b = ?", 1, "x"));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE a = ?1 AND b = ?2");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE a = ?1 AND b = ?2");
     CHECK((*r).params == std::vector<flux::Value>{ 1, std::string("x") });
 
     const auto few = statement_of(select_from("t") | raw(&flux::slots::where, "a = ? AND b = ?", 1));
@@ -293,7 +295,7 @@ FLUXMT_TEST_CASE("query raw clause binds its values", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
-    static constexpr flux::ext::Slot extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
+    static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
 
     const test::AntiDialect dialect;
 
@@ -315,7 +317,7 @@ FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dialect", "[sql]") {
-    static constexpr flux::ext::Slot extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
+    static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
 
     auto twice = select_from("t");
     REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
@@ -324,7 +326,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
     const auto duplicate = statement_of(twice);
 
     REQUIRE_FALSE(duplicate);
-    CHECK(duplicate.error().code() == flux::ESqlError::DuplicateSlot);
+    CHECK(duplicate.error().code() == flux::EQueryError::DuplicateSlot);
 
     auto lost = select_from("t");
     REQUIRE(lost.insert_after(&flux::slots::returning, { .slot = &extra }));
@@ -332,7 +334,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
     const auto unknown = statement_of(lost);
 
     REQUIRE_FALSE(unknown);
-    CHECK(unknown.error().code() == flux::ESqlError::UnknownAnchor);
+    CHECK(unknown.error().code() == flux::EQueryError::UnknownAnchor);
 }
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {
@@ -374,9 +376,9 @@ FLUXMT_TEST_CASE("query subqueries", "[sql]") {
         | with_limit(10));
 
     REQUIRE(r);
-    CHECK(contains((*r).sql, "WHERE active = ?1 AND EXISTS (SELECT *"));
-    CHECK(contains((*r).sql, "WHERE user_id = ?2"));
-    CHECK(contains((*r).sql, "LIMIT ?3"));
+    CHECK(contains((*r).text, "WHERE active = ?1 AND EXISTS (SELECT *"));
+    CHECK(contains((*r).text, "WHERE user_id = ?2"));
+    CHECK(contains((*r).text, "LIMIT ?3"));
 
     CHECK(sql_of(select_from("users")
         | where(col("id").in(select_from("orders") | columns("user_id") | where(col("total") > 100))))

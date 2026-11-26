@@ -5,6 +5,7 @@
 
 // fluxmt
 #include <fluxmt/drivers/shared.hpp>
+#include <fluxmt/sql/kinds.hpp>
 
 
 using namespace flux::impl;
@@ -14,14 +15,15 @@ using namespace flux::impl;
 
 namespace {
     // LIMIT -1: OFFSET needs a LIMIT
-    constexpr SlotBinding offset {
+    constexpr slot_info_t offset {
         .slot        = &slots::offset,
         .prefix      = "\nOFFSET ",
         .lead_unless = &slots::limit,
         .lead        = "\nLIMIT -1",
     };
 
-    constexpr SlotBinding select_layout[] = {
+    constexpr slot_info_t select_layout[] = {
+        shared::with,
         shared::select_keyword,
         shared::distinct,
         shared::select_columns,
@@ -33,9 +35,11 @@ namespace {
         shared::order,
         shared::limit,
         offset,
+        shared::set_union,
     };
 
-    constexpr SlotBinding insert_layout[] = {
+    constexpr slot_info_t insert_layout[] = {
+        shared::with,
         shared::insert_into,
         shared::set_as_values,
         shared::insert_columns,
@@ -45,20 +49,23 @@ namespace {
         shared::returning,
     };
 
-    constexpr SlotBinding update_layout[] = {
+    constexpr slot_info_t update_layout[] = {
+        shared::with,
         shared::update_target,
         shared::set,
         shared::where,
         shared::returning,
     };
 
-    constexpr SlotBinding delete_layout[] = {
+    constexpr slot_info_t delete_layout[] = {
+        shared::with,
         shared::delete_from,
         shared::where,
         shared::returning,
     };
 
-    constexpr SlotBinding exists_layout[] = {
+    constexpr slot_info_t exists_layout[] = {
+        shared::with,
         shared::exists_target,
         shared::where,
         shared::exists_alias,
@@ -76,6 +83,6 @@ namespace {
 
 // Implementation --------------------------------------------------------------
 
-LayoutView sqlite::sqlite_dialect::layout(KindRef kind) const noexcept {
+slot_info_view sqlite::sqlite_dialect::layout(kind_ref kind) const noexcept {
     return find_layout(table, kind);
 }

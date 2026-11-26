@@ -34,7 +34,7 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             if (!is_type_name(_type)) {
                 return ers::make_error(ESqlError::InvalidName, "type '{}' in a cast",
                     _type);
@@ -43,7 +43,7 @@ namespace flux::impl::nodes {
             const auto cast = ctx.dialect().syntax().cast;
 
             if (!cast) {
-                return ers::make_error(ESqlError::Unsupported, "cast in '{}'",
+                return ers::make_error(EQueryError::Unsupported, "cast in '{}'",
                     ctx.dialect().name());
             }
 

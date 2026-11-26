@@ -37,12 +37,12 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             ERS_TRY(_lhs.render(ctx, _left_associative ? _precedence : next(_precedence)));
 
-            ctx.query += ' ';
-            ctx.query += _op;
-            ctx.query += ' ';
+            ctx.text += ' ';
+            ctx.text += _op;
+            ctx.text += ' ';
 
             return _rhs.render(ctx, next(_precedence));
         }

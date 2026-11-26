@@ -26,7 +26,7 @@ namespace {
     std::string sql_of(const flux::sql::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? (*r).text : std::string("<error>");
     }
 }
 
@@ -74,7 +74,7 @@ FLUXMT_TEST_CASE("psql query binds an array as one parameter", "[psql]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE id = ANY($1)");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE id = ANY($1)");
     CHECK((*r).params == std::vector<flux::Value>{ flux::Value(flux::value_array_t{ 1, 2 }) });
 }
 

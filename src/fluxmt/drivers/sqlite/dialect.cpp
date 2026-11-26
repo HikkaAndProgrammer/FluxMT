@@ -43,7 +43,7 @@ namespace {
 // sqlite_dialect
 
 flux::impl::sqlite::sqlite_dialect::sqlite_dialect() noexcept :
-    Dialect(sqlite_syntax) {
+    SqlDialect(sqlite_syntax) {
 }
 
 

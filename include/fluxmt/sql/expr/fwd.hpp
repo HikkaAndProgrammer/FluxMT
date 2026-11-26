@@ -11,7 +11,7 @@ namespace flux::impl {
     using ExprNodePtr = std::shared_ptr<const IExprNode>;
 
     class Expr;
-    struct Aliased;
+    struct aliased_t;
 
     class Query;
 }

@@ -170,12 +170,12 @@ namespace flux::impl {
         }
 
 
-        Aliased as(std::string alias) const;
+        aliased_t as(std::string alias) const;
 
 
         // Executors
 
-        ers::Status render(Context& ctx, EPrecedence parent = EPrecedence::Or) const;
+        ers::Status render(SqlContext& ctx, EPrecedence parent = EPrecedence::Or) const;
 
 
     private:
@@ -231,28 +231,28 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    struct Aliased {
+    struct aliased_t {
         Expr expr;
         std::string alias;
     };
 
-    inline Aliased Expr::as(std::string alias) const {
+    inline aliased_t Expr::as(std::string alias) const {
         return { .expr = *this, .alias = std::move(alias) };
     }
 
 
-    struct ColumnExpr {
+    struct column_expr_t {
         Expr expr;
 
 
         template<IsExpr T>
-        ColumnExpr(T&& what) :
+        column_expr_t(T&& what) :
             expr(std::forward<T>(what)) {
         }
 
         template<typename S>
             requires (std::convertible_to<S, std::string_view> && !IsExpr<S>)
-        ColumnExpr(S&& name) :
+        column_expr_t(S&& name) :
             expr(make_column(std::string(std::string_view(name)))) {
         }
     };
@@ -320,7 +320,7 @@ namespace flux::impl {
             return self.to_expr().cast(type);
         }
 
-        Aliased as(this const auto& self, std::string alias) {
+        aliased_t as(this const auto& self, std::string alias) {
             return self.to_expr().as(std::move(alias));
         }
     };

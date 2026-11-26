@@ -45,7 +45,7 @@ FLUXMT_TEST_CASE("sql context finish moves the text and parameters out", "[sql]"
     test::AntiDialect dialect;
     flux::sql::Context ctx(dialect);
 
-    ctx.query = "SELECT " + ctx.bind(5);
+    ctx.text = "SELECT " + ctx.bind(5);
 
     const auto statement = std::move(ctx).finish();
 
@@ -62,7 +62,7 @@ FLUXMT_TEST_CASE("sql context rejects empty identifier parts", "[sql]") {
     REQUIRE(!ctx.append_identifier("a."));
     REQUIRE(!ctx.append_identifier(std::string_view("a\0b", 3)));
 
-    REQUIRE(ctx.query.empty());
+    REQUIRE(ctx.text.empty());
 }
 
 FLUXMT_TEST_CASE("sql context writes identifiers by the dialect policy", "[sql]") {
@@ -72,7 +72,7 @@ FLUXMT_TEST_CASE("sql context writes identifiers by the dialect policy", "[sql]"
         flux::sql::Context ctx(dialect);
         REQUIRE(ctx.append_identifier(name));
 
-        return ctx.query;
+        return ctx.text;
     };
 
     REQUIRE(render("users") == "users");

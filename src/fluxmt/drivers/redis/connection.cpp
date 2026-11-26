@@ -22,13 +22,13 @@ namespace {
     using flux::impl::redis::error;
 
 
-    struct reply_deleter {
+    struct reply_deleter_fn {
         void operator()(redisReply* reply) const noexcept {
             freeReplyObject(reply);
         }
     };
 
-    using reply_ptr = std::unique_ptr<redisReply, reply_deleter>;
+    using reply_ptr = std::unique_ptr<redisReply, reply_deleter_fn>;
 
 
     timeval to_timeval(ers::ms_t value) {

@@ -42,5 +42,5 @@ struct flux::impl::backend_traits<flux::impl::sqlite::backend> {
     static bool alive(const connection& conn) noexcept { return conn.is_open(); }
     static ers::Diagnostic diagnose(std::string_view label) { return sqlite::diagnose(label); }
     static bool retryable() noexcept { return sqlite::retryable(); }
-    static const Dialect& dialect() noexcept { return sqlite::dialect(); }
+    static const SqlDialect& dialect() noexcept { return sqlite::dialect(); }
 };

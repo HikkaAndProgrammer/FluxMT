@@ -20,7 +20,7 @@ namespace {
     std::string sql_of(const flux::sql::Expr& expr) {
         flux::sql::Context ctx(flux::psql::dialect());
 
-        return expr.render(ctx) ? ctx.query : "<error>";
+        return expr.render(ctx) ? ctx.text : "<error>";
     }
 }
 

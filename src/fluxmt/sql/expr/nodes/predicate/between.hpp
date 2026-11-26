@@ -31,13 +31,13 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             ERS_TRY(_operand.render(ctx, EPrecedence::Other));
 
-            ctx.query += " BETWEEN ";
+            ctx.text += " BETWEEN ";
             ERS_TRY(_low.render(ctx, EPrecedence::Other));
 
-            ctx.query += " AND ";
+            ctx.text += " AND ";
 
             return _high.render(ctx, EPrecedence::Other);
         }

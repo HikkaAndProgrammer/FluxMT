@@ -10,27 +10,60 @@
 #include <erslib/core/type/result.hpp>
 
 // fluxmt
-#include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/expr/needs.hpp>
 
 // export
 #include <fluxmt/export.hpp>
 
 
+namespace flux::impl {
+    class Expr;
+    class SqlContext;
+}
+
+
+namespace flux::impl {
+    struct function_spelling_t {
+        std::string_view name;
+        bool call = true;
+
+        bool supported = true;
+        std::string_view reason;
+    };
+
+
+    struct function_rule_t {
+        std::string_view name;
+        size_t min_arity = 0;
+        size_t max_arity = ~size_t {};
+        function_spelling_t spelling;
+    };
+
+
+    struct syntax_t {
+        ers::Status (*cast)(SqlContext&, const Expr& operand, std::string_view type) = nullptr;
+        ers::Status (*ilike)(SqlContext&, const Expr& lhs, const Expr& rhs) = nullptr;
+        ers::Status (*any)(SqlContext&, const Expr& operand, const Expr& array) = nullptr;
+        ers::Status (*excluded)(SqlContext&, std::string_view column) = nullptr;
+
+        std::span<const function_rule_t> functions;
+
+        function_spelling_t (*function)(std::string_view name, size_t arity) noexcept = nullptr;
+    };
+}
+
+
 namespace flux::impl::syntax {
-    FLUXMT_EXPORT ers::Status cast_postfix(Context& ctx, const Expr& operand, std::string_view type);
+    FLUXMT_EXPORT ers::Status cast_postfix(SqlContext& ctx, const Expr& operand, std::string_view type);
+    FLUXMT_EXPORT ers::Status cast_function(SqlContext& ctx, const Expr& operand, std::string_view type);
 
-    FLUXMT_EXPORT ers::Status cast_function(Context& ctx, const Expr& operand, std::string_view type);
+    FLUXMT_EXPORT ers::Status ilike_operator(SqlContext& ctx, const Expr& lhs, const Expr& rhs);
+    FLUXMT_EXPORT ers::Status ilike_via_lower(SqlContext& ctx, const Expr& lhs, const Expr& rhs);
 
-    FLUXMT_EXPORT ers::Status ilike_operator(Context& ctx, const Expr& lhs, const Expr& rhs);
+    FLUXMT_EXPORT ers::Status any_native(SqlContext& ctx, const Expr& operand, const Expr& array);
+    FLUXMT_EXPORT ers::Status any_as_in_list(SqlContext& ctx, const Expr& operand, const Expr& array);
 
-    FLUXMT_EXPORT ers::Status ilike_via_lower(Context& ctx, const Expr& lhs, const Expr& rhs);
-
-    FLUXMT_EXPORT ers::Status any_native(Context& ctx, const Expr& operand, const Expr& array);
-
-    FLUXMT_EXPORT ers::Status any_as_in_list(Context& ctx, const Expr& operand, const Expr& array);
-
-    FLUXMT_EXPORT ers::Status excluded_table(Context& ctx, std::string_view column);
+    FLUXMT_EXPORT ers::Status excluded_table(SqlContext& ctx, std::string_view column);
 }
 
 

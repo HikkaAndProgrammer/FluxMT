@@ -39,12 +39,12 @@ FLUXMT_TEST_CASE("sqlite quotes only what needs it", "[sqlite]") {
     flux::sql::Context ctx(flux::sqlite::dialect());
 
     REQUIRE(ctx.append_identifier("main.order"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("Account"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("created_at"));
 
-    REQUIRE(ctx.query == "main.\"order\" \"Account\" created_at");
+    REQUIRE(ctx.text == "main.\"order\" \"Account\" created_at");
     REQUIRE(ctx.bind("x") == "?1");
 }
 

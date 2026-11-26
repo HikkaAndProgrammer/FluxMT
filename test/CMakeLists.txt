@@ -187,6 +187,7 @@ endfunction()
 
 
 add_header_check(core)
+add_header_check(query)
 add_header_check(sql)
 add_header_check(shared)
 
@@ -222,7 +223,13 @@ endfunction()
 add_layering_check(core pqxx "pqxx/")
 add_layering_check(core sqlite3 "sqlite3")
 add_layering_check(core hiredis "hiredis")
+add_layering_check(core query "fluxmt/query")
 add_layering_check(core sql "fluxmt/sql")
+
+add_layering_check(query pqxx "pqxx/")
+add_layering_check(query sqlite3 "sqlite3")
+add_layering_check(query hiredis "hiredis")
+add_layering_check(query sql "fluxmt/sql")
 
 add_layering_check(sql pqxx "pqxx/")
 add_layering_check(sql sqlite3 "sqlite3")

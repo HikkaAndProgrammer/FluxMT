@@ -36,12 +36,12 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             bool first = true;
 
             for (const auto& it : _items) {
                 if (!first)
-                    ctx.query += _conjunction ? " AND " : " OR ";
+                    ctx.text += _conjunction ? " AND " : " OR ";
                 first = false;
 
                 ERS_TRY(it.render(ctx, precedence()));

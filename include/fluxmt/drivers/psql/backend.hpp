@@ -45,5 +45,5 @@ struct flux::impl::backend_traits<flux::impl::psql::backend> {
     static bool alive(const connection& conn) noexcept { return psql::is_alive(conn); }
     static ers::Diagnostic diagnose(std::string_view label) { return psql::diagnose(label); }
     static bool retryable() noexcept { return psql::retryable(); }
-    static const Dialect& dialect() noexcept { return psql::dialect(); }
+    static const SqlDialect& dialect() noexcept { return psql::dialect(); }
 };

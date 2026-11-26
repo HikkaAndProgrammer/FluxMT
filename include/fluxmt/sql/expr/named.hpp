@@ -16,8 +16,8 @@
 
 namespace flux::impl {
     template<ers::fixed_string Op, EPrecedence Precedence = EPrecedence::Other>
-    struct binary_op_t {
-        static_assert(!Op.to_sv().empty(), "binary_op_t<> needs an operator.");
+    struct binary_op_fn {
+        static_assert(!Op.to_sv().empty(), "binary_op_fn<> needs an operator.");
 
         template<IsExprLike L, IsExprLike R>
         auto operator()(L&& lhs, R&& rhs) const {
@@ -27,8 +27,8 @@ namespace flux::impl {
     };
 
     template<ers::fixed_string Name>
-    struct fn_t {
-        static_assert(!Name.to_sv().empty(), "fn_t<> needs a name.");
+    struct named_fn {
+        static_assert(!Name.to_sv().empty(), "named_fn<> needs a name.");
 
         template<typename... Args>
         auto operator()(Args&&... args) const {

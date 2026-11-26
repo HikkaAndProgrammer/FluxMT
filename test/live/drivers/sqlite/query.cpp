@@ -26,7 +26,7 @@ namespace {
         auto statement = query.to_statement(flux::sqlite::dialect());
         REQUIRE(statement);
 
-        return conn.exec((*statement).sql, (*statement).params);
+        return conn.exec((*statement).text, (*statement).params);
     }
 
     ers::i64 integer(const flux::sqlite::result_t& result, size_t row = 0) {

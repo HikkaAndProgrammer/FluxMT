@@ -37,16 +37,16 @@ namespace {
 
         auto statement = std::move(ctx).finish();
 
-        return { std::move(statement.sql), std::move(statement.params) };
+        return { std::move(statement.text), std::move(statement.params) };
     }
 
     std::string sql_of(const flux::sql::Expr& expr) {
         return render(expr).sql;
     }
 
-    constexpr flux::ext::fn_t<"lower"> lower {};
-    constexpr flux::ext::fn_t<"date_trunc"> date_trunc {};
-    constexpr flux::ext::binary_op_t<"%"> similar {};
+    constexpr flux::ext::named_fn<"lower"> lower {};
+    constexpr flux::ext::named_fn<"date_trunc"> date_trunc {};
+    constexpr flux::ext::binary_op_fn<"%"> similar {};
 
     struct NameColumn : flux::sql::ExprMethods {
         flux::sql::Expr to_expr() const { return col("name"); }
@@ -154,8 +154,8 @@ FLUXMT_TEST_CASE("expr custom node", "[sql]") {
 
         explicit ZeroLess(flux::sql::Expr v) : value(std::move(v)) {}
 
-        ers::Status render(flux::ext::Context& ctx) const override {
-            ctx.query += "0 < ";
+        ers::Status render(flux::ext::SqlContext& ctx) const override {
+            ctx.text += "0 < ";
             return value.render(ctx, flux::ext::EPrecedence::Comparison);
         }
 

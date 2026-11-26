@@ -67,24 +67,24 @@ namespace {
     constexpr syntax_t nothing {};
     constexpr auto& anti = test::anti::syntax;
 
-    constexpr flux::ext::fn_t<"forbidden"> forbidden {};
-    constexpr flux::ext::fn_t<"pair"> pair {};
-    constexpr flux::ext::fn_t<"f1"> f1 {};
-    constexpr flux::ext::fn_t<"f2"> f2 {};
-    constexpr flux::ext::fn_t<"f3"> f3 {};
-    constexpr flux::ext::fn_t<"f4"> f4 {};
-    constexpr flux::ext::fn_t<"f5"> f5 {};
-    constexpr flux::ext::fn_t<"a_function_with_a_name_too_long"> too_long {};
+    constexpr flux::ext::named_fn<"forbidden"> forbidden {};
+    constexpr flux::ext::named_fn<"pair"> pair {};
+    constexpr flux::ext::named_fn<"f1"> f1 {};
+    constexpr flux::ext::named_fn<"f2"> f2 {};
+    constexpr flux::ext::named_fn<"f3"> f3 {};
+    constexpr flux::ext::named_fn<"f4"> f4 {};
+    constexpr flux::ext::named_fn<"f5"> f5 {};
+    constexpr flux::ext::named_fn<"a_function_with_a_name_too_long"> too_long {};
 
 
     class BareDialect final : public flux::sql::Dialect {
     public:
-        BareDialect() noexcept : Dialect(nothing) {}
+        BareDialect() noexcept : SqlDialect(nothing) {}
 
         std::string_view name() const noexcept override { return "bare"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view) const noexcept override { return false; }
-        flux::ext::LayoutView layout(flux::ext::KindRef) const noexcept override { return {}; }
+        flux::ext::slot_info_view layout(flux::ext::kind_ref) const noexcept override { return {}; }
     };
 }
 
@@ -210,8 +210,8 @@ FLUXMT_TEST_CASE("typed expr renders as the erased one", "[sql]") {
     REQUIRE(typed.render(a));
     REQUIRE(erased.render(b));
 
-    CHECK(a.query == "lower(a) LIKE lower(?1) AND b = ?2");
-    CHECK(a.query == b.query);
+    CHECK(a.text == "lower(a) LIKE lower(?1) AND b = ?2");
+    CHECK(a.text == b.text);
 }
 
 FLUXMT_TEST_CASE("erased expr is still checked when it is rendered", "[sql]") {
@@ -223,7 +223,7 @@ FLUXMT_TEST_CASE("erased expr is still checked when it is rendered", "[sql]") {
     const auto r = erased.render(ctx);
 
     REQUIRE(!r);
-    CHECK(r.error().code() == flux::ESqlError::Unsupported);
+    CHECK(r.error().code() == flux::EQueryError::Unsupported);
 }
 
 FLUXMT_TEST_CASE("typed and erased operands meet in an erased result", "[sql]") {
@@ -236,5 +236,5 @@ FLUXMT_TEST_CASE("typed and erased operands meet in an erased result", "[sql]") 
     static_assert(std::same_as<std::remove_cvref_t<decltype(both)>, Expr>);
 
     REQUIRE(both.render(ctx));
-    CHECK(ctx.query == "lower(a) LIKE lower(?1) AND b = ?2");
+    CHECK(ctx.text == "lower(a) LIKE lower(?1) AND b = ?2");
 }

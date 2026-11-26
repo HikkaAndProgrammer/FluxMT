@@ -2,7 +2,7 @@
 
 // Includes --------------------------------------------------------------------
 
-#include <fluxmt/core.hpp>
+#include <fluxmt/query.hpp>
 #include <fluxmt/sql/backend.hpp>
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
@@ -13,30 +13,66 @@
 #include <fluxmt/sql/expr/named.hpp>
 #include <fluxmt/sql/expr/operators.hpp>
 #include <fluxmt/sql/identifier.hpp>
-#include <fluxmt/sql/query.hpp>
-#include <fluxmt/sql/statement.hpp>
+#include <fluxmt/sql/kinds.hpp>
 #include <fluxmt/sql/syntax.hpp>
+
+#include <fluxmt/sql/slots/column.hpp>
+#include <fluxmt/sql/slots/conflict.hpp>
+#include <fluxmt/sql/slots/distinct.hpp>
+#include <fluxmt/sql/slots/from.hpp>
+#include <fluxmt/sql/slots/group.hpp>
+#include <fluxmt/sql/slots/having.hpp>
+#include <fluxmt/sql/slots/head.hpp>
+#include <fluxmt/sql/slots/join.hpp>
+#include <fluxmt/sql/slots/limit.hpp>
+#include <fluxmt/sql/slots/offset.hpp>
+#include <fluxmt/sql/slots/order.hpp>
+#include <fluxmt/sql/slots/returning.hpp>
+#include <fluxmt/sql/slots/set.hpp>
+#include <fluxmt/sql/slots/values.hpp>
+#include <fluxmt/sql/slots/where.hpp>
+#include <fluxmt/sql/slots/with.hpp>
+
+#include <fluxmt/sql/clauses/assign.hpp>
+#include <fluxmt/sql/clauses/bound.hpp>
+#include <fluxmt/sql/clauses/column.hpp>
+#include <fluxmt/sql/clauses/conflict.hpp>
+#include <fluxmt/sql/clauses/distinct.hpp>
+#include <fluxmt/sql/clauses/group.hpp>
+#include <fluxmt/sql/clauses/identity.hpp>
+#include <fluxmt/sql/clauses/join.hpp>
+#include <fluxmt/sql/clauses/order.hpp>
+#include <fluxmt/sql/clauses/raw.hpp>
+#include <fluxmt/sql/clauses/returning.hpp>
+#include <fluxmt/sql/clauses/values.hpp>
+#include <fluxmt/sql/clauses/where.hpp>
+#include <fluxmt/sql/clauses/with.hpp>
+
+#include <fluxmt/sql/layouts/delete.hpp>
+#include <fluxmt/sql/layouts/exists.hpp>
+#include <fluxmt/sql/layouts/insert.hpp>
+#include <fluxmt/sql/layouts/select.hpp>
+#include <fluxmt/sql/layouts/update.hpp>
 
 
 // Exports ---------------------------------------------------------------------
 
 namespace flux::sql {
-    using impl::Aliased;
-    using impl::ColumnExpr;
+    using impl::aliased_t;
+    using impl::column_expr_t;
     using impl::EOrder;
     using impl::Expr;
     using impl::ExprMethods;
     using impl::IsExprSource;
     using impl::TypedExpr;
 
-    using impl::Context;
+    using Context = impl::SqlContext;
+    using Dialect = impl::SqlDialect;
+
     using impl::Query;
     using impl::SqlBackend;
     using impl::statement_t;
-    using impl::WithCte;
-    using impl::WithUnion;
 
-    using impl::Dialect;
     using impl::ESyntax;
     using impl::function_rule_t;
     using impl::function_rules_t;
@@ -69,29 +105,17 @@ namespace flux {
 // Extension points
 
 namespace flux::ext {
-    using impl::Clause;
-    using impl::EArity;
-    using impl::IClause;
-    using impl::Slot;
-    using impl::SlotBinding;
-    using impl::SlotRef;
-    using impl::make_clause;
-
-    using impl::KindRef;
-    using impl::Layout;
-    using impl::LayoutView;
-    using impl::StatementKind;
-    using impl::find_layout;
-
-    using impl::Context;
     using impl::EPrecedence;
     using impl::IExprNode;
-    using impl::binary_op_t;
-    using impl::fn_t;
+    using impl::SqlContext;
+    using impl::SqlDialect;
+    using impl::binary_op_fn;
+    using impl::named_fn;
     using impl::make_expr;
     using impl::need_function;
     using impl::need_syntax;
     using impl::retype;
+    using impl::sql_of;
     using impl::sql_text;
 }
 

@@ -47,14 +47,14 @@ const flux::impl::IExprNode& flux::impl::Expr::node() const noexcept { return *_
 
 // Executors
 
-ers::Status flux::impl::Expr::render(Context& ctx, EPrecedence parent) const {
+ers::Status flux::impl::Expr::render(SqlContext& ctx, EPrecedence parent) const {
     if (precedence() >= parent)
         return _node->render(ctx);
 
-    ctx.query += '(';
+    ctx.text += '(';
     ERS_TRY(_node->render(ctx));
 
-    ctx.query += ')';
+    ctx.text += ')';
 
     return ers::ok;
 }

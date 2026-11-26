@@ -11,6 +11,6 @@
 namespace flux::impl {
     template<typename B>
     concept SqlBackend = Supports<B, EFeature::Sql> && requires {
-        { backend_traits<B>::dialect() } -> std::convertible_to<const Dialect&>;
+        { backend_traits<B>::dialect() } -> std::convertible_to<const SqlDialect&>;
     };
 }

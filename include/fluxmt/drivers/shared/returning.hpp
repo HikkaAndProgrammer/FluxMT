@@ -1,12 +1,12 @@
 #pragma once
 
 // fluxmt
-#include <fluxmt/sql/query/slot.hpp>
-#include <fluxmt/sql/query/slots/returning.hpp>
+#include <fluxmt/query/slot.hpp>
+#include <fluxmt/sql/slots/returning.hpp>
 
 
 namespace flux::impl::shared {
-    inline constexpr SlotBinding returning {
+    inline constexpr slot_info_t returning {
         .slot      = &slots::returning,
         .prefix    = "\nRETURNING ",
         .separator = ", ",

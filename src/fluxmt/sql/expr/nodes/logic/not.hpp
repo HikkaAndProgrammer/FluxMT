@@ -29,8 +29,8 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
-            ctx.query += "NOT ";
+        ers::Status render(SqlContext& ctx) const override {
+            ctx.text += "NOT ";
 
             return _what.render(ctx, EPrecedence::Not);
         }

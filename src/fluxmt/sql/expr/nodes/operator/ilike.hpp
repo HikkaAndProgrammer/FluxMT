@@ -35,11 +35,11 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             const auto ilike = ctx.dialect().syntax().ilike;
 
             if (!ilike) {
-                return ers::make_error(ESqlError::Unsupported, "ILIKE in '{}'",
+                return ers::make_error(EQueryError::Unsupported, "ILIKE in '{}'",
                     ctx.dialect().name());
             }
 

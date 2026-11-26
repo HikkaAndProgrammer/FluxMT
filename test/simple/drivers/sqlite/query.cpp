@@ -26,7 +26,7 @@ namespace {
     std::string sql_of(const flux::sql::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? (*r).text : std::string("<error>");
     }
 }
 
@@ -75,7 +75,7 @@ FLUXMT_TEST_CASE("sqlite query refuses ON CONSTRAINT", "[sqlite]") {
         | do_nothing());
 
     REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
+    CHECK(refused.error().code() == flux::EQueryError::Unsupported);
 
     CHECK(sql_of(insert_into("t") | columns("a") | values(1) | on_conflict("a") | do_nothing())
         == "INSERT INTO t (a)\nVALUES (?1)\nON CONFLICT (a)\nDO NOTHING");
@@ -85,6 +85,6 @@ FLUXMT_TEST_CASE("sqlite query spreads an array into parameters", "[sqlite]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE id IN (?1, ?2)");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE id IN (?1, ?2)");
     CHECK((*r).params == std::vector<flux::Value>{ 1, 2 });
 }

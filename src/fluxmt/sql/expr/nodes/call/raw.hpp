@@ -34,7 +34,7 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             std::string_view rest = _pattern;
             size_t used = 0;
 
@@ -45,7 +45,7 @@ namespace flux::impl::nodes {
                         _pattern);
                 }
 
-                ctx.query += rest.substr(0, at);
+                ctx.text += rest.substr(0, at);
                 ERS_TRY(_args[used++].render(ctx, EPrecedence::Primary));
 
                 rest.remove_prefix(at + 2);
@@ -57,7 +57,7 @@ namespace flux::impl::nodes {
                     _pattern);
             }
 
-            ctx.query += rest;
+            ctx.text += rest;
 
             return ers::ok;
         }

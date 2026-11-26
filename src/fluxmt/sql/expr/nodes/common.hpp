@@ -20,12 +20,12 @@ namespace flux::impl::nodes {
             : static_cast<EPrecedence>(static_cast<ers::u8>(precedence) + 1);
     }
 
-    inline ers::Status render_list(Context& ctx, const std::vector<Expr>& items) {
+    inline ers::Status render_list(SqlContext& ctx, const std::vector<Expr>& items) {
         bool first = true;
 
         for (const auto& it : items) {
             if (!first)
-                ctx.query += ", ";
+                ctx.text += ", ";
             first = false;
 
             ERS_TRY(it.render(ctx));

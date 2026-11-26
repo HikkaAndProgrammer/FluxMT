@@ -36,11 +36,11 @@ FLUXMT_TEST_CASE("psql quotes only what needs it", "[psql]") {
     flux::sql::Context ctx(flux::psql::dialect());
 
     REQUIRE(ctx.append_identifier("public.order"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("Account"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("created_at"));
 
-    REQUIRE(ctx.query == "public.\"order\" \"Account\" created_at");
+    REQUIRE(ctx.text == "public.\"order\" \"Account\" created_at");
     REQUIRE(ctx.bind("x") == "$1");
 }

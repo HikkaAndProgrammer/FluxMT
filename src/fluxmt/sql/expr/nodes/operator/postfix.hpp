@@ -35,10 +35,10 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             ERS_TRY(_operand.render(ctx, next(_precedence)));
 
-            ctx.query += _suffix;
+            ctx.text += _suffix;
 
             return ers::ok;
         }
