@@ -5,9 +5,8 @@
 #include <utility>
 
 // fluxmt
+#include <fluxmt/sql/error.hpp>
 #include <fluxmt/sql/identifier.hpp>
-
-#include "fluxmt/sql/error.hpp"
 
 
 // Implementation --------------------------------------------------------------
@@ -77,7 +76,7 @@ ers::Status flux::impl::Context::append_identifier(std::string_view name) {
     return ers::ok;
 }
 
-flux::impl::Statement flux::impl::Context::finish() && {
+flux::impl::statement_t flux::impl::Context::finish() && {
     return {
         .sql    = std::move(query),
         .params = std::move(_params)

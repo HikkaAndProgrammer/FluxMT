@@ -114,14 +114,14 @@ namespace {
         return dialect;
     }
 
-    ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
         return query.to_statement(hook());
     }
 
     std::string sql_of(const flux::sql::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? r->sql : std::string("<error>");
     }
 
     std::string sql_of(const flux::sql::Expr& expr, const flux::sql::Dialect& dialect = hook()) {

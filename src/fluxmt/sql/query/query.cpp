@@ -137,7 +137,7 @@ ers::Status flux::impl::Query::build(Context& ctx) const {
     return ers::ok;
 }
 
-ers::Result<flux::impl::Statement> flux::impl::Query::to_statement(const Dialect& dialect) const {
+ers::Result<flux::impl::statement_t> flux::impl::Query::to_statement(const Dialect& dialect) const {
     Context ctx(dialect);
     ERS_TRY(build(ctx));
 

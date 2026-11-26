@@ -35,11 +35,8 @@ namespace flux::impl {
 
     struct syntax_t {
         ers::Status (*cast)(Context&, const Expr& operand, std::string_view type) = nullptr;
-
         ers::Status (*ilike)(Context&, const Expr& lhs, const Expr& rhs) = nullptr;
-
         ers::Status (*any)(Context&, const Expr& operand, const Expr& array) = nullptr;
-
         ers::Status (*excluded)(Context&, std::string_view column) = nullptr;
 
         function_spelling_t (*function)(std::string_view name, size_t arity) noexcept = nullptr;
@@ -79,11 +76,8 @@ namespace flux::impl {
         const syntax_t& syntax() const noexcept { return _syntax; }
 
         virtual std::string_view name() const noexcept = 0;
-
         virtual std::string placeholder(size_t index) const = 0;
-
         virtual bool is_reserved(std::string_view word) const noexcept = 0;
-
         virtual LayoutView layout(KindRef kind) const noexcept = 0;
 
 

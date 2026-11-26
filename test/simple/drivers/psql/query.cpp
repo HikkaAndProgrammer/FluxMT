@@ -19,7 +19,7 @@ using std::string_literals::operator ""s;
 
 
 namespace {
-    ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
         return query.to_statement(flux::psql::dialect());
     }
 

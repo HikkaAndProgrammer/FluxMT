@@ -41,7 +41,7 @@ namespace flux::impl {
 
         ers::Status append_identifier(std::string_view name);
 
-        Statement finish() &&;
+        statement_t finish() &&;
 
 
         std::string query;

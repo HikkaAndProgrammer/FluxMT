@@ -32,7 +32,7 @@ namespace flux::sql {
     using impl::IsExprSource;
     using impl::Query;
     using impl::SqlBackend;
-    using impl::Statement;
+    using impl::statement_t;
     using impl::TypedExpr;
     using impl::WithCte;
     using impl::WithUnion;

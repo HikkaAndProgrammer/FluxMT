@@ -49,7 +49,7 @@ FLUXMT_TEST_CASE("sql context finish moves the text and parameters out", "[sql]"
 
     const auto statement = std::move(ctx).finish();
 
-    REQUIRE(statement == flux::sql::Statement{ "SELECT ?1",{ 5 } });
+    REQUIRE(statement == flux::sql::statement_t{ "SELECT ?1", { 5 } });
 }
 
 FLUXMT_TEST_CASE("sql context rejects empty identifier parts", "[sql]") {

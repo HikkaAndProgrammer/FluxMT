@@ -70,7 +70,7 @@ namespace flux::impl {
 
         ers::Status build(Context& ctx) const;
 
-        ers::Result<Statement> to_statement(const Dialect& dialect) const;
+        ers::Result<statement_t> to_statement(const Dialect& dialect) const;
 
 
     private:

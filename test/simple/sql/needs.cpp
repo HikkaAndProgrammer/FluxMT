@@ -90,7 +90,7 @@ static_assert(std::same_as<decltype(row(col("a"), 1)), Plain>);
 static_assert(std::same_as<decltype(col("a") == 1), Plain>);
 static_assert(std::same_as<decltype(5 <= col("a")), Plain>);
 static_assert(std::same_as<decltype(col("a") + col("b") * 2), Plain>);
-static_assert(std::same_as<decltype(col("a") == 1 && col("b") == 2 || !(col("c") == 3)), Plain>);
+static_assert(std::same_as<decltype((col("a") == 1 && col("b") == 2) || !(col("c") == 3)), Plain>);
 static_assert(std::same_as<decltype(col("a").is_null()), Plain>);
 static_assert(std::same_as<decltype(col("a").between(1, col("b"))), Plain>);
 static_assert(std::same_as<decltype(col("a").in({ 1, 2, 3 })), Plain>);
@@ -129,8 +129,8 @@ static_assert(needs<decltype(now())> == flux::impl::need_function("now", 0));
 static_assert(needs<decltype(greatest(col("a"), col("b")))> == flux::impl::need_function("greatest", 2));
 static_assert(needs<decltype(greatest(col("a").cast("int"), 1))>
     == (flux::impl::need_function("greatest", 2) | only(ESyntax::Cast)));
-static_assert(needs<decltype(f1(1) + f1(2))>.count == 2);
-static_assert(needs<decltype(f1(1) + f1(1))>.count == 1);
+static_assert(needs<decltype(f1(1) + f1(1, 2))>.count == 2);
+static_assert(needs<decltype(f1(1) + f1(2))>.count == 1);
 
 // More functions than fit, or a name that does not fit: not known, so erased
 static_assert(!needs<decltype(f1(1) + f2(1) + f3(1) + f4(1))>.partial);

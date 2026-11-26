@@ -9,10 +9,10 @@
 
 
 namespace flux::impl {
-    struct Statement {
+    struct statement_t {
         std::string sql;
         std::vector<Value> params;
 
-        bool operator==(const Statement&) const = default;
+        bool operator==(const statement_t&) const = default;
     };
 }

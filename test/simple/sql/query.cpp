@@ -24,7 +24,7 @@ using std::string_literals::operator ""s;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
         static const test::AntiDialect dialect;
 
         return query.to_statement(dialect);
@@ -344,8 +344,8 @@ FLUXMT_TEST_CASE("query custom clause", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query when", "[sql]") {
-    const auto off = false;
-    const auto on = true;
+    constexpr auto off = false;
+    constexpr auto on = true;
 
     CHECK(sql_of(select_from("t") | when(off, where(col("a") == 1)) | when(on, where(col("b") == 2)))
         == "SELECT *\nFROM t\nWHERE b = ?1");
