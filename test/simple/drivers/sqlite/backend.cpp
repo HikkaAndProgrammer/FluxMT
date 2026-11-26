@@ -3,6 +3,7 @@
 
 // fluxmt
 #include <fluxmt/drivers/sqlite.hpp>
+#include <fluxmt/sql.hpp>
 
 // test
 #include "support/test_case.hpp"
@@ -25,4 +26,20 @@ FLUXMT_TEST_CASE("sqlite backend traits", "[sqlite]") {
     REQUIRE(traits::features.contains(flux::EFeature::Sql));
     REQUIRE(traits::features.contains(flux::EFeature::Transactions));
     REQUIRE(!traits::features.contains(flux::EFeature::DistinctOn));
+}
+
+FLUXMT_TEST_CASE("sqlite backend is a sql backend at compile time", "[sqlite]") {
+    namespace impl = flux::impl;
+
+    STATIC_REQUIRE(impl::SqlBackend<backend>);
+
+    STATIC_REQUIRE(impl::HasKind<backend, &flux::kinds::select>);
+
+    STATIC_REQUIRE(impl::HasSlot<backend, &flux::kinds::insert, &flux::slots::returning>);
+    STATIC_REQUIRE(!impl::HasSlot<backend, &flux::kinds::insert, &flux::slots::conflict_constraint>);
+    STATIC_REQUIRE(!impl::HasSlot<backend, &flux::kinds::select, &flux::slots::returning>);
+
+    STATIC_REQUIRE(impl::SupportsNeeds<backend, impl::need_syntax(impl::ESyntax::Ilike)>);
+    STATIC_REQUIRE(impl::SupportsNeeds<backend, impl::need_function("now", 0)>);
+    STATIC_REQUIRE(!impl::SupportsNeeds<backend, impl::need_function("greatest", 1)>);
 }

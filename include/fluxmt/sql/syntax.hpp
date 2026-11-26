@@ -24,7 +24,7 @@ namespace flux::impl {
 
 namespace flux::impl {
     struct function_spelling_t {
-        std::string_view name;
+        std::string_view text;
         bool call = true;
 
         bool supported = true;

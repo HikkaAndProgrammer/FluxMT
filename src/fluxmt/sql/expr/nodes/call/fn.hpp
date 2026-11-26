@@ -47,7 +47,7 @@ namespace flux::impl::nodes {
                     _name, ctx.dialect().name(), spelling.reason);
             }
 
-            ctx.text += spelling.name.empty() ? _name : spelling.name;
+            ctx.text += spelling.text.empty() ? _name : spelling.text;
 
             if (!spelling.call)
                 return ers::ok;

@@ -9,6 +9,7 @@
 
 // fluxmt
 #include <fluxmt/drivers/psql.hpp>
+#include <fluxmt/sql.hpp>
 
 // test
 #include "support/test_case.hpp"
@@ -29,4 +30,22 @@ FLUXMT_TEST_CASE("psql backend", "[psql]") {
     STATIC_REQUIRE(flux::Supports<B, flux::EFeature::Upsert>);
     STATIC_REQUIRE(flux::Supports<B, flux::EFeature::DistinctOn>);
     STATIC_REQUIRE(flux::Supports<B, flux::EFeature::NativeArrays>);
+}
+
+FLUXMT_TEST_CASE("psql backend is a sql backend at compile time", "[psql]") {
+    using B = flux::psql::backend;
+
+    namespace impl = flux::impl;
+
+    STATIC_REQUIRE(impl::SqlBackend<B>);
+
+    STATIC_REQUIRE(impl::HasKind<B, &flux::kinds::select>);
+    STATIC_REQUIRE(impl::HasKind<B, &flux::kinds::exists>);
+
+    STATIC_REQUIRE(impl::HasSlot<B, &flux::kinds::insert, &flux::slots::returning>);
+    STATIC_REQUIRE(impl::HasSlot<B, &flux::kinds::insert, &flux::slots::conflict_constraint>);
+    STATIC_REQUIRE(!impl::HasSlot<B, &flux::kinds::select, &flux::slots::returning>);
+
+    STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Ilike)>);
+    STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Any)>);
 }

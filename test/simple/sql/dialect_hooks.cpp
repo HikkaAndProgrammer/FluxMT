@@ -76,12 +76,12 @@ namespace {
     constexpr flux::sql::function_rule_t now_keyword {
         .name      = "now",
         .max_arity = 0,
-        .spelling  = { .name = "CURRENT_TIMESTAMP", .call = false },
+        .spelling  = { .text = "CURRENT_TIMESTAMP", .call = false },
     };
 
     constexpr flux::sql::function_rule_t greatest_max {
         .name     = "greatest",
-        .spelling = { .name = "max" },
+        .spelling = { .text = "max" },
     };
 
     constexpr flux::sql::function_rules_t hook_functions { now_keyword, greatest_max };

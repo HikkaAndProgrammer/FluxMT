@@ -54,8 +54,8 @@ namespace {
 
     constexpr syntax_t picky { .function = &spell };
 
-    constexpr flux::sql::function_rule_t pair_rule { .name = "pair", .min_arity = 2, .max_arity = 2, .spelling = { .name = "pair_of" } };
-    constexpr flux::sql::function_rule_t pair_mine { .name = "pair", .spelling = { .name = "mine" } };
+    constexpr flux::sql::function_rule_t pair_rule { .name = "pair", .min_arity = 2, .max_arity = 2, .spelling = { .text = "pair_of" } };
+    constexpr flux::sql::function_rule_t pair_mine { .name = "pair", .spelling = { .text = "mine" } };
     constexpr flux::sql::function_rules_t pair_rules { pair_rule };
     constexpr flux::sql::function_rules_t pair_both { pair_mine, pair_rule };
     constexpr flux::sql::function_rules_t pair_added = pair_rules + flux::sql::function_rules_t { pair_mine };
@@ -184,9 +184,9 @@ static_assert(!supports(tabled_and_picky, needs<decltype(pair(1))>));
 static_assert(supports(tabled_and_picky, needs<decltype(pair(1, 2))>));
 
 // The first rule wins
-static_assert(flux::impl::spelling_of(mine_first, "pair", 2).name == "mine");
-static_assert(flux::impl::spelling_of(mine_last, "pair", 2).name == "pair_of");
-static_assert(flux::impl::spelling_of(mine_last, "pair", 5).name == "mine");
+static_assert(flux::impl::spelling_of(mine_first, "pair", 2).text == "mine");
+static_assert(flux::impl::spelling_of(mine_last, "pair", 2).text == "pair_of");
+static_assert(flux::impl::spelling_of(mine_last, "pair", 5).text == "mine");
 static_assert(supports(mine_first, needs<decltype(pair(1))>));
 static_assert(missing(nothing, needs<decltype(col("a").ilike("x").cast("int"))>)
     == (only(ESyntax::Ilike) | only(ESyntax::Cast)));

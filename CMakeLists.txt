@@ -248,7 +248,6 @@ if(FLUXMT_BUILD_PSQL)
 			"src/fluxmt/drivers/psql/connection.cpp"
 			"src/fluxmt/drivers/psql/dialect.cpp"
 			"src/fluxmt/drivers/psql/error.cpp"
-			"src/fluxmt/drivers/psql/layouts.cpp"
 			"src/fluxmt/drivers/psql/options.cpp"
 			"src/fluxmt/drivers/psql/params.cpp"
 	)
@@ -288,7 +287,6 @@ if(FLUXMT_BUILD_SQLITE)
 			"src/fluxmt/drivers/sqlite/connection.cpp"
 			"src/fluxmt/drivers/sqlite/dialect.cpp"
 			"src/fluxmt/drivers/sqlite/error.cpp"
-			"src/fluxmt/drivers/sqlite/layouts.cpp"
 			"src/fluxmt/drivers/sqlite/options.cpp"
 			"src/fluxmt/drivers/sqlite/params.cpp"
 			"src/fluxmt/drivers/sqlite/transaction.cpp"

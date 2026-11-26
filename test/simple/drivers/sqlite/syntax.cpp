@@ -66,7 +66,7 @@ FLUXMT_TEST_CASE("sqlite spells functions at compile time and at render time the
     CHECK_FALSE(now_with_argument.supported);
     CHECK_FALSE(one_greatest.supported);
     CHECK(two_greatest.supported);
-    CHECK(two_greatest.name == "max");
+    CHECK(two_greatest.text == "max");
     CHECK(unknown.supported);
-    CHECK(unknown.name.empty());
+    CHECK(unknown.text.empty());
 }

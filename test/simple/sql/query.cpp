@@ -64,6 +64,7 @@ namespace {
             return ers::ok;
         }
 
+
     private:
         std::vector<flux::sql::Expr> _on;
     };
@@ -74,17 +75,17 @@ namespace {
 
 FLUXMT_TEST_CASE("query select", "[sql]") {
     CHECK(sql_of(select_from("users")
-        | columns("id", "name")
-        | where(col("active") == true)
-        | order_by("created_at", EOrder::Desc)
-        | with_limit(20)
-        | with_offset(5))
+            | columns("id", "name")
+            | where(col("active") == true)
+            | order_by("created_at", EOrder::Desc)
+            | with_limit(20)
+            | with_offset(5))
         == "SELECT id, name"
-           "\nFROM users"
-           "\nWHERE active = ?1"
-           "\nORDER BY created_at DESC"
-           "\nLIMIT ?2"
-           "\nOFFSET ?3");
+        "\nFROM users"
+        "\nWHERE active = ?1"
+        "\nORDER BY created_at DESC"
+        "\nLIMIT ?2"
+        "\nOFFSET ?3");
 
     CHECK(sql_of(select_from("users")) == "SELECT *\nFROM users");
     CHECK(sql_of(select_from("t") | distinct() | columns("a")) == "SELECT DISTINCT a\nFROM t");
@@ -115,8 +116,8 @@ FLUXMT_TEST_CASE("query single slot keeps the last clause", "[sql]") {
 
 FLUXMT_TEST_CASE("query join", "[sql]") {
     CHECK(sql_of(select_from("orders", "o")
-        | join("users", "u", col("u.id") == col("o.user_id"))
-        | where(col("u.active") == true))
+            | join("users", "u", col("u.id") == col("o.user_id"))
+            | where(col("u.active") == true))
         == "SELECT *\nFROM orders AS o\nJOIN users AS u ON u.id = o.user_id\nWHERE u.active = ?1");
 
     CHECK(contains(sql_of(select_from("t") | join("x; --", col("a") == col("b"))), "JOIN \"x; --\" ON a = b"));
@@ -124,16 +125,16 @@ FLUXMT_TEST_CASE("query join", "[sql]") {
 
 FLUXMT_TEST_CASE("query select list", "[sql]") {
     CHECK(sql_of(select_from("orders")
-        | columns("user_id", count_all().as("n"), sum_of("total").as("sum"))
-        | column(coalesce(max_of("total"), 0).as("top"))
-        | group_by("user_id")
-        | having(count_all() > 5)
-        | order_by(sum_of("total"), EOrder::Desc))
+            | columns("user_id", count_all().as("n"), sum_of("total").as("sum"))
+            | column(coalesce(max_of("total"), 0).as("top"))
+            | group_by("user_id")
+            | having(count_all() > 5)
+            | order_by(sum_of("total"), EOrder::Desc))
         == "SELECT user_id, count(*) AS n, sum(total) AS sum, coalesce(max(total), ?1) AS top"
-           "\nFROM orders"
-           "\nGROUP BY user_id"
-           "\nHAVING count(*) > ?2"
-           "\nORDER BY sum(total) DESC");
+        "\nFROM orders"
+        "\nGROUP BY user_id"
+        "\nHAVING count(*) > ?2"
+        "\nORDER BY sum(total) DESC");
 
     CHECK(sql_of(select_from("t") | columns(count_distinct("a"), corr_of("y", "x"), agg<"regr_slope">("y", col("x") * 2)))
         == "SELECT count(DISTINCT a), corr(y, x), regr_slope(y, x * ?1)\nFROM t");
@@ -154,16 +155,16 @@ FLUXMT_TEST_CASE("query aliases are quoted when they need it", "[sql]") {
 
 FLUXMT_TEST_CASE("query insert", "[sql]") {
     CHECK(sql_of(insert_into("images")
-        | columns("url", "path")
-        | values("a.png"s, "/a.png"s)
-        | on_conflict("url")
-        | do_update("path")
-        | returning("id"))
+            | columns("url", "path")
+            | values("a.png"s, "/a.png"s)
+            | on_conflict("url")
+            | do_update("path")
+            | returning("id"))
         == "INSERT INTO images (url, path)"
-           "\nVALUES (?1, ?2)"
-           "\nON CONFLICT (url)"
-           "\nDO UPDATE SET path = excluded.path"
-           "\nRETURNING id");
+        "\nVALUES (?1, ?2)"
+        "\nON CONFLICT (url)"
+        "\nDO UPDATE SET path = excluded.path"
+        "\nRETURNING id");
 
     CHECK(sql_of(insert_into("t") | columns("a", "at") | values("x", now()) | returning("id", col("at").as("created")))
         == "INSERT INTO t (a, at)\nVALUES (?1, now())\nRETURNING id, at AS created");
@@ -174,15 +175,15 @@ FLUXMT_TEST_CASE("query insert", "[sql]") {
 
 FLUXMT_TEST_CASE("query insert with set", "[sql]") {
     CHECK(sql_of(insert_into("images")
-        | set("url", "a.png"s, "path", "/a.png"s)
-        | on_conflict("url")
-        | do_update("path")
-        | returning("id"))
+            | set("url", "a.png"s, "path", "/a.png"s)
+            | on_conflict("url")
+            | do_update("path")
+            | returning("id"))
         == "INSERT INTO images (url, path)"
-           "\nVALUES (?1, ?2)"
-           "\nON CONFLICT (url)"
-           "\nDO UPDATE SET path = excluded.path"
-           "\nRETURNING id");
+        "\nVALUES (?1, ?2)"
+        "\nON CONFLICT (url)"
+        "\nDO UPDATE SET path = excluded.path"
+        "\nRETURNING id");
 
     CHECK(sql_of(insert_into("t") | assign("a", 1)) == "INSERT INTO t (a)\nVALUES (?1)");
     CHECK(sql_of(insert_into("t") | set("a", 1, "b", 2, "c", 3)) == "INSERT INTO t (a, b, c)\nVALUES (?1, ?2, ?3)");
@@ -339,9 +340,9 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {
     CHECK(sql_of(select_from("prices")
-        | flux::ext::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
-        | order_by("product_id")
-        | order_by("at", EOrder::Desc))
+            | flux::ext::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
+            | order_by("product_id")
+            | order_by("at", EOrder::Desc))
         == "SELECT DISTINCT ON (product_id) *\nFROM prices\nORDER BY product_id ASC, at DESC");
 }
 
@@ -381,7 +382,7 @@ FLUXMT_TEST_CASE("query subqueries", "[sql]") {
     CHECK(contains((*r).text, "LIMIT ?3"));
 
     CHECK(sql_of(select_from("users")
-        | where(col("id").in(select_from("orders") | columns("user_id") | where(col("total") > 100))))
+            | where(col("id").in(select_from("orders") | columns("user_id") | where(col("total") > 100))))
         == "SELECT *\nFROM users\nWHERE id IN (SELECT user_id\nFROM orders\nWHERE total > ?1)");
 }
 

@@ -16,21 +16,21 @@
 
 namespace flux::impl::sqlite {
     inline constexpr function_rule_t now_as_keyword {
-        .name       = "now",
-        .max_arity  = 0,
-        .spelling   = { .name = "CURRENT_TIMESTAMP", .call = false },
+        .name      = "now",
+        .max_arity = 0,
+        .spelling  = { .text = "CURRENT_TIMESTAMP", .call = false },
     };
 
     inline constexpr function_rule_t greatest_as_max {
-        .name       = "greatest",
-        .min_arity  = 2,
-        .spelling   = { .name = "max" },
+        .name      = "greatest",
+        .min_arity = 2,
+        .spelling  = { .text = "max" },
     };
 
     inline constexpr function_rule_t least_as_min {
-        .name       = "least",
-        .min_arity  = 2,
-        .spelling   = { .name = "min" },
+        .name      = "least",
+        .min_arity = 2,
+        .spelling  = { .text = "min" },
     };
 
     inline constexpr function_rules_t sqlite_functions {
