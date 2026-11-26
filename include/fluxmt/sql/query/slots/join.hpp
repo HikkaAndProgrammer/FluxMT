@@ -10,9 +10,3 @@ namespace flux::impl::slots {
         .arity = EArity::Multi,
     };
 }
-
-namespace flux::impl::bindings {
-    inline constexpr SlotBinding join {
-        .slot = &slots::join,
-    };
-}

@@ -10,12 +10,3 @@ namespace flux::impl::slots {
         .arity = EArity::Multi,
     };
 }
-
-namespace flux::impl::bindings {
-    inline constexpr SlotBinding values {
-        .slot      = &slots::values,
-        .prefix    = "\nVALUES (",
-        .separator = "), (",
-        .suffix    = ")",
-    };
-}

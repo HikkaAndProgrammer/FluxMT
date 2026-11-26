@@ -48,11 +48,11 @@ FLUXMT_TEST_CASE("sqlite quotes only what needs it", "[sqlite]") {
     REQUIRE(ctx.bind("x") == "?1");
 }
 
-FLUXMT_TEST_CASE("sqlite capabilities match its features", "[sqlite]") {
-    const auto& caps = flux::sqlite::dialect().caps();
+FLUXMT_TEST_CASE("sqlite syntax matches its features", "[sqlite]") {
+    const auto& syntax = flux::sqlite::dialect().syntax();
 
-    REQUIRE(!caps.native_arrays);
-    REQUIRE(!caps.ilike);
-    REQUIRE(caps.cast == flux::sql::ECastStyle::Function);
-    REQUIRE(traits::features.contains(flux::EFeature::NativeArrays) == caps.native_arrays);
+    REQUIRE(syntax.any == &flux::syntax::any_as_in_list);
+    REQUIRE(syntax.ilike == &flux::syntax::ilike_via_lower);
+    REQUIRE(syntax.cast == &flux::syntax::cast_function);
+    REQUIRE(traits::features.contains(flux::EFeature::NativeArrays) == (syntax.any == &flux::syntax::any_native));
 }

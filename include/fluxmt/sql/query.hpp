@@ -3,6 +3,7 @@
 // Core ------------------------------------------------------------------------
 
 #include <fluxmt/sql/query/clause.hpp>
+#include <fluxmt/sql/query/kind.hpp>
 #include <fluxmt/sql/query/layout.hpp>
 #include <fluxmt/sql/query/query.hpp>
 #include <fluxmt/sql/query/slot.hpp>
@@ -16,6 +17,7 @@
 #include <fluxmt/sql/query/slots/from.hpp>
 #include <fluxmt/sql/query/slots/group.hpp>
 #include <fluxmt/sql/query/slots/having.hpp>
+#include <fluxmt/sql/query/slots/head.hpp>
 #include <fluxmt/sql/query/slots/join.hpp>
 #include <fluxmt/sql/query/slots/limit.hpp>
 #include <fluxmt/sql/query/slots/offset.hpp>

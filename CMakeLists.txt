@@ -165,6 +165,7 @@ target_sources(fluxmt_sql
 	PRIVATE
 		"src/fluxmt/sql/context.cpp"
 		"src/fluxmt/sql/identifier.cpp"
+		"src/fluxmt/sql/syntax.cpp"
 		"src/fluxmt/sql/expr/aggregate.cpp"
 		"src/fluxmt/sql/expr/expr.cpp"
 		"src/fluxmt/sql/query/layout.cpp"
@@ -197,6 +198,24 @@ list(APPEND FLUXMT_TARGETS fluxmt_sql)
 
 
 #----------------------------------------------------------------------------------------------------------------------
+# fluxmt::shared: the text dialects have in common, headers only
+#----------------------------------------------------------------------------------------------------------------------
+
+
+add_library(fluxmt_shared INTERFACE)
+add_library(fluxmt::shared ALIAS fluxmt_shared)
+
+set_target_properties(fluxmt_shared PROPERTIES EXPORT_NAME shared)
+
+target_link_libraries(fluxmt_shared
+	INTERFACE
+		fluxmt_sql
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_shared)
+
+
+#----------------------------------------------------------------------------------------------------------------------
 # fluxmt::psql
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -208,10 +227,12 @@ if(FLUXMT_BUILD_PSQL)
 			"src/fluxmt/drivers/psql/connection.cpp"
 			"src/fluxmt/drivers/psql/dialect.cpp"
 			"src/fluxmt/drivers/psql/error.cpp"
+			"src/fluxmt/drivers/psql/layouts.cpp"
 			"src/fluxmt/drivers/psql/options.cpp"
 			"src/fluxmt/drivers/psql/params.cpp"
 	)
 
+	target_link_libraries(fluxmt_psql PUBLIC fluxmt_shared)
 	fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
 endif()
 
@@ -246,11 +267,13 @@ if(FLUXMT_BUILD_SQLITE)
 			"src/fluxmt/drivers/sqlite/connection.cpp"
 			"src/fluxmt/drivers/sqlite/dialect.cpp"
 			"src/fluxmt/drivers/sqlite/error.cpp"
+			"src/fluxmt/drivers/sqlite/layouts.cpp"
 			"src/fluxmt/drivers/sqlite/options.cpp"
 			"src/fluxmt/drivers/sqlite/params.cpp"
 			"src/fluxmt/drivers/sqlite/transaction.cpp"
 	)
 
+	target_link_libraries(fluxmt_sqlite PUBLIC fluxmt_shared)
 	fluxmt_required_package(fluxmt_sqlite unofficial-sqlite3 unofficial::sqlite3::sqlite3)
 endif()
 

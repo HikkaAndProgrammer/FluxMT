@@ -9,6 +9,7 @@
 // fluxmt
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
+#include <fluxmt/sql/error.hpp>
 #include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/expr/node.hpp>
 
@@ -35,23 +36,14 @@ namespace flux::impl::nodes {
         // Executors
 
         ers::Status render(Context& ctx) const override {
-            if (ctx.dialect().caps().ilike) {
-                ERS_TRY(_lhs.render(ctx, next(precedence())));
+            const auto ilike = ctx.dialect().syntax().ilike;
 
-                ctx.query += " ILIKE ";
-
-                return _rhs.render(ctx, next(precedence()));
+            if (!ilike) {
+                return ers::make_error(ESqlError::Unsupported, "ILIKE in '{}'",
+                    ctx.dialect().name());
             }
 
-            ctx.query += "lower(";
-            ERS_TRY(_lhs.render(ctx));
-
-            ctx.query += ") LIKE lower(";
-            ERS_TRY(_rhs.render(ctx));
-
-            ctx.query += ')';
-
-            return ers::ok;
+            return ilike(ctx, _lhs, _rhs);
         }
 
 

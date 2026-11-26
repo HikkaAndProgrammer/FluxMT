@@ -17,6 +17,35 @@ bool flux::impl::Query::has(SlotRef slot) const {
     });
 }
 
+ers::Result<flux::impl::Layout> flux::impl::Query::layout(const Dialect& dialect) const {
+    const auto base = _kind ? dialect.layout(_kind) : _fixed;
+
+    if (base.empty()) {
+        return ers::make_error(ESqlError::Unsupported, "'{}' statement in '{}'",
+            _kind ? _kind->name : std::string_view("custom"), dialect.name());
+    }
+
+    Layout out(base);
+
+    for (const auto& edit : _edits) {
+        switch (edit.op) {
+            case EEdit::After:
+                ERS_TRY(out.insert_after(edit.anchor, edit.binding));
+                break;
+
+            case EEdit::Before:
+                ERS_TRY(out.insert_before(edit.anchor, edit.binding));
+                break;
+
+            case EEdit::Append:
+                ERS_TRY(out.append(edit.binding));
+                break;
+        }
+    }
+
+    return out;
+}
+
 
 // Modifiers
 
@@ -43,11 +72,37 @@ void flux::impl::Query::add(WithUnion with_union) {
     _unions.push_back(std::move(with_union));
 }
 
+ers::Status flux::impl::Query::insert_after(SlotRef anchor, const SlotBinding& binding) {
+    return _add_edit(EEdit::After, anchor, binding);
+}
+
+ers::Status flux::impl::Query::insert_before(SlotRef anchor, const SlotBinding& binding) {
+    return _add_edit(EEdit::Before, anchor, binding);
+}
+
+ers::Status flux::impl::Query::append(const SlotBinding& binding) {
+    return _add_edit(EEdit::Append, nullptr, binding);
+}
+
+ers::Status flux::impl::Query::_add_edit(EEdit op, SlotRef anchor, const SlotBinding& binding) {
+    if (!binding.slot)
+        return ers::make_error(ESqlError::NullSlot, "slot");
+
+    if (op != EEdit::Append && !anchor)
+        return ers::make_error(ESqlError::NullSlot, "anchor");
+
+    _edits.push_back(LayoutEdit { .op = op, .anchor = anchor, .binding = binding });
+
+    return ers::ok;
+}
+
 
 // Executors
 
 ers::Status flux::impl::Query::build(Context& ctx) const {
-    ERS_TRY(_validate(ctx.dialect()));
+    const auto resolved = ERS_TRY(layout(ctx.dialect()));
+
+    ERS_TRY(_validate(resolved, ctx.dialect()));
 
     if (!_ctes.empty()) {
         const bool recursive = std::ranges::any_of(_ctes, [](const WithCte& c) { return c.recursive; });
@@ -71,7 +126,7 @@ ers::Status flux::impl::Query::build(Context& ctx) const {
         ctx.query += "\n";
     }
 
-    for (const auto& binding : _layout.bindings())
+    for (const auto& binding : resolved.bindings())
         ERS_TRY(_render_slot(ctx, binding));
 
     for (const auto& u : _unions) {
@@ -93,7 +148,8 @@ ers::Result<flux::impl::Statement> flux::impl::Query::to_statement(const Dialect
 // Rendering
 
 ers::Status flux::impl::Query::_render_slot(Context& ctx, const SlotBinding& binding) const {
-    ERS_TRY(ctx.dialect().before_slot(ctx, *this, binding));
+    if (binding.lead_unless && has(binding.slot) && !has(binding.lead_unless))
+        ctx.query += binding.lead;
 
     if (binding.renderer)
         return _render_custom(ctx, binding);
@@ -148,18 +204,21 @@ ers::Status flux::impl::Query::_render_custom(Context& ctx, const SlotBinding& b
 
 // Validators
 
-ers::Status flux::impl::Query::_validate(const Dialect& dialect) const {
+ers::Status flux::impl::Query::_validate(const Layout& layout, const Dialect& dialect) const {
     for (const auto& it : _clauses) {
-        if (!_layout.contains(it->slot()))
-            return ers::make_error(ESqlError::ForeignSlot, "'{}'", it->slot()->name);
+        if (layout.contains(it->slot()))
+            continue;
 
-        if (!dialect.supports(it->slot())) {
-            return ers::make_error(ESqlError::Unsupported, "'{}' in '{}'",
-                it->slot()->name, dialect.name());
+        // The dialect decides what a statement of its kind has, a layout of your own decides for itself.
+        if (_kind) {
+            return ers::make_error(ESqlError::Unsupported, "'{}' in '{}' for '{}'",
+                it->slot()->name, dialect.name(), _kind->name);
         }
+
+        return ers::make_error(ESqlError::ForeignSlot, "'{}'", it->slot()->name);
     }
 
-    for (const auto& binding : _layout.bindings()) {
+    for (const auto& binding : layout.bindings()) {
         if (!has(binding.slot))
             continue;
 

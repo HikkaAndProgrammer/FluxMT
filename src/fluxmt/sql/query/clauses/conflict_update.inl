@@ -33,6 +33,13 @@ namespace flux::impl {
             if (_columns.empty())
                 return ers::make_error(ESqlError::EmptyColumns, "'{}'", slot()->name);
 
+            const auto excluded = ctx.dialect().syntax().excluded;
+
+            if (!excluded) {
+                return ers::make_error(ESqlError::Unsupported, "DO UPDATE in '{}'",
+                    ctx.dialect().name());
+            }
+
             ctx.query += "DO UPDATE SET ";
 
             bool first = true;
@@ -44,8 +51,8 @@ namespace flux::impl {
 
                 ERS_TRY(ctx.append_identifier(name));
 
-                ctx.query += " = excluded.";
-                ERS_TRY(ctx.append_identifier(name));
+                ctx.query += " = ";
+                ERS_TRY(excluded(ctx, name));
             }
 
             return ers::ok;

@@ -8,8 +8,12 @@
 #include <erslib/core/type/result.hpp>
 
 // fluxmt
-#include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/query/fwd.hpp>
+
+
+namespace flux::impl {
+    class Context;
+}
 
 
 namespace flux::impl {
@@ -38,11 +42,13 @@ namespace flux::impl {
         slot_renderer_t renderer = nullptr;
 
         std::span<const SlotRef> excludes;
+
+        SlotRef lead_unless = nullptr;
+        std::string_view lead;
     };
     using LayoutView = std::span<const SlotBinding>;
 
 
-    [[nodiscard]]
     constexpr bool same_slot(SlotRef lhs, SlotRef rhs) noexcept {
         return lhs && rhs && lhs->name == rhs->name;
     }

@@ -39,7 +39,12 @@ namespace flux::impl::nodes {
                     _name);
             }
 
-            const auto spelling = ERS_TRY(ctx.dialect().function_spelling(_name, _args.size()));
+            function_spelling_t spelling;
+
+            if (const auto spell = ctx.dialect().syntax().function) {
+                const auto got = ERS_TRY(spell(_name, _args.size()));
+                spelling = got;
+            }
 
             ctx.query += spelling.name.empty() ? _name : spelling.name;
 

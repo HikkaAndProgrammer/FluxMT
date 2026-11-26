@@ -2,11 +2,13 @@
 #include <catch2/catch_test_macros.hpp>
 
 // std
+#include <array>
 #include <cstddef>
 #include <string>
 #include <string_view>
 
 // fluxmt
+#include <fluxmt/drivers/shared.hpp>
 #include <fluxmt/sql.hpp>
 
 // test
@@ -20,42 +22,92 @@ using namespace flux::orm;
 // Details ---------------------------------------------------------------------
 
 namespace {
+    namespace shared = flux::impl::shared;
+
     inline constexpr flux::ext::fn_t<"forbidden"> forbidden {};
 
 
-    // Refuses RETURNING, writes a comment before WHERE and spells three functions its own way.
+    // A statement of its own kind
+    inline constexpr flux::ext::StatementKind truncate_kind { .name = "test.truncate" };
+
+    inline constexpr flux::ext::Slot truncate_target {
+        .name  = "test.truncate_target",
+        .arity = flux::ext::EArity::Single,
+    };
+
+    constexpr flux::ext::SlotBinding hook_where {
+        .slot      = &flux::slots::where,
+        .prefix    = "\n/* before where */\nWHERE ",
+        .separator = " AND ",
+    };
+
+    constexpr flux::ext::SlotBinding hook_limit {
+        .slot   = &flux::slots::limit,
+        .prefix = "\nFETCH FIRST ",
+        .suffix = " ROWS ONLY",
+    };
+
+    constexpr flux::ext::SlotBinding select_layout[] = {
+        shared::select_keyword,
+        shared::select_columns,
+        shared::from,
+        hook_where,
+        shared::order,
+        hook_limit,
+    };
+
+    // No RETURNING
+    constexpr flux::ext::SlotBinding insert_layout[] = {
+        shared::insert_into,
+        shared::set_as_values,
+        shared::insert_columns,
+        shared::values,
+    };
+
+    constexpr flux::ext::SlotBinding truncate_layout[] = {
+        { .slot = &truncate_target, .prefix = "TRUNCATE " },
+    };
+
+    constexpr auto layouts = std::to_array<flux::sql::layout_entry_t>({
+        { &flux::kinds::select, select_layout },
+        { &flux::kinds::insert, insert_layout },
+        { &truncate_kind, truncate_layout },
+    });
+
+
+    ers::Result<flux::sql::function_spelling_t> spell_function(std::string_view name, size_t arity) {
+        if (name == "now")
+            return flux::sql::function_spelling_t { .name = "CURRENT_TIMESTAMP", .call = false };
+
+        if (name == "greatest")
+            return flux::sql::function_spelling_t { .name = "max" };
+
+        if (name == "forbidden")
+            return ers::make_error(flux::ESqlError::Unsupported, "'{}' with {} arguments", name, arity);
+
+        return flux::sql::function_spelling_t {};
+    }
+
+    constexpr flux::sql::syntax_t hook_syntax {
+        .cast     = flux::syntax::cast_function,
+        .ilike    = flux::syntax::ilike_via_lower,
+        .any      = flux::syntax::any_as_in_list,
+        .excluded = flux::syntax::excluded_table,
+        .function = &spell_function,
+    };
+
+
+    // No RETURNING, DELETE or UPDATE, a comment before WHERE, FETCH FIRST for LIMIT and three functions spelled its own way.
     class HookDialect final : public flux::sql::Dialect {
     public:
-        HookDialect() noexcept : Dialect(flux::sql::dialect_caps_t {}) {}
+        HookDialect() noexcept : Dialect(hook_syntax) {}
 
         std::string_view name() const noexcept override { return "hook"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view) const noexcept override { return false; }
 
-        bool supports(const flux::ext::Slot* slot) const noexcept override {
-            return slot->name != flux::slots::returning.name;
-        }
-
-        ers::Status before_slot(
-            flux::ext::Context& ctx, const flux::sql::Query& query, const flux::ext::SlotBinding& binding
-        ) const override {
-            if (binding.slot->name == flux::slots::where.name && query.has(binding.slot))
-                ctx.query += "\n/* before where */";
-
-            return ers::ok;
-        }
-
-        ers::Result<flux::sql::function_spelling_t> function_spelling(std::string_view name, size_t arity) const override {
-            if (name == "now")
-                return flux::sql::function_spelling_t { .name = "CURRENT_TIMESTAMP", .call = false };
-
-            if (name == "greatest")
-                return flux::sql::function_spelling_t { .name = "max" };
-
-            if (name == "forbidden")
-                return ers::make_error(flux::ESqlError::Unsupported, "'{}' with {} arguments", name, arity);
-
-            return flux::sql::function_spelling_t {};
+        flux::ext::LayoutView layout(flux::ext::KindRef kind) const noexcept override {
+            return flux::ext::find_layout(layouts, kind);
         }
     };
 
@@ -124,14 +176,36 @@ FLUXMT_TEST_CASE("dialect refuses a slot it does not support", "[sql]") {
     CHECK(sql_of(insert_into("t") | columns("a") | values(1)) == "INSERT INTO t (a)\nVALUES (?1)");
 }
 
-FLUXMT_TEST_CASE("dialect writes text before a slot", "[sql]") {
+FLUXMT_TEST_CASE("dialect owns the text of a slot", "[sql]") {
     CHECK(sql_of(select_from("t") | where(col("a") == 1))
         == "SELECT *\nFROM t\n/* before where */\nWHERE a = ?1");
 
     CHECK(sql_of(select_from("t")) == "SELECT *\nFROM t");
+    CHECK(sql_of(select_from("t") | with_limit(3)) == "SELECT *\nFROM t\nFETCH FIRST ?1 ROWS ONLY");
 }
 
-FLUXMT_TEST_CASE("dialect hooks reach subqueries", "[sql]") {
+FLUXMT_TEST_CASE("dialect refuses a statement it has no layout for", "[sql]") {
+    const auto refused = statement_of(delete_from("t"));
+
+    REQUIRE(!refused);
+    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
+    CHECK(refused.error().message().contains("hook"));
+}
+
+FLUXMT_TEST_CASE("dialect can have a statement of its own kind", "[sql]") {
+    flux::sql::Query q(&truncate_kind);
+    q |= identifier(&truncate_target, "t");
+
+    CHECK(sql_of(q) == "TRUNCATE t");
+
+    const test::AntiDialect other;
+    const auto refused = q.to_statement(other);
+
+    REQUIRE(!refused);
+    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
+}
+
+FLUXMT_TEST_CASE("dialect layout reaches subqueries", "[sql]") {
     CHECK(sql_of(select_from("u") | where(col("id").in(select_from("o") | columns("user_id") | where(col("x") == 1))))
         == "SELECT *\nFROM u"
            "\n/* before where */"

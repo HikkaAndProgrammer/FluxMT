@@ -2,12 +2,16 @@
 
 // std
 #include <cstddef>
+#include <span>
 #include <string>
 #include <string_view>
 
 // ers
-#include <erslib/core/type/general.hpp>
 #include <erslib/core/type/result.hpp>
+
+// fluxmt
+#include <fluxmt/sql/query/kind.hpp>
+#include <fluxmt/sql/query/slot.hpp>
 
 // export
 #include <fluxmt/export.hpp>
@@ -15,31 +19,46 @@
 
 namespace flux::impl {
     class Context;
-    class Query;
-    struct Slot;
-    struct SlotBinding;
+    class Expr;
 }
 
 
 namespace flux::impl {
-    enum class ECastStyle : ers::u8 {
-        Postfix,  // x::type
-        Function, // or CAST(x AS type)
-    };
-
-    struct dialect_caps_t {
-        bool native_arrays = false;
-        bool ilike = false;
-        ECastStyle cast = ECastStyle::Function;
-    };
-
     struct function_spelling_t {
-        // Empty: the function keeps its own name.
         std::string_view name;
-
-        // False: written as a bare keyword, like CURRENT_TIMESTAMP.
         bool call = true;
     };
+
+
+    struct syntax_t {
+        // x::type or CAST(x AS type)
+        ers::Status (*cast)(Context&, const Expr& operand, std::string_view type) = nullptr;
+
+        ers::Status (*ilike)(Context&, const Expr& lhs, const Expr& rhs) = nullptr;
+
+        // x = ANY(array)
+        ers::Status (*any)(Context&, const Expr& operand, const Expr& array) = nullptr;
+
+        // The new value of a column in an upsert: excluded.col
+        ers::Status (*excluded)(Context&, std::string_view column) = nullptr;
+
+        ers::Result<function_spelling_t> (*function)(std::string_view name, size_t arity) = nullptr;
+    };
+
+
+    struct layout_entry_t {
+        KindRef kind;
+        LayoutView layout;
+    };
+
+    constexpr LayoutView find_layout(std::span<const layout_entry_t> table, KindRef kind) noexcept {
+        for (const auto& it : table) {
+            if (same_kind(it.kind, kind))
+                return it.layout;
+        }
+
+        return {};
+    }
 }
 
 
@@ -48,8 +67,8 @@ namespace flux::impl {
     public:
         // Member functions
 
-        explicit Dialect(dialect_caps_t caps) noexcept :
-            _caps(caps) {
+        explicit Dialect(const syntax_t& syntax) noexcept :
+            _syntax(syntax) {
         }
 
         virtual ~Dialect() = default;
@@ -57,7 +76,7 @@ namespace flux::impl {
 
         // Accessors
 
-        const dialect_caps_t& caps() const noexcept { return _caps; }
+        const syntax_t& syntax() const noexcept { return _syntax; }
 
         virtual std::string_view name() const noexcept = 0;
 
@@ -66,21 +85,10 @@ namespace flux::impl {
 
         virtual bool is_reserved(std::string_view word) const noexcept = 0;
 
-
-        // Syntax hooks: the defaults write PostgreSQL-like SQL.
-
-        // A statement with a clause in an unsupported slot fails with Unsupported.
-        virtual bool supports(const Slot*) const noexcept { return true; }
-
-        // Runs before a slot is rendered and may write text in front of it.
-        virtual ers::Status before_slot(Context&, const Query&, const SlotBinding&) const { return ers::ok; }
-
-        virtual ers::Result<function_spelling_t> function_spelling(std::string_view, size_t) const {
-            return function_spelling_t {};
-        }
+        virtual LayoutView layout(KindRef kind) const noexcept = 0;
 
 
     private:
-        dialect_caps_t _caps;
+        syntax_t _syntax;
     };
 }

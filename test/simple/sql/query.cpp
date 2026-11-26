@@ -249,8 +249,26 @@ FLUXMT_TEST_CASE("query identifiers are quoted, not trusted", "[sql]") {
     CHECK_FALSE(statement_of(select_from("a..b")));
 }
 
-FLUXMT_TEST_CASE("query rejects what the layout does not have", "[sql]") {
-    const auto foreign = statement_of(delete_from("t") | order_by("a"));
+FLUXMT_TEST_CASE("query rejects what the layout of the dialect does not have", "[sql]") {
+    const auto unsupported = statement_of(delete_from("t") | order_by("a"));
+
+    REQUIRE_FALSE(unsupported);
+    CHECK(unsupported.error().code() == flux::ESqlError::Unsupported);
+    CHECK(unsupported.error().message().contains("anti"));
+}
+
+FLUXMT_TEST_CASE("query with a layout of its own", "[sql]") {
+    static constexpr flux::ext::SlotBinding own[] = {
+        flux::impl::shared::select_keyword,
+        flux::impl::shared::from,
+    };
+
+    auto q = flux::sql::Query(own);
+    q |= from("t");
+
+    CHECK(sql_of(q) == "SELECT\nFROM t");
+
+    const auto foreign = statement_of(q | order_by("a"));
 
     REQUIRE_FALSE(foreign);
     CHECK(foreign.error().code() == flux::ESqlError::ForeignSlot);
@@ -281,14 +299,44 @@ FLUXMT_TEST_CASE("query raw clause binds its values", "[sql]") {
 FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
     static constexpr flux::ext::Slot extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
 
+    const test::AntiDialect dialect;
+
     auto q = select_from("t");
 
-    REQUIRE(q.layout().insert_after(&flux::slots::from, { .slot = &extra, .prefix = "\n-- extra" }));
-    REQUIRE(q.layout().contains(&extra));
-    REQUIRE(*q.layout().index_of(&extra) == *q.layout().index_of(&flux::slots::from) + 1);
+    REQUIRE(q.insert_after(&flux::slots::from, { .slot = &extra, .prefix = "\n-- " }));
+    q |= raw(&extra, "extra");
 
-    CHECK_FALSE(q.layout().insert_after(&flux::slots::from, { .slot = &extra }));
-    CHECK_FALSE(q.layout().insert_after(nullptr, { .slot = &extra }));
+    const auto layout = q.layout(dialect);
+
+    REQUIRE(layout);
+    CHECK((*layout).contains(&extra));
+    CHECK(*(*layout).index_of(&extra) == *(*layout).index_of(&flux::slots::from) + 1);
+
+    CHECK(sql_of(q) == "SELECT *\nFROM t\n-- extra");
+
+    CHECK_FALSE(select_from("t").insert_after(&flux::slots::from, { .slot = nullptr }));
+    CHECK_FALSE(select_from("t").insert_after(nullptr, { .slot = &extra }));
+}
+
+FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dialect", "[sql]") {
+    static constexpr flux::ext::Slot extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
+
+    auto twice = select_from("t");
+    REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
+    REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
+
+    const auto duplicate = statement_of(twice);
+
+    REQUIRE_FALSE(duplicate);
+    CHECK(duplicate.error().code() == flux::ESqlError::DuplicateSlot);
+
+    auto lost = select_from("t");
+    REQUIRE(lost.insert_after(&flux::slots::returning, { .slot = &extra }));
+
+    const auto unknown = statement_of(lost);
+
+    REQUIRE_FALSE(unknown);
+    CHECK(unknown.error().code() == flux::ESqlError::UnknownAnchor);
 }
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {

@@ -8,12 +8,14 @@
 #include <vector>
 
 // ers
+#include <erslib/core/type/general.hpp>
 #include <erslib/core/type/result.hpp>
 
 // fluxmt
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/query/clause.hpp>
+#include <fluxmt/sql/query/kind.hpp>
 #include <fluxmt/sql/query/layout.hpp>
 #include <fluxmt/sql/statement.hpp>
 
@@ -29,23 +31,26 @@ namespace flux::impl {
 }
 
 namespace flux::impl {
-    // A statement as a tree: a layout of slots and the clauses that fill them.
-    // It does not know the dialect, that comes with build().
     class FLUXMT_EXPORT Query {
     public:
         // Member functions
 
-        explicit Query(LayoutView layout) :
-            _layout(layout) {
+        explicit Query(KindRef kind) noexcept :
+            _kind(kind) {
+        }
+
+        explicit Query(LayoutView layout) noexcept :
+            _fixed(layout) {
         }
 
 
         // Observers
 
-        Layout& layout() noexcept { return _layout; }
-        const Layout& layout() const noexcept { return _layout; }
+        KindRef kind() const noexcept { return _kind; }
 
         bool has(SlotRef slot) const;
+
+        ers::Result<Layout> layout(const Dialect& dialect) const;
 
 
         // Modifiers
@@ -56,6 +61,10 @@ namespace flux::impl {
         void add(WithCte with_cte);
         void add(WithUnion with_union);
 
+        ers::Status insert_after(SlotRef anchor, const SlotBinding& binding);
+        ers::Status insert_before(SlotRef anchor, const SlotBinding& binding);
+        ers::Status append(const SlotBinding& binding);
+
 
         // Executors
 
@@ -65,16 +74,31 @@ namespace flux::impl {
 
 
     private:
-        Layout _layout;
+        enum class EEdit : ers::u8 {
+            After, Before, Append
+        };
+
+        struct LayoutEdit {
+            EEdit op;
+            SlotRef anchor;
+            SlotBinding binding;
+        };
+
+
+        KindRef _kind = nullptr;
+        LayoutView _fixed;
+        std::vector<LayoutEdit> _edits;
         std::vector<Clause> _clauses;
         std::vector<WithCte> _ctes;
         std::vector<WithUnion> _unions;
 
 
+        ers::Status _add_edit(EEdit op, SlotRef anchor, const SlotBinding& binding);
+
         ers::Status _render_slot(Context& ctx, const SlotBinding& binding) const;
         ers::Status _render_custom(Context& ctx, const SlotBinding& binding) const;
 
-        ers::Status _validate(const Dialect& dialect) const;
+        ers::Status _validate(const Layout& layout, const Dialect& dialect) const;
     };
 }
 

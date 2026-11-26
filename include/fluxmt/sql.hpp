@@ -15,6 +15,7 @@
 #include <fluxmt/sql/identifier.hpp>
 #include <fluxmt/sql/query.hpp>
 #include <fluxmt/sql/statement.hpp>
+#include <fluxmt/sql/syntax.hpp>
 
 
 // Exports ---------------------------------------------------------------------
@@ -24,7 +25,6 @@ namespace flux::sql {
     using impl::ColumnExpr;
     using impl::Context;
     using impl::Dialect;
-    using impl::ECastStyle;
     using impl::EOrder;
     using impl::Expr;
     using impl::ExprMethods;
@@ -34,8 +34,9 @@ namespace flux::sql {
     using impl::Statement;
     using impl::WithCte;
     using impl::WithUnion;
-    using impl::dialect_caps_t;
     using impl::function_spelling_t;
+    using impl::layout_entry_t;
+    using impl::syntax_t;
 
     using impl::is_plain_identifier;
     using impl::quote_identifier;
@@ -46,7 +47,8 @@ namespace flux::sql {
 
 namespace flux {
     namespace slots = impl::slots;
-    namespace bindings = impl::bindings;
+    namespace kinds = impl::kinds;
+    namespace syntax = impl::syntax;
 }
 
 
@@ -58,11 +60,15 @@ namespace flux::ext {
     using impl::EPrecedence;
     using impl::IClause;
     using impl::IExprNode;
+    using impl::KindRef;
     using impl::Layout;
+    using impl::LayoutView;
     using impl::Slot;
     using impl::SlotBinding;
     using impl::SlotRef;
+    using impl::StatementKind;
     using impl::binary_op_t;
+    using impl::find_layout;
     using impl::fn_t;
     using impl::make_clause;
     using impl::make_expr;

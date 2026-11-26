@@ -40,23 +40,14 @@ namespace flux::impl::nodes {
                     _type);
             }
 
-            if (ctx.dialect().caps().cast == ECastStyle::Postfix) {
-                ERS_TRY(_operand.render(ctx, EPrecedence::Cast));
+            const auto cast = ctx.dialect().syntax().cast;
 
-                ctx.query += "::";
-                ctx.query += _type;
-
-                return ers::ok;
+            if (!cast) {
+                return ers::make_error(ESqlError::Unsupported, "cast in '{}'",
+                    ctx.dialect().name());
             }
 
-            ctx.query += "CAST(";
-            ERS_TRY(_operand.render(ctx));
-
-            ctx.query += " AS ";
-            ctx.query += _type;
-            ctx.query += ')';
-
-            return ers::ok;
+            return cast(ctx, _operand, _type);
         }
 
 

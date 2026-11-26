@@ -17,7 +17,7 @@ add_library(test_support
 		"support/test_case.cpp"
 )
 target_include_directories(test_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(test_support PUBLIC fluxmt::core)
+target_link_libraries(test_support PUBLIC fluxmt::core fluxmt::shared)
 target_compile_definitions(test_support PRIVATE
 	FLUXMT_TEST_LIVEDB_COMMAND_DEFAULT="${FLUXMT_TEST_LIVEDB_COMMAND}"
 )
@@ -192,6 +192,7 @@ endfunction()
 
 add_header_check(core)
 add_header_check(sql)
+add_header_check(shared)
 
 if(TARGET fluxmt::psql)
     add_header_check(psql)

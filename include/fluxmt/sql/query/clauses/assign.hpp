@@ -2,6 +2,7 @@
 
 // std
 #include <cstddef>
+#include <span>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -17,6 +18,9 @@
 
 namespace flux::impl {
     FLUXMT_EXPORT Clause make_assign_clause(std::string column, Expr value);
+
+    // For a layout: SET of an INSERT written as "(columns) VALUES (values)"
+    FLUXMT_EXPORT ers::Status render_set_as_values(Context& ctx, std::span<const Clause* const> group);
 }
 
 

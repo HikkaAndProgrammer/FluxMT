@@ -10,10 +10,3 @@ namespace flux::impl::slots {
         .arity = EArity::Single,
     };
 }
-
-namespace flux::impl::bindings {
-    inline constexpr SlotBinding limit {
-        .slot   = &slots::limit,
-        .prefix = "\nLIMIT ",
-    };
-}

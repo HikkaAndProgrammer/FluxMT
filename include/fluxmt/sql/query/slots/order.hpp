@@ -10,11 +10,3 @@ namespace flux::impl::slots {
         .arity = EArity::Multi,
     };
 }
-
-namespace flux::impl::bindings {
-    inline constexpr SlotBinding order {
-        .slot      = &slots::order,
-        .prefix    = "\nORDER BY ",
-        .separator = ", ",
-    };
-}
