@@ -4,6 +4,8 @@
 
 #include <fluxmt/query.hpp>
 #include <fluxmt/sql/backend.hpp>
+#include <fluxmt/sql/builder.hpp>
+#include <fluxmt/sql/builder.hpp>
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/error.hpp>
@@ -13,7 +15,6 @@
 #include <fluxmt/sql/expr/named.hpp>
 #include <fluxmt/sql/expr/operators.hpp>
 #include <fluxmt/sql/identifier.hpp>
-#include <fluxmt/sql/kinds.hpp>
 #include <fluxmt/sql/syntax.hpp>
 
 #include <fluxmt/sql/slots/column.hpp>
@@ -43,8 +44,8 @@
 #include <fluxmt/sql/clauses/join.hpp>
 #include <fluxmt/sql/clauses/order.hpp>
 #include <fluxmt/sql/clauses/raw.hpp>
-#include <fluxmt/sql/clauses/tag.hpp>
 #include <fluxmt/sql/clauses/returning.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
 #include <fluxmt/sql/clauses/values.hpp>
 #include <fluxmt/sql/clauses/where.hpp>
 #include <fluxmt/sql/clauses/with.hpp>
@@ -72,6 +73,7 @@ namespace flux::sql {
 
     using impl::Query;
     using impl::SqlBackend;
+    using impl::QueryBuilder;
     using impl::SqlClause;
     using impl::SqlClauses;
     using impl::clause_needs;
@@ -102,6 +104,7 @@ namespace flux::sql {
 namespace flux {
     namespace slots = impl::slots;
     namespace kinds = impl::kinds;
+    namespace builders = impl::builders;
     namespace syntax = impl::syntax;
 }
 

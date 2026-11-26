@@ -5,7 +5,6 @@
 
 // fluxmt
 #include <fluxmt/sql/clauses/identity.hpp>
-#include <fluxmt/sql/kinds.hpp>
 #include <fluxmt/sql/slots/head.hpp>
 
 

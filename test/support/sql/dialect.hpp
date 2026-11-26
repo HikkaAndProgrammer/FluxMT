@@ -65,11 +65,11 @@ namespace test::anti {
     };
 
     inline constexpr auto layouts = std::to_array<flux::sql::layout_entry_t>({
-        { &flux::kinds::select, select_layout },
-        { &flux::kinds::insert, insert_layout },
-        { &flux::kinds::update, update_layout },
-        { &flux::kinds::erase,  delete_layout },
-        { &flux::kinds::exists, exists_layout },
+        { .kind = &flux::kinds::select, .layout = select_layout },
+        { .kind = &flux::kinds::insert, .layout = insert_layout },
+        { .kind = &flux::kinds::update, .layout = update_layout },
+        { .kind = &flux::kinds::erase, .layout = delete_layout },
+        { .kind = &flux::kinds::exists, .layout = exists_layout },
     });
 }
 

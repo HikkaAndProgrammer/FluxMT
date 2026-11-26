@@ -6,7 +6,11 @@
 // fluxmt
 #include <fluxmt/drivers/shared.hpp>
 #include <fluxmt/query/dialect.hpp>
-#include <fluxmt/sql/kinds.hpp>
+#include <fluxmt/sql/layouts/delete.hpp>
+#include <fluxmt/sql/layouts/exists.hpp>
+#include <fluxmt/sql/layouts/insert.hpp>
+#include <fluxmt/sql/layouts/select.hpp>
+#include <fluxmt/sql/layouts/update.hpp>
 
 
 namespace flux::impl::sqlite {
