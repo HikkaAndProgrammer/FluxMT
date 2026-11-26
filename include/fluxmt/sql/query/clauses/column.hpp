@@ -20,7 +20,6 @@
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
-    // An item of a list slot: the select list, RETURNING, GROUP BY.
     template<typename T>
     concept ColumnItem = std::constructible_from<ColumnExpr, T> || std::same_as<std::remove_cvref_t<T>, Aliased>;
 

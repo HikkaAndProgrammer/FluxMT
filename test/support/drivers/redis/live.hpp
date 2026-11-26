@@ -9,11 +9,9 @@
 
 
 namespace test::live {
-    // Skips the running test case when no server is configured.
     flux::redis::options_t require_options();
 
 
-    // Own key prefix per test case: its keys are deleted on destruction.
     class Sandbox {
     public:
         // Member functions

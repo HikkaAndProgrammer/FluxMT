@@ -17,7 +17,6 @@
 
 
 namespace flux::impl {
-    // Verbatim SQL with '?' value markers.
     class RawClause final : public IClause {
     public:
         // Member functions

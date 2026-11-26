@@ -11,6 +11,5 @@
 
 
 namespace flux::impl::redis {
-    // Arguments of a Redis command are flat byte strings.
     FLUXMT_EXPORT std::string to_arg(const Value& value);
 }

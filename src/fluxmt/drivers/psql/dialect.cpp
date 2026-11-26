@@ -5,9 +5,6 @@
 #include <array>
 #include <format>
 
-// fluxmt
-#include <fluxmt/sql/syntax.hpp>
-
 
 // Details ---------------------------------------------------------------------
 
@@ -36,12 +33,7 @@ namespace {
 // postgres_dialect
 
 flux::impl::psql::postgres_dialect::postgres_dialect() noexcept :
-    Dialect(syntax_t {
-        .cast     = syntax::cast_postfix,
-        .ilike    = syntax::ilike_operator,
-        .any      = syntax::any_native,
-        .excluded = syntax::excluded_table,
-    }) {
+    Dialect(postgres_syntax) {
 }
 
 

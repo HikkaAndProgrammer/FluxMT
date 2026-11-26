@@ -15,7 +15,6 @@
 
 
 namespace flux::impl::nodes {
-    // How it is written is up to the dialect: "x = ANY(array)" or "x IN (...)".
     class AnyNode final : public IExprNode {
     public:
         // Member functions

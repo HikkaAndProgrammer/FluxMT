@@ -79,7 +79,6 @@ namespace test::anti {
 
 
 namespace test {
-    // Differs from PostgreSQL on purpose: "?N" placeholders and its own reserved words.
     class AntiDialect final : public flux::sql::Dialect {
     public:
         AntiDialect() noexcept : Dialect(anti::syntax) {}

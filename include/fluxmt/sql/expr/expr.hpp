@@ -7,6 +7,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -15,15 +16,38 @@
 #include <fluxmt/sql/expr/concepts.hpp>
 #include <fluxmt/sql/expr/factories.hpp>
 #include <fluxmt/sql/expr/fwd.hpp>
+#include <fluxmt/sql/expr/needs.hpp>
 #include <fluxmt/sql/expr/node.hpp>
 
 // export
 #include <fluxmt/export.hpp>
 
 
+// Details ---------------------------------------------------------------------
+
+namespace flux::impl {
+    template<needs_t N>
+    class TypedExpr;
+
+    template<needs_t N>
+    using expr_for = std::conditional_t<N.partial, Expr, TypedExpr<N>>;
+
+    template<needs_t N>
+    expr_for<N> retype(Expr expr);
+
+    template<typename... Ts>
+    constexpr needs_t needs_of() noexcept;
+}
+
+
+// Expr ------------------------------------------------------------------------
+
 namespace flux::impl {
     class FLUXMT_EXPORT Expr {
     public:
+        static constexpr needs_t needs = unknown_needs;
+
+
         // Member functions
 
         explicit Expr(ExprNodePtr node);
@@ -53,46 +77,99 @@ namespace flux::impl {
 
         // Generators
 
-        Expr is_null() const;
+        template<typename Self>
+        auto is_null(this const Self& self) {
+            return retype<needs_of<Self>()>(
+                make_postfix(self, " IS NULL", EPrecedence::Is));
+        }
 
-        Expr is_not_null() const;
+        template<typename Self>
+        auto is_not_null(this const Self& self) {
+            return retype<needs_of<Self>()>(
+                make_postfix(self, " IS NOT NULL", EPrecedence::Is));
+        }
 
-        Expr is_distinct_from(Expr other) const;
+        template<typename Self, IsExprLike P>
+        auto is_distinct_from(this const Self& self, P&& other) {
+            return retype<needs_of<Self, P>()>(
+                make_binary("IS DISTINCT FROM", self, Expr(std::forward<P>(other)), EPrecedence::Is));
+        }
 
 
-        Expr like(Expr pattern) const;
+        template<typename Self, IsExprLike P>
+        auto like(this const Self& self, P&& pattern) {
+            return retype<needs_of<Self, P>()>(
+                make_binary("LIKE", self, Expr(std::forward<P>(pattern)), EPrecedence::Like));
+        }
 
-        Expr ilike(Expr pattern) const;
+        template<typename Self, IsExprLike P>
+        auto ilike(this const Self& self, P&& pattern) {
+            return retype<(needs_of<Self, P>() | need_syntax(ESyntax::Ilike))>(
+                make_ilike(self, Expr(std::forward<P>(pattern))));
+        }
 
-        Expr between(Expr low, Expr high) const;
+        template<typename Self, IsExprLike L, IsExprLike H>
+        auto between(this const Self& self, L&& low, H&& high) {
+            return retype<needs_of<Self, L, H>()>(
+                make_between(self, Expr(std::forward<L>(low)), Expr(std::forward<H>(high))));
+        }
 
-        Expr contains(Expr other) const;
+        template<typename Self, IsExprLike P>
+        auto contains(this const Self& self, P&& other) {
+            return retype<needs_of<Self, P>()>(
+                make_binary("@>", self, Expr(std::forward<P>(other)), EPrecedence::Other));
+        }
 
 
-        Expr in(std::initializer_list<Expr> values) const;
+        template<typename Self, IsExprLike T>
+        auto in(this const Self& self, std::initializer_list<T> values) {
+            std::vector<Expr> items;
+            items.reserve(values.size());
 
-        template<std::ranges::input_range R>
-        Expr in(R&& values) const {
+            for (const auto& it : values)
+                items.push_back(Expr(it));
+
+            return retype<needs_of<Self, T>()>(
+                make_in(self, std::move(items)));
+        }
+
+        template<typename Self>
+        auto in(this const Self& self, std::initializer_list<Expr> values) {
+            return retype<needs_of<Self, Expr>()>(
+                make_in(self, std::vector(values)));
+        }
+
+        template<typename Self, std::ranges::input_range R>
+        auto in(this const Self& self, R&& values) {
             std::vector<Expr> items;
 
             for (auto&& it : values)
                 items.push_back(Expr(it));
 
-            return make_in(*this, std::move(items));
+            return retype<needs_of<Self, std::ranges::range_reference_t<R>>()>(
+                make_in(self, std::move(items)));
         }
 
-        template<std::same_as<Query> Q>
-        Expr in(Q subquery) const {
-            return make_in(*this, std::move(subquery));
+        template<typename Self, std::same_as<Query> Q>
+        auto in(this const Self& self, Q subquery) {
+            return retype<needs_of<Self, Expr>()>(
+                make_in(self, std::move(subquery)));
         }
 
 
-        Expr any(Expr array) const;
+        template<typename Self, IsExprLike P>
+        auto any(this const Self& self, P&& array) {
+            return retype<(needs_of<Self, P>() | need_syntax(ESyntax::Any))>(
+                make_any(self, Expr(std::forward<P>(array))));
+        }
 
-        Expr cast(std::string_view type) const;
+        template<typename Self>
+        auto cast(this const Self& self, std::string_view type) {
+            return retype<(needs_of<Self>() | need_syntax(ESyntax::Cast))>(
+                make_cast(self, type));
+        }
 
 
-        // For columns() and returning(): "<expr> AS <alias>"
         Aliased as(std::string alias) const;
 
 
@@ -108,6 +185,52 @@ namespace flux::impl {
 
 
 namespace flux::impl {
+    template<needs_t N>
+    class TypedExpr : public Expr {
+        static_assert(!N.partial, "TypedExpr<> has to know all it needs, an erased expression is Expr.");
+
+
+    public:
+        static constexpr needs_t needs = N;
+
+
+        explicit TypedExpr(Expr expr) noexcept :
+            Expr(std::move(expr)) {
+        }
+    };
+
+
+    template<needs_t N>
+    expr_for<N> retype(Expr expr) {
+        if constexpr (N.partial)
+            return expr;
+        else
+            return expr_for<N>(std::move(expr));
+    }
+
+    template<typename T>
+    constexpr needs_t needs_of_one() noexcept {
+        using U = std::remove_cvref_t<T>;
+
+        if constexpr (std::is_base_of_v<Expr, U>)
+            return U::needs;
+        else if constexpr (IsExprSource<U>)
+            return needs_of_one<decltype(std::declval<const U&>().to_expr())>();
+        else
+            return no_needs;
+    }
+
+    template<typename... Ts>
+    constexpr needs_t needs_of() noexcept {
+        needs_t out;
+        ((out = out | needs_of_one<Ts>()), ...);
+
+        return out;
+    }
+}
+
+
+namespace flux::impl {
     struct Aliased {
         Expr expr;
         std::string alias;
@@ -118,7 +241,6 @@ namespace flux::impl {
     }
 
 
-    // A column name or an expression, where a bare name means a column.
     struct ColumnExpr {
         Expr expr;
 
@@ -131,38 +253,76 @@ namespace flux::impl {
         template<typename S>
             requires (std::convertible_to<S, std::string_view> && !IsExpr<S>)
         ColumnExpr(S&& name) :
-            expr(clauses::col(std::string(std::string_view(name)))) {
+            expr(make_column(std::string(std::string_view(name)))) {
         }
     };
 
 
-    // The same builder methods for anything with 'Expr to_expr() const': derive from ExprMethods.
     class ExprMethods {
     public:
-        Expr is_null(this const auto& self) { return self.to_expr().is_null(); }
-        Expr is_not_null(this const auto& self) { return self.to_expr().is_not_null(); }
-        Expr is_distinct_from(this const auto& self, Expr other) { return self.to_expr().is_distinct_from(std::move(other)); }
+        auto is_null(this const auto& self) {
+            return self.to_expr().is_null();
+        }
+        auto is_not_null(this const auto& self) {
+            return self.to_expr().is_not_null();
+        }
+
+        template<IsExprLike P>
+        auto is_distinct_from(this const auto& self, P&& other) {
+            return self.to_expr().is_distinct_from(std::forward<P>(other));
+        }
 
 
-        Expr like(this const auto& self, Expr pattern) { return self.to_expr().like(std::move(pattern)); }
-        Expr ilike(this const auto& self, Expr pattern) { return self.to_expr().ilike(std::move(pattern)); }
-        Expr between(this const auto& self, Expr low, Expr high) { return self.to_expr().between(std::move(low), std::move(high)); }
-        Expr contains(this const auto& self, Expr other) { return self.to_expr().contains(std::move(other)); }
+        template<IsExprLike P>
+        auto like(this const auto& self, P&& pattern) {
+            return self.to_expr().like(std::forward<P>(pattern));
+        }
+
+        template<IsExprLike P>
+        auto ilike(this const auto& self, P&& pattern) {
+            return self.to_expr().ilike(std::forward<P>(pattern));
+        }
+
+        template<IsExprLike L, IsExprLike H>
+        auto between(this const auto& self, L&& low, H&& high) {
+            return self.to_expr().between(std::forward<L>(low), std::forward<H>(high));
+        }
+
+        template<IsExprLike P>
+        auto contains(this const auto& self, P&& other) {
+            return self.to_expr().contains(std::forward<P>(other));
+        }
 
 
-        Expr in(this const auto& self, std::initializer_list<Expr> values) { return self.to_expr().in(values); }
-
+        template<IsExprLike T>
+        auto in(this const auto& self, std::initializer_list<T> values) {
+            return self.to_expr().in(values);
+        }
+        auto in(this const auto& self, std::initializer_list<Expr> values) {
+            return self.to_expr().in(values);
+        }
         template<std::ranges::input_range R>
-        Expr in(this const auto& self, R&& values) { return self.to_expr().in(std::forward<R>(values)); }
-
+        auto in(this const auto& self, R&& values) {
+            return self.to_expr().in(std::forward<R>(values));
+        }
         template<std::same_as<Query> Q>
-        Expr in(this const auto& self, Q subquery) { return self.to_expr().in(std::move(subquery)); }
+        auto in(this const auto& self, Q subquery) {
+            return self.to_expr().in(std::move(subquery));
+        }
 
 
-        Expr any(this const auto& self, Expr array) { return self.to_expr().any(std::move(array)); }
-        Expr cast(this const auto& self, std::string_view type) { return self.to_expr().cast(type); }
+        template<IsExprLike P>
+        auto any(this const auto& self, P&& array) {
+            return self.to_expr().any(std::forward<P>(array));
+        }
 
-        Aliased as(this const auto& self, std::string alias) { return self.to_expr().as(std::move(alias)); }
+        auto cast(this const auto& self, std::string_view type) {
+            return self.to_expr().cast(type);
+        }
+
+        Aliased as(this const auto& self, std::string alias) {
+            return self.to_expr().as(std::move(alias));
+        }
     };
 }
 
@@ -177,24 +337,39 @@ namespace flux::impl {
 
 
     namespace clauses {
-        template<typename T>
-        Expr val(T&& value) {
-            return Expr(std::forward<T>(value));
+        inline auto col(std::string name) {
+            return retype<no_needs>(make_column(std::move(name)));
         }
 
-        // One placeholder per statement, however many times it's used.
+        inline auto col(std::string_view table, std::string_view name) {
+            return col(std::string(table) + '.' + std::string(name));
+        }
+
+        inline auto null() {
+            return retype<no_needs>(make_const("NULL"));
+        }
+
+        inline auto sql_bool(bool value) {
+            return retype<no_needs>(value ? make_const("TRUE") : make_const("FALSE"));
+        }
+
         template<typename T>
-        Expr param(T&& value) {
-            return make_param(to_value(std::forward<T>(value)));
+        auto val(T&& value) {
+            return retype<needs_of<T>()>(Expr(std::forward<T>(value)));
+        }
+
+        template<typename T>
+        auto param(T&& value) {
+            return retype<no_needs>(make_param(to_value(std::forward<T>(value))));
         }
 
         template<typename... Args>
-        Expr row(Args&&... items) {
+        auto row(Args&&... items) {
             std::vector<Expr> out;
             out.reserve(sizeof...(Args));
             (out.push_back(Expr(std::forward<Args>(items))), ...);
 
-            return make_row(std::move(out));
+            return retype<needs_of<Args...>()>(make_row(std::move(out)));
         }
     }
 }

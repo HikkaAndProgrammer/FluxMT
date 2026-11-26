@@ -30,10 +30,8 @@ namespace flux::impl::redis {
 
 
 namespace flux::impl::redis {
-    // "WRONGTYPE Operation against ...": the first word of an error reply
     FLUXMT_EXPORT EDbError classify_reply(std::string_view text) noexcept;
 
-    // REDIS_ERR_* of a hiredis context
     FLUXMT_EXPORT EDbError classify_transport(int hiredis_error) noexcept;
 
     FLUXMT_EXPORT ers::Diagnostic diagnose(std::string_view label);

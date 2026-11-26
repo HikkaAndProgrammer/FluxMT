@@ -27,7 +27,6 @@ namespace {
     inline constexpr flux::ext::fn_t<"forbidden"> forbidden {};
 
 
-    // A statement of its own kind
     inline constexpr flux::ext::StatementKind truncate_kind { .name = "test.truncate" };
 
     inline constexpr flux::ext::Slot truncate_target {
@@ -56,7 +55,6 @@ namespace {
         hook_limit,
     };
 
-    // No RETURNING
     constexpr flux::ext::SlotBinding insert_layout[] = {
         shared::insert_into,
         shared::set_as_values,
@@ -75,17 +73,17 @@ namespace {
     });
 
 
-    ers::Result<flux::sql::function_spelling_t> spell_function(std::string_view name, size_t arity) {
+    constexpr flux::sql::function_spelling_t spell_function(std::string_view name, size_t) noexcept {
         if (name == "now")
-            return flux::sql::function_spelling_t { .name = "CURRENT_TIMESTAMP", .call = false };
+            return { .name = "CURRENT_TIMESTAMP", .call = false };
 
         if (name == "greatest")
-            return flux::sql::function_spelling_t { .name = "max" };
+            return { .name = "max" };
 
         if (name == "forbidden")
-            return ers::make_error(flux::ESqlError::Unsupported, "'{}' with {} arguments", name, arity);
+            return { .supported = false, .reason = "no arguments, one or many" };
 
-        return flux::sql::function_spelling_t {};
+        return {};
     }
 
     constexpr flux::sql::syntax_t hook_syntax {
@@ -97,7 +95,6 @@ namespace {
     };
 
 
-    // No RETURNING, DELETE or UPDATE, a comment before WHERE, FETCH FIRST for LIMIT and three functions spelled its own way.
     class HookDialect final : public flux::sql::Dialect {
     public:
         HookDialect() noexcept : Dialect(hook_syntax) {}

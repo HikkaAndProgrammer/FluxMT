@@ -17,7 +17,6 @@
 
 
 namespace flux::impl {
-    // The whole action: "DO UPDATE SET a = excluded.a, b = excluded.b"
     FLUXMT_EXPORT Clause make_conflict_update_clause(std::vector<std::string> columns);
 }
 

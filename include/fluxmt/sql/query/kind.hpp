@@ -5,7 +5,6 @@
 
 
 namespace flux::impl {
-    // What a statement is. A tag like Slot, so anyone can add their own kind and a dialect maps it to a layout.
     struct StatementKind {
         std::string_view name;
     };

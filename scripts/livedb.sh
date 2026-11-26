@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# Throwaway databases for the live tests.
-#
 #   bash scripts/livedb.sh up [pg] [redis]     start fresh instances (all by default)
 #   bash scripts/livedb.sh down [pg] [redis]   stop them and delete their data
 #   bash scripts/livedb.sh status
 #   bash scripts/livedb.sh run <command...>    up, run the command, down
-#
-# The defaults match CMakeUserPresets.json, so tests need no extra setup.
 
 set -euo pipefail
 

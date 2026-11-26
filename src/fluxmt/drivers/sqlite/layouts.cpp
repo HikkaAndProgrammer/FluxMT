@@ -13,7 +13,7 @@ using namespace flux::impl;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    // OFFSET is only valid after LIMIT, and a negative LIMIT means no limit.
+    // LIMIT -1: OFFSET needs a LIMIT
     constexpr SlotBinding offset {
         .slot        = &slots::offset,
         .prefix      = "\nOFFSET ",
@@ -35,7 +35,6 @@ namespace {
         offset,
     };
 
-    // No ON CONFLICT ON CONSTRAINT
     constexpr SlotBinding insert_layout[] = {
         shared::insert_into,
         shared::set_as_values,

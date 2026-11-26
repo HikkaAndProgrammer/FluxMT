@@ -10,17 +10,20 @@
 
 namespace flux::impl {
     template<typename T>
+    concept IsExprObject = std::is_base_of_v<Expr, std::remove_cvref_t<T>>;
+
+    template<typename T>
     concept IsExprSource = requires(const T& what) {
-        { what.to_expr() } -> std::same_as<Expr>;
+        { what.to_expr() } -> std::derived_from<Expr>;
     };
 
     template<typename T>
-    concept IsExprValue = !std::same_as<std::remove_cvref_t<T>, Expr>
+    concept IsExprValue = !IsExprObject<T>
         && !IsExprSource<std::remove_cvref_t<T>>
         && !std::convertible_to<T, ExprNodePtr>;
 
     template<typename T>
-    concept IsExpr = std::same_as<std::remove_cvref_t<T>, Expr>
+    concept IsExpr = IsExprObject<T>
         || IsExprSource<std::remove_cvref_t<T>>;
 
     template<typename T>

@@ -17,7 +17,6 @@ namespace flux::impl::shared {
 
     inline constexpr SlotRef set_as_values_excludes[] = { &slots::column, &slots::values };
 
-    // SET of an INSERT is written as "(columns) VALUES (values)".
     inline constexpr SlotBinding set_as_values {
         .slot     = &slots::set,
         .renderer = &render_set_as_values,

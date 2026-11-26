@@ -39,7 +39,6 @@ namespace flux::impl {
 
         std::string bind_once(const void* key, Value value);
 
-        // name[.name...]: a part stays bare when it is plain and not reserved, otherwise it is quoted.
         ers::Status append_identifier(std::string_view name);
 
         Statement finish() &&;

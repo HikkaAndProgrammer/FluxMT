@@ -13,7 +13,6 @@
 
 
 namespace flux::impl::nodes {
-    // (SELECT ...) or EXISTS (SELECT ...)
     class SubqueryNode final : public IExprNode {
     public:
         // Member functions

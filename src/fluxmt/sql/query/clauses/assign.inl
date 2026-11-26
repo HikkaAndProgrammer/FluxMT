@@ -15,7 +15,6 @@
 
 
 namespace flux::impl {
-    // column = value: SET of UPDATE, or one column of an INSERT
     class AssignClause final : public IClause {
     public:
         // Member functions

@@ -14,7 +14,6 @@
 
 
 namespace flux::impl {
-    // An item of a list slot: the select list, RETURNING, GROUP BY.
     class ColumnClause final : public IClause {
     public:
         // Member functions

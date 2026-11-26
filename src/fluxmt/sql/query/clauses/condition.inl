@@ -13,7 +13,6 @@
 
 
 namespace flux::impl {
-    // A condition joined with the others of its slot by AND: WHERE, HAVING.
     class ConditionClause final : public IClause {
     public:
         // Member functions

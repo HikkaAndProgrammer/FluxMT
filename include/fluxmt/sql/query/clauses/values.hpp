@@ -18,7 +18,6 @@ namespace flux::impl {
 
 
 namespace flux::impl::clauses {
-    // A value is bound, an Expr is rendered: values(url, now()).
     template<typename... Args>
     Clause values(Args&&... args) {
         std::vector<Expr> items;

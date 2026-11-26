@@ -45,51 +45,6 @@ flux::impl::EPrecedence flux::impl::Expr::precedence() const noexcept {
 const flux::impl::IExprNode& flux::impl::Expr::node() const noexcept { return *_node; }
 
 
-// Generators
-
-flux::impl::Expr flux::impl::Expr::is_null() const {
-    return make_postfix(*this, " IS NULL", EPrecedence::Is);
-}
-flux::impl::Expr flux::impl::Expr::is_not_null() const {
-    return make_postfix(*this, " IS NOT NULL", EPrecedence::Is);
-}
-
-flux::impl::Expr flux::impl::Expr::is_distinct_from(Expr other) const {
-    return make_binary("IS DISTINCT FROM", *this, std::move(other), EPrecedence::Is);
-}
-
-
-flux::impl::Expr flux::impl::Expr::like(Expr pattern) const {
-    return make_binary("LIKE", *this, std::move(pattern), EPrecedence::Like);
-}
-
-flux::impl::Expr flux::impl::Expr::ilike(Expr pattern) const {
-    return make_ilike(*this, std::move(pattern));
-}
-
-
-flux::impl::Expr flux::impl::Expr::between(Expr low, Expr high) const {
-    return make_between(*this, std::move(low), std::move(high));
-}
-
-flux::impl::Expr flux::impl::Expr::contains(Expr other) const {
-    return make_binary("@>", *this, std::move(other), EPrecedence::Other);
-}
-
-flux::impl::Expr flux::impl::Expr::in(std::initializer_list<Expr> values) const {
-    return make_in(*this, std::vector(values));
-}
-
-
-flux::impl::Expr flux::impl::Expr::any(Expr array) const {
-    return make_any(*this, std::move(array));
-}
-
-flux::impl::Expr flux::impl::Expr::cast(std::string_view type) const {
-    return make_cast(*this, type);
-}
-
-
 // Executors
 
 ers::Status flux::impl::Expr::render(Context& ctx, EPrecedence parent) const {
@@ -109,6 +64,10 @@ ers::Status flux::impl::Expr::render(Context& ctx, EPrecedence parent) const {
 
 flux::impl::Expr flux::impl::make_value(Value value) {
     return make_expr<nodes::ValueNode>(std::move(value));
+}
+
+flux::impl::Expr flux::impl::make_column(std::string name) {
+    return make_expr<nodes::ColumnNode>(std::move(name));
 }
 
 flux::impl::Expr flux::impl::make_param(Value value) {
@@ -184,22 +143,6 @@ flux::impl::Expr flux::impl::make_not(Expr what) {
 
 
 // Shortcuts -------------------------------------------------------------------
-
-flux::impl::Expr flux::impl::clauses::col(std::string name) {
-    return make_expr<nodes::ColumnNode>(std::move(name));
-}
-
-flux::impl::Expr flux::impl::clauses::col(std::string_view table, std::string_view name) {
-    return col(std::string(table) + '.' + std::string(name));
-}
-
-flux::impl::Expr flux::impl::clauses::null() {
-    return make_const("NULL");
-}
-
-flux::impl::Expr flux::impl::clauses::sql_bool(bool value) {
-    return value ? make_const("TRUE") : make_const("FALSE");
-}
 
 flux::impl::Expr flux::impl::clauses::exists(Query subquery) {
     return make_expr<nodes::SubqueryNode>(std::move(subquery), true);

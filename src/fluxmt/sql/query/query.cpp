@@ -209,7 +209,6 @@ ers::Status flux::impl::Query::_validate(const Layout& layout, const Dialect& di
         if (layout.contains(it->slot()))
             continue;
 
-        // The dialect decides what a statement of its kind has, a layout of your own decides for itself.
         if (_kind) {
             return ers::make_error(ESqlError::Unsupported, "'{}' in '{}' for '{}'",
                 it->slot()->name, dialect.name(), _kind->name);

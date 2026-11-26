@@ -12,7 +12,6 @@
 
 
 namespace flux::impl {
-    // LIMIT and OFFSET: a bound, non-negative number
     class BoundClause final : public IClause {
     public:
         // Member functions

@@ -19,13 +19,12 @@ namespace flux::impl {
 
 
 namespace flux::impl::clauses {
-    // Expr only: 'join("t", "alias")' must not silently bind a string.
-    template<std::same_as<Expr> T>
+    template<std::derived_from<Expr> T>
     Clause join(std::string table, std::string alias, T on) {
         return make_join_clause(std::move(table), std::move(alias), std::move(on));
     }
 
-    template<std::same_as<Expr> T>
+    template<std::derived_from<Expr> T>
     Clause join(std::string table, T on) {
         return make_join_clause(std::move(table), std::string(), std::move(on));
     }

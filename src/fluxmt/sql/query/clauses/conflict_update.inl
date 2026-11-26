@@ -16,7 +16,6 @@
 
 
 namespace flux::impl {
-    // The whole action: "DO UPDATE SET a = excluded.a, b = excluded.b"
     class ConflictUpdateClause final : public IClause {
     public:
         // Member functions

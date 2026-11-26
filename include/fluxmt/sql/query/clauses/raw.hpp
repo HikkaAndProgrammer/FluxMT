@@ -20,8 +20,6 @@ namespace flux::impl {
 
 
 namespace flux::impl::clauses {
-    // Verbatim SQL with '?' value markers.
-    // Nothing in the text is checked, so keep untrusted input in the markers, never in the text itself.
     template<typename... Args>
     Clause raw(SlotRef slot, std::string sql, Args&&... args) {
         std::vector<Value> values;

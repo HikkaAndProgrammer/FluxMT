@@ -26,17 +26,25 @@ namespace flux::sql {
     using impl::Context;
     using impl::Dialect;
     using impl::EOrder;
+    using impl::ESyntax;
     using impl::Expr;
     using impl::ExprMethods;
     using impl::IsExprSource;
     using impl::Query;
     using impl::SqlBackend;
     using impl::Statement;
+    using impl::TypedExpr;
     using impl::WithCte;
     using impl::WithUnion;
     using impl::function_spelling_t;
     using impl::layout_entry_t;
+    using impl::needs_t;
     using impl::syntax_t;
+
+    using impl::missing;
+    using impl::needs_of;
+    using impl::no_needs;
+    using impl::supports;
 
     using impl::is_plain_identifier;
     using impl::quote_identifier;
@@ -72,6 +80,9 @@ namespace flux::ext {
     using impl::fn_t;
     using impl::make_clause;
     using impl::make_expr;
+    using impl::need_function;
+    using impl::need_syntax;
+    using impl::retype;
     using impl::sql_text;
 }
 

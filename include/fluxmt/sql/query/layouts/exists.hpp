@@ -11,6 +11,5 @@
 
 
 namespace flux::impl::layouts {
-    // SELECT EXISTS (SELECT 1 FROM <table> [WHERE ...]) AS "exists"
     FLUXMT_EXPORT Query exists_in(std::string table);
 }

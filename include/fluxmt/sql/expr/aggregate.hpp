@@ -20,7 +20,6 @@
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
-    // fn([DISTINCT] args [ORDER BY order_by]) [WITHIN GROUP (ORDER BY within_group)]
     struct aggregate_t {
         std::vector<Expr> args;
         std::vector<Expr> order_by;
@@ -39,49 +38,112 @@ namespace flux::impl {
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    // For anything without a shorthand: agg<"regr_slope">("y", "x").
     template<ers::fixed_string Fn, typename... Args>
         requires (std::constructible_from<ColumnExpr, Args> && ...)
-    Expr agg(Args&&... args) {
-        return make_aggregate(Fn.to_sv(), {
+    auto agg(Args&&... args) {
+        return retype<needs_of<Args...>()>(make_aggregate(Fn.to_sv(), {
             .args = { ColumnExpr(std::forward<Args>(args)).expr... }
-        });
+        }));
     }
 
-    template<ers::fixed_string Fn>
-    Expr agg_distinct(ColumnExpr what) {
-        return make_aggregate(Fn.to_sv(), {
-            .args     = { std::move(what.expr) },
+    template<ers::fixed_string Fn, typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto agg_distinct(A&& what) {
+        return retype<needs_of<A>()>(make_aggregate(Fn.to_sv(), {
+            .args     = { ColumnExpr(std::forward<A>(what)).expr },
             .distinct = true
-        });
+        }));
     }
 
 
-    FLUXMT_EXPORT Expr count_all();
-    FLUXMT_EXPORT Expr count_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr count_distinct(ColumnExpr what);
+    inline auto count_all() {
+        return retype<no_needs>(make_aggregate("count", { .args = { make_const("*") } }));
+    }
 
-    FLUXMT_EXPORT Expr min_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr max_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr sum_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr avg_of(ColumnExpr what);
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto count_of(A&& what) {
+        return agg<"count">(std::forward<A>(what));
+    }
 
-    FLUXMT_EXPORT Expr array_agg_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr bool_and_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr bool_or_of(ColumnExpr what);
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto count_distinct(A&& what) {
+        return agg_distinct<"count">(std::forward<A>(what));
+    }
 
-    FLUXMT_EXPORT Expr stddev_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr variance_of(ColumnExpr what);
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto min_of(A&& what) {
+        return agg<"min">(std::forward<A>(what));
+    }
 
-    FLUXMT_EXPORT Expr corr_of(ColumnExpr y, ColumnExpr x);
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto max_of(A&& what) {
+        return agg<"max">(std::forward<A>(what));
+    }
 
-    // The delimiter is a value.
-    FLUXMT_EXPORT Expr string_agg(ColumnExpr what, Expr delimiter);
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto sum_of(A&& what) {
+        return agg<"sum">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto avg_of(A&& what) {
+        return agg<"avg">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto array_agg_of(A&& what) {
+        return agg<"array_agg">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto bool_and_of(A&& what) {
+        return agg<"bool_and">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto bool_or_of(A&& what) {
+        return agg<"bool_or">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto stddev_of(A&& what) {
+        return agg<"stddev">(std::forward<A>(what));
+    }
+
+    template<typename A>
+        requires std::constructible_from<ColumnExpr, A>
+    auto variance_of(A&& what) {
+        return agg<"variance">(std::forward<A>(what));
+    }
+
+    template<typename Y, typename X>
+        requires (std::constructible_from<ColumnExpr, Y> && std::constructible_from<ColumnExpr, X>)
+    auto corr_of(Y&& y, X&& x) {
+        return agg<"corr">(std::forward<Y>(y), std::forward<X>(x));
+    }
+
+    template<typename A, IsExprLike D>
+        requires std::constructible_from<ColumnExpr, A>
+    auto string_agg(A&& what, D&& delimiter) {
+        return retype<needs_of<A, D>()>(make_aggregate("string_agg", {
+            .args = { ColumnExpr(std::forward<A>(what)).expr, Expr(std::forward<D>(delimiter)) }
+        }));
+    }
+
 
     FLUXMT_EXPORT Expr percentile_cont(double fraction, std::vector<ColumnExpr> order_by);
     FLUXMT_EXPORT Expr percentile_disc(double fraction, std::vector<ColumnExpr> order_by);
     FLUXMT_EXPORT Expr mode_of(std::vector<ColumnExpr> order_by);
 
-    // json_agg(row_to_json(<table>) ORDER BY ...)
     FLUXMT_EXPORT Expr json_rows(std::string table, std::vector<ColumnExpr> order_by = {});
 }

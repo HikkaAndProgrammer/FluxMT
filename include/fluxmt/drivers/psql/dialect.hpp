@@ -8,12 +8,21 @@
 
 // fluxmt
 #include <fluxmt/sql/dialect.hpp>
+#include <fluxmt/sql/syntax.hpp>
 
 // export
 #include <fluxmt/export.hpp>
 
 
 namespace flux::impl::psql {
+    inline constexpr syntax_t postgres_syntax {
+        .cast     = &syntax::cast_postfix,
+        .ilike    = &syntax::ilike_operator,
+        .any      = &syntax::any_native,
+        .excluded = &syntax::excluded_table,
+    };
+
+
     class FLUXMT_EXPORT postgres_dialect final : public Dialect {
     public:
         postgres_dialect() noexcept;

@@ -14,7 +14,6 @@
 
 
 namespace flux::impl::nodes {
-    // x IN (SELECT ...)
     class InQueryNode final : public IExprNode {
     public:
         // Member functions

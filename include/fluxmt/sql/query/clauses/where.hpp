@@ -15,19 +15,17 @@
 
 
 namespace flux::impl {
-    // A condition joined with the others of its slot by AND: WHERE, HAVING.
     FLUXMT_EXPORT Clause make_condition_clause(SlotRef slot, Expr condition);
 }
 
 
 namespace flux::impl::clauses {
-    // Expr only: 'where("flag")' must not silently bind a string.
-    template<std::same_as<Expr> T>
+    template<std::derived_from<Expr> T>
     Clause where(T condition) {
         return make_condition_clause(&slots::where, std::move(condition));
     }
 
-    template<std::same_as<Expr> T>
+    template<std::derived_from<Expr> T>
     Clause having(T condition) {
         return make_condition_clause(&slots::having, std::move(condition));
     }

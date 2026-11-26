@@ -9,11 +9,9 @@
 
 
 namespace test::live {
-    // Skips the running test case when no database is configured.
     flux::psql::options_t require_options();
 
 
-    // Own schema per test case: created on construction, dropped (CASCADE) on destruction.
     class Sandbox {
     public:
         // Member functions
@@ -30,7 +28,6 @@ namespace test::live {
         flux::psql::Database& db() noexcept { return _db; }
         const std::string& schema() const noexcept { return _schema; }
 
-        // '@' in the text stands for the schema name: "SELECT * FROM @.account"
         [[nodiscard]] std::string sql(std::string text) const;
 
         template<typename T>

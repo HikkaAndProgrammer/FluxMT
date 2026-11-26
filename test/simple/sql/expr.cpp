@@ -48,7 +48,6 @@ namespace {
     constexpr flux::ext::fn_t<"date_trunc"> date_trunc {};
     constexpr flux::ext::binary_op_t<"%"> similar {};
 
-    // Anything with to_expr() joins in: it gets the builder methods from ExprMethods.
     struct NameColumn : flux::sql::ExprMethods {
         flux::sql::Expr to_expr() const { return col("name"); }
     };
@@ -105,15 +104,12 @@ FLUXMT_TEST_CASE("expr in and between", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("expr follows the dialect capabilities", "[sql]") {
-    // no ILIKE
     CHECK(sql_of(col("a").ilike("x%")) == "lower(a) LIKE lower(?1)");
 
-    // no native arrays: a bound array is spread
     CHECK(sql_of(col("a").any(std::vector<int>{ 1, 2 })) == "a IN (?1, ?2)");
     CHECK(sql_of(col("a").any(std::vector<int>{})) == "FALSE");
     CHECK(sql_of(col("a").any(col("b"))) == "<error>");
 
-    // CAST() instead of ::
     CHECK(sql_of(col("a").cast("uuid") == col("b")) == "CAST(a AS uuid) = b");
     CHECK(sql_of((col("a") + col("b")).cast("int") > 1) == "CAST(a + b AS int) > ?1");
 }

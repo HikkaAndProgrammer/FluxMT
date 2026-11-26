@@ -11,7 +11,6 @@
 
 
 namespace flux::impl::clauses {
-    // Names: a table, an alias, a conflict target
     FLUXMT_EXPORT Clause identifier(SlotRef slot, std::string name, std::string alias = "");
 
     FLUXMT_EXPORT Clause from(std::string name, std::string alias = "");

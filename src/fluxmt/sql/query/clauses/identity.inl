@@ -13,7 +13,6 @@
 
 
 namespace flux::impl {
-    // A name with an optional alias: a table, a conflict target.
     class IdentityClause final : public IClause {
     public:
         // Member functions

@@ -7,7 +7,6 @@ find_package(Catch2 3 CONFIG REQUIRED)
 include(Catch)
 
 
-# Command line of scripts/livedb.sh: live tests run "<command> up <pg|redis>" before the first connection
 set(FLUXMT_TEST_LIVEDB_COMMAND "" CACHE STRING "Starts the databases of live tests, empty to manage them by hand")
 
 add_library(test_support
@@ -69,7 +68,6 @@ option(FLUXMT_TESTS_PER_CASE "Register every test case as its own ctest entry" O
 add_library(test_simple_main OBJECT "simple.cpp")
 target_link_libraries(test_simple_main PUBLIC Catch2::Catch2WithMain test_support)
 
-# add_test_group(<kind> <module> SOURCES <...> LIBRARIES <...>) -> executable test_<kind>_<module>
 function(add_test_group KIND MODULE)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBRARIES" ${ARGN})
 
@@ -110,7 +108,6 @@ foreach(KIND IN ITEMS simple live)
 
     add_custom_target(test_${KIND})
 
-    # core, sql, ... lie directly in the kind directory, drivers in drivers/<name>
     file(GLOB KIND_GROUPS CONFIGURE_DEPENDS
         LIST_DIRECTORIES true
         RELATIVE "${KIND_DIR}"
@@ -163,7 +160,6 @@ endforeach()
 #----------------------------------------------------------------------------------------------------------------------
 
 
-# One translation unit per public header, so a header that misses its own includes fails the build.
 function(add_header_check MODULE)
     if(EXISTS "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}.hpp")
         set(HEADERS "fluxmt/drivers/${MODULE}.hpp")

@@ -24,7 +24,6 @@ using std::string_literals::operator ""s;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    // "?N" placeholders, no ILIKE, no native arrays: see support/sql/dialect.hpp
     ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
         static const test::AntiDialect dialect;
 
@@ -101,11 +100,9 @@ FLUXMT_TEST_CASE("query where, having and the clause order", "[sql]") {
     CHECK(contains(sql_of(select_from("t") | where(col("a").is_null())), "WHERE a IS NULL"));
     CHECK(contains(sql_of(select_from("t") | where(col("a") != 1)), "WHERE a <> ?1"));
 
-    // where() sits between ANDs, so a top-level OR is wrapped
     CHECK(sql_of(select_from("t") | where(col("a") == 1 || col("b") == 2) | where(col("c") == 3))
         == "SELECT *\nFROM t\nWHERE (a = ?1 OR b = ?2) AND c = ?3");
 
-    // the order of the pipe does not matter, the layout does
     CHECK(sql_of(select_from("t") | with_limit(1) | order_by("a") | where(col("b") == 2))
         == "SELECT *\nFROM t\nWHERE b = ?1\nORDER BY a ASC\nLIMIT ?2");
 }
@@ -193,7 +190,6 @@ FLUXMT_TEST_CASE("query insert with set", "[sql]") {
     CHECK(sql_of(insert_into("t") | set("a", 1, "b", 2) | on_conflict_constraint("t_a_key") | do_nothing())
         == "INSERT INTO t (a, b)\nVALUES (?1, ?2)\nON CONFLICT ON CONSTRAINT t_a_key\nDO NOTHING");
 
-    // the order of the pipe does not matter
     CHECK(sql_of(insert_into("t") | returning("id") | set("a", 1, "b", 2))
         == "INSERT INTO t (a, b)\nVALUES (?1, ?2)\nRETURNING id");
 }
@@ -341,7 +337,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {
     CHECK(sql_of(select_from("prices")
-        | flux::ext::make_clause<DistinctOnClause>(std::vector{ col("product_id") })
+        | flux::ext::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
         | order_by("product_id")
         | order_by("at", EOrder::Desc))
         == "SELECT DISTINCT ON (product_id) *\nFROM prices\nORDER BY product_id ASC, at DESC");

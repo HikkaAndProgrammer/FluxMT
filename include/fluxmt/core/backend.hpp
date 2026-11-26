@@ -43,7 +43,6 @@ namespace flux::impl {
     };
 
 
-    // Specialized once per driver: its connection, features and dialect.
     template<typename B>
     struct backend_traits;
 

@@ -5,8 +5,6 @@
 #include <fluxmt/sql/query/slots/conflict.hpp>
 
 
-// ON CONFLICT: PostgreSQL, SQLite, DuckDB
-
 namespace flux::impl::shared {
     inline constexpr SlotBinding conflict {
         .slot      = &slots::conflict,

@@ -12,7 +12,6 @@
 
 
 namespace flux::impl::clauses {
-    // Conditionally include a clause without breaking out of the pipe chain.
     inline std::vector<Clause> when(bool condition, Clause clause) {
         std::vector<Clause> out;
 
@@ -29,8 +28,6 @@ namespace flux::impl::clauses {
         return clauses;
     }
 
-    // Lazy form: nothing is built when the condition fails,
-    // which matters when the skipped branch is a whole subquery.
     template<typename Fn>
         requires std::invocable<Fn>
     std::vector<Clause> when(bool condition, Fn&& make) {

@@ -42,8 +42,12 @@ namespace flux::impl::nodes {
             function_spelling_t spelling;
 
             if (const auto spell = ctx.dialect().syntax().function) {
-                const auto got = ERS_TRY(spell(_name, _args.size()));
-                spelling = got;
+                spelling = spell(_name, _args.size());
+
+                if (!spelling.supported) {
+                    return ers::make_error(ESqlError::Unsupported, "{}() in '{}': {}",
+                        _name, ctx.dialect().name(), spelling.reason);
+                }
             }
 
             ctx.query += spelling.name.empty() ? _name : spelling.name;

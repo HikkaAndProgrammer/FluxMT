@@ -157,7 +157,6 @@ namespace flux::impl {
 // Subqueries ------------------------------------------------------------------
 
 namespace flux::impl {
-    // open + the query + close: "EXISTS (" ... ")"
     FLUXMT_EXPORT ers::Status append_subquery(
         Context& ctx, const Query& sub,
         std::string_view open, std::string_view close = ")"

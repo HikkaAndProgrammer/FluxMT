@@ -15,10 +15,9 @@
 #include <fluxmt/export.hpp>
 
 
-// The templates that need a complete Expr (make_expr, val, param, row) are in expr.hpp.
-
 namespace flux::impl {
     FLUXMT_EXPORT Expr make_value(Value value);
+    FLUXMT_EXPORT Expr make_column(std::string name);
     FLUXMT_EXPORT Expr make_param(Value value);
     FLUXMT_EXPORT Expr make_const(sql_text text);
     FLUXMT_EXPORT Expr make_postfix(Expr operand, sql_text suffix, EPrecedence precedence);
@@ -37,11 +36,6 @@ namespace flux::impl {
 
 
     namespace clauses {
-        FLUXMT_EXPORT Expr col(std::string name);
-        FLUXMT_EXPORT Expr col(std::string_view table, std::string_view name);
-        FLUXMT_EXPORT Expr null();
-        FLUXMT_EXPORT Expr sql_bool(bool value);
-
         FLUXMT_EXPORT Expr exists(Query subquery);
         FLUXMT_EXPORT Expr subquery(Query query);
     }

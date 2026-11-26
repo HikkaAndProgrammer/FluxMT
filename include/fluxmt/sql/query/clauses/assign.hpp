@@ -19,13 +19,11 @@
 namespace flux::impl {
     FLUXMT_EXPORT Clause make_assign_clause(std::string column, Expr value);
 
-    // For a layout: SET of an INSERT written as "(columns) VALUES (values)"
     FLUXMT_EXPORT ers::Status render_set_as_values(Context& ctx, std::span<const Clause* const> group);
 }
 
 
 namespace flux::impl::clauses {
-    // A value is bound, an Expr is rendered: assign("stock", col("stock") - qty).
     template<typename T>
     Clause assign(std::string column, T&& value) {
         return make_assign_clause(std::move(column), Expr(std::forward<T>(value)));
@@ -34,7 +32,6 @@ namespace flux::impl::clauses {
     FLUXMT_EXPORT Clause assign_null(std::string column);
 
 
-    // Pairs of a column and a value: set("name", "bob", "stock", col("stock") - 1).
     template<typename... Args>
         requires (sizeof...(Args) >= 2 && sizeof...(Args) % 2 == 0)
     std::vector<Clause> set(Args&&... args) {
