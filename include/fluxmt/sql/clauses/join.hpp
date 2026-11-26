@@ -6,8 +6,10 @@
 #include <utility>
 
 // fluxmt
-#include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/query/clause.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
+#include <fluxmt/sql/expr/expr.hpp>
+#include <fluxmt/sql/slots/join.hpp>
 
 // export
 #include <fluxmt/export.hpp>
@@ -20,12 +22,14 @@ namespace flux::impl {
 
 namespace flux::impl::clauses {
     template<std::derived_from<Expr> T>
-    Clause join(std::string table, std::string alias, T on) {
-        return make_join_clause(std::move(table), std::move(alias), std::move(on));
+    SqlClause<&slots::join, needs_of<T>()> join(std::string table, std::string alias, T on) {
+        return SqlClause<&slots::join, needs_of<T>()>(
+            make_join_clause(std::move(table), std::move(alias), std::move(on)));
     }
 
     template<std::derived_from<Expr> T>
-    Clause join(std::string table, T on) {
-        return make_join_clause(std::move(table), std::string(), std::move(on));
+    SqlClause<&slots::join, needs_of<T>()> join(std::string table, T on) {
+        return SqlClause<&slots::join, needs_of<T>()>(
+            make_join_clause(std::move(table), std::string(), std::move(on)));
     }
 }

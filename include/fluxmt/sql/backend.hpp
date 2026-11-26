@@ -7,6 +7,7 @@
 #include <fluxmt/core/backend.hpp>
 #include <fluxmt/query/kind.hpp>
 #include <fluxmt/query/slot.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
 #include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/expr/needs.hpp>
 #include <fluxmt/sql/syntax.hpp>
@@ -51,4 +52,7 @@ namespace flux::impl {
 
     template<typename B, needs_t N>
     concept SupportsNeeds = SqlBackend<B> && supports(syntax_of<B>(), N);
+
+    template<typename B, kind_ref K, typename C>
+    concept AcceptsClause = HasSlot<B, K, C::slot> && SupportsNeeds<B, clause_needs<C>()>;
 }

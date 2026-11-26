@@ -16,10 +16,6 @@ flux::impl::Clause flux::impl::make_conflict_update_clause(std::vector<std::stri
 
 // Shortcuts
 
-flux::impl::Clause flux::impl::clauses::on_conflict_constraint(std::string name) {
-    return identifier(&slots::conflict_constraint, std::move(name));
-}
-
-flux::impl::Clause flux::impl::clauses::do_nothing() {
+flux::impl::Clause flux::impl::make_do_nothing_clause() {
     return make_raw_clause(&slots::conflict_action, "DO NOTHING", {});
 }

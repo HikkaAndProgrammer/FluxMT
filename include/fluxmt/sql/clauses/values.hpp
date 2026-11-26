@@ -5,8 +5,10 @@
 #include <vector>
 
 // fluxmt
-#include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/query/clause.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
+#include <fluxmt/sql/expr/expr.hpp>
+#include <fluxmt/sql/slots/values.hpp>
 
 // export
 #include <fluxmt/export.hpp>
@@ -19,11 +21,11 @@ namespace flux::impl {
 
 namespace flux::impl::clauses {
     template<typename... Args>
-    Clause values(Args&&... args) {
+    SqlClause<&slots::values, needs_of<Args...>()> values(Args&&... args) {
         std::vector<Expr> items;
         items.reserve(sizeof...(Args));
         (items.push_back(Expr(std::forward<Args>(args))), ...);
 
-        return make_values_clause(std::move(items));
+        return SqlClause<&slots::values, needs_of<Args...>()>(make_values_clause(std::move(items)));
     }
 }

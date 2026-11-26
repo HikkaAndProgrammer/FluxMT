@@ -43,6 +43,7 @@
 #include <fluxmt/sql/clauses/join.hpp>
 #include <fluxmt/sql/clauses/order.hpp>
 #include <fluxmt/sql/clauses/raw.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
 #include <fluxmt/sql/clauses/returning.hpp>
 #include <fluxmt/sql/clauses/values.hpp>
 #include <fluxmt/sql/clauses/where.hpp>
@@ -71,6 +72,9 @@ namespace flux::sql {
 
     using impl::Query;
     using impl::SqlBackend;
+    using impl::SqlClause;
+    using impl::SqlClauses;
+    using impl::clause_needs;
     using impl::statement_t;
 
     using impl::ESyntax;

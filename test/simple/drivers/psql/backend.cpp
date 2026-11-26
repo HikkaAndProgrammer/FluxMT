@@ -49,3 +49,15 @@ FLUXMT_TEST_CASE("psql backend is a sql backend at compile time", "[psql]") {
     STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Ilike)>);
     STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Any)>);
 }
+
+FLUXMT_TEST_CASE("psql backend accepts typed clauses", "[psql]") {
+    using B = flux::psql::backend;
+    using namespace flux::orm;
+
+    namespace impl = flux::impl;
+
+    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::select, decltype(where(col("a").ilike("x%")))>);
+    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::insert, decltype(on_conflict_constraint("c"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::insert, decltype(do_update("a", "b"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<B, &flux::kinds::select, decltype(returning("id"))>);
+}

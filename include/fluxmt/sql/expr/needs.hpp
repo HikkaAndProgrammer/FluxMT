@@ -50,7 +50,6 @@ namespace flux::impl {
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    [[nodiscard]]
     constexpr needs_t need_syntax(ESyntax what) noexcept {
         needs_t out;
         out.syntax = static_cast<ers::u8>(1u << static_cast<unsigned>(what));
@@ -58,7 +57,6 @@ namespace flux::impl {
         return out;
     }
 
-    [[nodiscard]]
     constexpr needs_t need_function(std::string_view name, size_t arity) noexcept {
         needs_t out;
 
@@ -77,12 +75,10 @@ namespace flux::impl {
         return out;
     }
 
-    [[nodiscard]]
     constexpr bool has_syntax(const needs_t& needs, ESyntax what) noexcept {
         return (needs.syntax & (1u << static_cast<unsigned>(what))) != 0;
     }
 
-    [[nodiscard]]
     constexpr needs_t operator|(const needs_t& lhs, const needs_t& rhs) noexcept {
         needs_t out = lhs;
 

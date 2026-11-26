@@ -9,6 +9,7 @@
 
 // fluxmt
 #include <fluxmt/query/clause.hpp>
+#include <fluxmt/query/slot_clause.hpp>
 
 
 namespace flux::impl::clauses {
@@ -28,19 +29,36 @@ namespace flux::impl::clauses {
         return clauses;
     }
 
-    template<typename Fn>
-        requires std::invocable<Fn>
-    std::vector<Clause> when(bool condition, Fn&& make) {
+    template<slot_ref S, bool Many, auto Meta>
+    SlotClause<S, true, Meta> when(bool condition, SlotClause<S, Many, Meta> clause) {
         if (!condition)
             return {};
 
+        return SlotClause<S, true, Meta>(std::move(clause).take_all());
+    }
+
+    template<typename Fn>
+        requires std::invocable<Fn>
+    auto when(bool condition, Fn&& make) {
         using result_t = std::remove_cvref_t<std::invoke_result_t<Fn>>;
 
-        if constexpr (std::same_as<result_t, std::vector<Clause>>) {
+        if constexpr (is_slot_clause_v<result_t>) {
+            using out_t = SlotClause<result_t::slot, true, result_t::meta>;
+
+            if (!condition)
+                return out_t {};
+
+            return out_t(std::forward<Fn>(make)().take_all());
+        } else if constexpr (std::same_as<result_t, std::vector<Clause>>) {
+            if (!condition)
+                return std::vector<Clause> {};
+
             return std::forward<Fn>(make)();
         } else {
             std::vector<Clause> out;
-            out.push_back(std::forward<Fn>(make)());
+
+            if (condition)
+                out.push_back(std::forward<Fn>(make)());
 
             return out;
         }

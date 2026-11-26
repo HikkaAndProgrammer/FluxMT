@@ -7,6 +7,6 @@
 
 // Implementation --------------------------------------------------------------
 
-flux::impl::Clause flux::impl::clauses::distinct() {
+flux::impl::Clause flux::impl::make_distinct_clause() {
     return make_raw_clause(&slots::distinct, " DISTINCT", {});
 }

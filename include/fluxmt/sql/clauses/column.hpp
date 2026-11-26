@@ -9,8 +9,9 @@
 #include <vector>
 
 // fluxmt
-#include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/query/clause.hpp>
+#include <fluxmt/sql/clauses/tag.hpp>
+#include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/slots/column.hpp>
 
 // export
@@ -58,16 +59,19 @@ namespace flux::impl {
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    FLUXMT_EXPORT Clause column(column_expr_t what);
-    FLUXMT_EXPORT Clause column(aliased_t what);
+    template<ColumnItem T>
+    SqlClause<&slots::column, column_need<T>()> column(T&& what) {
+        return SqlClause<&slots::column, column_need<T>()>(make_column_clause(&slots::column, std::forward<T>(what)));
+    }
 
     template<ColumnItem... Args>
-    std::vector<Clause> columns(Args&&... args) {
-        return make_columns(&slots::column, std::forward<Args>(args)...);
+    SqlClauses<&slots::column, column_needs<Args...>()> columns(Args&&... args) {
+        return SqlClauses<&slots::column, column_needs<Args...>()>(
+            make_columns(&slots::column, std::forward<Args>(args)...));
     }
 
     template<ColumnNames R>
-    std::vector<Clause> columns(R&& names) {
-        return make_columns(&slots::column, std::forward<R>(names));
+    SqlClauses<&slots::column, no_needs> columns(R&& names) {
+        return SqlClauses<&slots::column, no_needs>(make_columns(&slots::column, std::forward<R>(names)));
     }
 }

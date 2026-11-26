@@ -61,6 +61,6 @@ ers::Status flux::impl::render_set_as_values(Context& base, std::span<const Clau
 
 // Shortcuts
 
-flux::impl::Clause flux::impl::clauses::assign_null(std::string column) {
-    return make_assign_clause(std::move(column), null());
+flux::impl::Clause flux::impl::make_assign_null_clause(std::string column) {
+    return make_assign_clause(std::move(column), clauses::null());
 }

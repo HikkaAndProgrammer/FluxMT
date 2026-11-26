@@ -19,7 +19,6 @@ namespace flux::impl::psql {
         std::string password;
 
 
-        [[nodiscard]]
         std::string connection_string() const;
     };
 }

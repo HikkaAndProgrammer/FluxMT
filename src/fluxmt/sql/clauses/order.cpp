@@ -9,10 +9,10 @@
 
 // Implementation --------------------------------------------------------------
 
-flux::impl::Clause flux::impl::clauses::order_by(column_expr_t what, EOrder order) {
+flux::impl::Clause flux::impl::make_order_clause(column_expr_t what, EOrder order) {
     return make_clause<OrderClause>(std::move(what.expr), order);
 }
 
-flux::impl::Clause flux::impl::clauses::order_by_random() {
-    return order_by(named_fn<"random"> {}());
+flux::impl::Clause flux::impl::make_order_random_clause() {
+    return make_order_clause(named_fn<"random"> {}(), EOrder::Asc);
 }

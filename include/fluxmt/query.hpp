@@ -12,6 +12,7 @@
 #include <fluxmt/query/layout.hpp>
 #include <fluxmt/query/query.hpp>
 #include <fluxmt/query/slot.hpp>
+#include <fluxmt/query/slot_clause.hpp>
 #include <fluxmt/query/statement.hpp>
 
 
@@ -24,6 +25,8 @@ namespace flux::query {
     using impl::Layout;
     using impl::slot_info_view;
     using impl::Query;
+    using impl::SlotClause;
+    using impl::clauses::when;
     using impl::statement_kind_t;
     using impl::layout_entry_t;
     using impl::find_layout;

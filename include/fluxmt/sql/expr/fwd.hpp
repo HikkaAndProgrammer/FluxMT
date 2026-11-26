@@ -4,8 +4,6 @@
 #include <memory>
 
 
-
-
 namespace flux::impl {
     class IExprNode;
     using ExprNodePtr = std::shared_ptr<const IExprNode>;

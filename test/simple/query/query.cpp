@@ -3,6 +3,7 @@
 
 // std
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -199,4 +200,34 @@ FLUXMT_TEST_CASE("query writes a lead before a slot when another is empty", "[qu
     q |= flux::ext::make_clause<ValueClause>(&ttl_slot, 5);
 
     CHECK(statement_of(q)->text == "GET $1 NONX TTL $2");
+}
+
+
+// Typed clauses ---------------------------------------------------------------
+
+FLUXMT_TEST_CASE("query takes typed slot clauses", "[query]") {
+    using key_clause = flux::query::SlotClause<&key_slot>;
+    using value_clause = flux::query::SlotClause<&value_slot>;
+    using flag_clauses = flux::query::SlotClause<&nx_slot, true>;
+
+    STATIC_REQUIRE(key_clause::slot == &key_slot);
+    STATIC_REQUIRE(std::convertible_to<key_clause, flux::ext::Clause>);
+    STATIC_REQUIRE(!std::convertible_to<flag_clauses, flux::ext::Clause>);
+    STATIC_REQUIRE(std::convertible_to<flag_clauses, std::vector<flux::ext::Clause>>);
+
+    STATIC_REQUIRE(std::same_as<
+        decltype(flux::query::when(true, std::declval<key_clause>())),
+        flux::query::SlotClause<&key_slot, true>
+    >);
+
+    flux::query::Query q(&set_kind);
+    q |= key_clause(flux::ext::make_clause<ValueClause>(&key_slot, std::string("k")));
+    q |= flux::query::when(true, value_clause(flux::ext::make_clause<ValueClause>(&value_slot, 5)));
+    q |= flux::query::when(false, flag_clauses(std::vector<flux::ext::Clause> {}));
+
+    const auto r = statement_of(q);
+
+    REQUIRE(r);
+    CHECK(r->text == "SET $1 $2");
+    CHECK(r->params == std::vector<flux::Value>{ std::string("k"), 5 });
 }

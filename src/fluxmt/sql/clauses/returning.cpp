@@ -6,6 +6,6 @@
 
 // Implementation --------------------------------------------------------------
 
-flux::impl::Clause flux::impl::clauses::returning_all() {
+flux::impl::Clause flux::impl::make_returning_all_clause() {
     return make_raw_clause(&slots::returning, "*", {});
 }

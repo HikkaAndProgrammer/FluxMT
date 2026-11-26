@@ -94,10 +94,10 @@ ers::Status flux::impl::render_with(Context& ctx, std::span<const Clause* const>
 
 // Shortcuts
 
-Clause flux::impl::clauses::with_cte(std::string name, Query definition, bool recursive) {
+Clause flux::impl::make_cte_clause(std::string name, Query definition, bool recursive) {
     return make_clause<CteClause>(std::move(name), std::move(definition), recursive);
 }
 
-Clause flux::impl::clauses::union_with(Query other, bool all) {
+Clause flux::impl::make_union_clause(Query other, bool all) {
     return make_clause<UnionClause>(std::move(other), all);
 }

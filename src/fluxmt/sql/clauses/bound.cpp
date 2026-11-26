@@ -10,10 +10,10 @@
 
 // Implementation --------------------------------------------------------------
 
-flux::impl::Clause flux::impl::clauses::with_limit(ers::i64 amount) {
+flux::impl::Clause flux::impl::make_limit_clause(ers::i64 amount) {
     return make_clause<BoundClause>(&slots::limit, amount);
 }
 
-flux::impl::Clause flux::impl::clauses::with_offset(ers::i64 amount) {
+flux::impl::Clause flux::impl::make_offset_clause(ers::i64 amount) {
     return make_clause<BoundClause>(&slots::offset, amount);
 }

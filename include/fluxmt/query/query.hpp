@@ -17,6 +17,7 @@
 #include <fluxmt/query/dialect.hpp>
 #include <fluxmt/query/kind.hpp>
 #include <fluxmt/query/layout.hpp>
+#include <fluxmt/query/slot_clause.hpp>
 #include <fluxmt/query/statement.hpp>
 
 // export
@@ -52,6 +53,11 @@ namespace flux::impl {
 
         void add(Clause clause);
         void add(std::vector<Clause> clauses);
+
+        template<slot_ref S, bool Many, auto Meta>
+        void add(SlotClause<S, Many, Meta> clause) {
+            add(std::move(clause).take_all());
+        }
 
         ers::Status insert_after(slot_ref anchor, const slot_info_t& binding);
         ers::Status insert_before(slot_ref anchor, const slot_info_t& binding);

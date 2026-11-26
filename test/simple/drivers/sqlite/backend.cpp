@@ -43,3 +43,15 @@ FLUXMT_TEST_CASE("sqlite backend is a sql backend at compile time", "[sqlite]") 
     STATIC_REQUIRE(impl::SupportsNeeds<backend, impl::need_function("now", 0)>);
     STATIC_REQUIRE(!impl::SupportsNeeds<backend, impl::need_function("greatest", 1)>);
 }
+
+FLUXMT_TEST_CASE("sqlite backend accepts typed clauses", "[sqlite]") {
+    using namespace flux::orm;
+
+    namespace impl = flux::impl;
+
+    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::select, decltype(where(col("a").ilike("x%")))>);
+    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::insert, decltype(returning("id"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::insert, decltype(do_update("a", "b"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<backend, &flux::kinds::insert, decltype(on_conflict_constraint("c"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<backend, &flux::kinds::select, decltype(returning("id"))>);
+}
