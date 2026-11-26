@@ -23,28 +23,34 @@
 namespace flux::sql {
     using impl::Aliased;
     using impl::ColumnExpr;
-    using impl::Context;
-    using impl::Dialect;
     using impl::EOrder;
-    using impl::ESyntax;
     using impl::Expr;
     using impl::ExprMethods;
     using impl::IsExprSource;
+    using impl::TypedExpr;
+
+    using impl::Context;
     using impl::Query;
     using impl::SqlBackend;
     using impl::statement_t;
-    using impl::TypedExpr;
     using impl::WithCte;
     using impl::WithUnion;
+
+    using impl::Dialect;
+    using impl::ESyntax;
+    using impl::function_rule_t;
+    using impl::function_rules_t;
     using impl::function_spelling_t;
     using impl::layout_entry_t;
-    using impl::needs_t;
     using impl::syntax_t;
 
+    using impl::needs_t;
     using impl::missing;
     using impl::needs_of;
     using impl::no_needs;
+    using impl::spelling_of;
     using impl::supports;
+    using impl::with_functions;
 
     using impl::is_plain_identifier;
     using impl::quote_identifier;
@@ -60,25 +66,28 @@ namespace flux {
 }
 
 
-// Extension points: your own nodes, operators, functions and clauses.
+// Extension points
+
 namespace flux::ext {
     using impl::Clause;
-    using impl::Context;
     using impl::EArity;
-    using impl::EPrecedence;
     using impl::IClause;
-    using impl::IExprNode;
-    using impl::KindRef;
-    using impl::Layout;
-    using impl::LayoutView;
     using impl::Slot;
     using impl::SlotBinding;
     using impl::SlotRef;
-    using impl::StatementKind;
-    using impl::binary_op_t;
-    using impl::find_layout;
-    using impl::fn_t;
     using impl::make_clause;
+
+    using impl::KindRef;
+    using impl::Layout;
+    using impl::LayoutView;
+    using impl::StatementKind;
+    using impl::find_layout;
+
+    using impl::Context;
+    using impl::EPrecedence;
+    using impl::IExprNode;
+    using impl::binary_op_t;
+    using impl::fn_t;
     using impl::make_expr;
     using impl::need_function;
     using impl::need_syntax;
@@ -88,6 +97,7 @@ namespace flux::ext {
 
 
 // The query language: 'using namespace flux::orm;'.
+
 namespace flux::orm {
     using namespace impl::clauses;
     using namespace impl::layouts;

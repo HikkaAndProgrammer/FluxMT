@@ -53,10 +53,22 @@ namespace {
     }
 
     constexpr syntax_t picky { .function = &spell };
+
+    constexpr flux::sql::function_rule_t pair_rule { .name = "pair", .min_arity = 2, .max_arity = 2, .spelling = { .name = "pair_of" } };
+    constexpr flux::sql::function_rule_t pair_mine { .name = "pair", .spelling = { .name = "mine" } };
+    constexpr flux::sql::function_rules_t pair_rules { pair_rule };
+    constexpr flux::sql::function_rules_t pair_both { pair_mine, pair_rule };
+    constexpr flux::sql::function_rules_t pair_added = pair_rules + flux::sql::function_rules_t { pair_mine };
+
+    constexpr syntax_t tabled = flux::sql::with_functions(syntax_t {}, pair_rules);
+    constexpr syntax_t tabled_and_picky = flux::sql::with_functions(picky, pair_rules);
+    constexpr syntax_t mine_first = flux::sql::with_functions(syntax_t {}, pair_both);
+    constexpr syntax_t mine_last = flux::sql::with_functions(syntax_t {}, pair_added);
     constexpr syntax_t nothing {};
     constexpr auto& anti = test::anti::syntax;
 
     constexpr flux::ext::fn_t<"forbidden"> forbidden {};
+    constexpr flux::ext::fn_t<"pair"> pair {};
     constexpr flux::ext::fn_t<"f1"> f1 {};
     constexpr flux::ext::fn_t<"f2"> f2 {};
     constexpr flux::ext::fn_t<"f3"> f3 {};
@@ -161,6 +173,21 @@ static_assert(!supports(picky, needs<decltype(coalesce(col("a"), forbidden(1)))>
 static_assert(supports(picky, needs<decltype(coalesce(col("a"), 1))>));
 
 static_assert(missing(picky, needs<decltype(greatest(col("a")))>) == flux::impl::need_function("greatest", 1));
+
+// Rules: a name with rules is refused for an argument count without one, a name without rules keeps its own
+static_assert(supports(tabled, needs<decltype(pair(1, 2))>));
+static_assert(!supports(tabled, needs<decltype(pair(1))>));
+static_assert(!supports(tabled, needs<decltype(pair(1, 2, 3))>));
+static_assert(supports(tabled, needs<decltype(greatest(col("a")))>));
+static_assert(!supports(tabled_and_picky, needs<decltype(greatest(col("a")))>));
+static_assert(!supports(tabled_and_picky, needs<decltype(pair(1))>));
+static_assert(supports(tabled_and_picky, needs<decltype(pair(1, 2))>));
+
+// The first rule wins
+static_assert(flux::impl::spelling_of(mine_first, "pair", 2).name == "mine");
+static_assert(flux::impl::spelling_of(mine_last, "pair", 2).name == "pair_of");
+static_assert(flux::impl::spelling_of(mine_last, "pair", 5).name == "mine");
+static_assert(supports(mine_first, needs<decltype(pair(1))>));
 static_assert(missing(nothing, needs<decltype(col("a").ilike("x").cast("int"))>)
     == (only(ESyntax::Ilike) | only(ESyntax::Cast)));
 static_assert(missing(anti, needs<decltype(col("a").ilike("x"))>) == no_needs);

@@ -3,6 +3,7 @@
 // std
 #include <cstddef>
 #include <initializer_list>
+#include <span>
 #include <string_view>
 
 // ers
@@ -36,7 +37,62 @@ namespace flux::impl::syntax {
 // Compile-time check ----------------------------------------------------------
 
 namespace flux::impl {
-    [[nodiscard]]
+    template<size_t N>
+    struct function_rules_t {
+        function_rule_t rules[N];
+
+        constexpr operator std::span<const function_rule_t>() const noexcept { return rules; }
+    };
+
+    template<typename... R>
+    function_rules_t(R...) -> function_rules_t<sizeof...(R)>;
+
+    template<size_t A, size_t B>
+    constexpr function_rules_t<A + B> operator+(const function_rules_t<A>& lhs, const function_rules_t<B>& rhs) noexcept {
+        function_rules_t<A + B> out {};
+
+        for (size_t i = 0; i < A; ++i)
+            out.rules[i] = lhs.rules[i];
+
+        for (size_t i = 0; i < B; ++i)
+            out.rules[A + i] = rhs.rules[i];
+
+        return out;
+    }
+
+    constexpr syntax_t with_functions(syntax_t base, std::span<const function_rule_t> functions) noexcept {
+        base.functions = functions;
+
+        return base;
+    }
+
+    constexpr function_spelling_t spelling_of(const syntax_t& syntax, std::string_view name, size_t arity) noexcept {
+        bool named = false;
+
+        for (const auto& rule : syntax.functions) {
+            if (rule.name != name)
+                continue;
+
+            named = true;
+
+            if (arity >= rule.min_arity && arity <= rule.max_arity)
+                return rule.spelling;
+        }
+
+        if (named) {
+            return {
+                .supported = false,
+                .reason    = "no spelling for this number of arguments"
+            };
+        }
+
+        if (syntax.function)
+            return syntax.function(name, arity);
+
+        return {};
+    }
+
+
     constexpr bool has_strategy(const syntax_t& syntax, ESyntax what) noexcept {
         switch (what) {
             case ESyntax::Cast:     return syntax.cast != nullptr;
@@ -48,7 +104,6 @@ namespace flux::impl {
         return false;
     }
 
-    [[nodiscard]]
     constexpr needs_t missing(const syntax_t& syntax, const needs_t& needs) noexcept {
         needs_t out;
 
@@ -57,23 +112,18 @@ namespace flux::impl {
                 out = out | need_syntax(what);
         }
 
-        if (!syntax.function)
-            return out;
-
         for (size_t i = 0; i < needs.count; ++i) {
             const auto& fn = needs.fns[i];
 
-            if (!syntax.function(fn.view(), fn.arity).supported)
+            if (!spelling_of(syntax, fn.view(), fn.arity).supported)
                 out = out | need_function(fn.view(), fn.arity);
         }
 
         return out;
     }
 
-    [[nodiscard]]
     constexpr bool supports(const syntax_t& syntax, const needs_t& needs) noexcept {
         const auto lacking = missing(syntax, needs);
-
         return lacking.syntax == 0 && lacking.count == 0;
     }
 }

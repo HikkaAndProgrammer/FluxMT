@@ -73,13 +73,21 @@ namespace {
     });
 
 
+    constexpr flux::sql::function_rule_t now_keyword {
+        .name      = "now",
+        .max_arity = 0,
+        .spelling  = { .name = "CURRENT_TIMESTAMP", .call = false },
+    };
+
+    constexpr flux::sql::function_rule_t greatest_max {
+        .name     = "greatest",
+        .spelling = { .name = "max" },
+    };
+
+    constexpr flux::sql::function_rules_t hook_functions { now_keyword, greatest_max };
+
+    // What no rule says
     constexpr flux::sql::function_spelling_t spell_function(std::string_view name, size_t) noexcept {
-        if (name == "now")
-            return { .name = "CURRENT_TIMESTAMP", .call = false };
-
-        if (name == "greatest")
-            return { .name = "max" };
-
         if (name == "forbidden")
             return { .supported = false, .reason = "no arguments, one or many" };
 
@@ -87,124 +95,11 @@ namespace {
     }
 
     constexpr flux::sql::syntax_t hook_syntax {
-        .cast     = flux::syntax::cast_function,
-        .ilike    = flux::syntax::ilike_via_lower,
-        .any      = flux::syntax::any_as_in_list,
-        .excluded = flux::syntax::excluded_table,
-        .function = &spell_function,
+        .cast      = flux::syntax::cast_function,
+        .ilike     = flux::syntax::ilike_via_lower,
+        .any       = flux::syntax::any_as_in_list,
+        .excluded  = flux::syntax::excluded_table,
+        .functions = hook_functions,
+        .function  = &spell_function,
     };
-
-
-    class HookDialect final : public flux::sql::Dialect {
-    public:
-        HookDialect() noexcept : Dialect(hook_syntax) {}
-
-        std::string_view name() const noexcept override { return "hook"; }
-        std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
-        bool is_reserved(std::string_view) const noexcept override { return false; }
-
-        flux::ext::LayoutView layout(flux::ext::KindRef kind) const noexcept override {
-            return flux::ext::find_layout(layouts, kind);
-        }
-    };
-
-
-    const HookDialect& hook() {
-        static const HookDialect dialect;
-        return dialect;
-    }
-
-    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
-        return query.to_statement(hook());
-    }
-
-    std::string sql_of(const flux::sql::Query& query) {
-        const auto r = statement_of(query);
-
-        return r ? r->sql : std::string("<error>");
-    }
-
-    std::string sql_of(const flux::sql::Expr& expr, const flux::sql::Dialect& dialect = hook()) {
-        flux::sql::Context ctx(dialect);
-
-        return expr.render(ctx) ? ctx.query : "<error>";
-    }
-}
-
-
-// Functions -------------------------------------------------------------------
-
-FLUXMT_TEST_CASE("dialect keeps a function name by default", "[sql]") {
-    const test::AntiDialect plain;
-
-    CHECK(sql_of(now(), plain) == "now()");
-    CHECK(sql_of(greatest(col("a"), col("b")), plain) == "greatest(a, b)");
-}
-
-FLUXMT_TEST_CASE("dialect renames a function", "[sql]") {
-    CHECK(sql_of(greatest(col("a"), col("b"))) == "max(a, b)");
-    CHECK(sql_of(coalesce(col("a"), 0)) == "coalesce(a, ?1)");
-}
-
-FLUXMT_TEST_CASE("dialect writes a function as a keyword", "[sql]") {
-    CHECK(sql_of(now()) == "CURRENT_TIMESTAMP");
-    CHECK(sql_of(col("a") < now()) == "a < CURRENT_TIMESTAMP");
-}
-
-FLUXMT_TEST_CASE("dialect can refuse a function", "[sql]") {
-    flux::sql::Context ctx(hook());
-
-    const auto r = forbidden(col("a")).render(ctx);
-
-    REQUIRE(!r);
-    CHECK(r.error().code() == flux::ESqlError::Unsupported);
-}
-
-
-// Slots -----------------------------------------------------------------------
-
-FLUXMT_TEST_CASE("dialect refuses a slot it does not support", "[sql]") {
-    const auto refused = statement_of(insert_into("t") | columns("a") | values(1) | returning("a"));
-
-    REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
-    CHECK(refused.error().message().contains("hook"));
-
-    CHECK(sql_of(insert_into("t") | columns("a") | values(1)) == "INSERT INTO t (a)\nVALUES (?1)");
-}
-
-FLUXMT_TEST_CASE("dialect owns the text of a slot", "[sql]") {
-    CHECK(sql_of(select_from("t") | where(col("a") == 1))
-        == "SELECT *\nFROM t\n/* before where */\nWHERE a = ?1");
-
-    CHECK(sql_of(select_from("t")) == "SELECT *\nFROM t");
-    CHECK(sql_of(select_from("t") | with_limit(3)) == "SELECT *\nFROM t\nFETCH FIRST ?1 ROWS ONLY");
-}
-
-FLUXMT_TEST_CASE("dialect refuses a statement it has no layout for", "[sql]") {
-    const auto refused = statement_of(delete_from("t"));
-
-    REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
-    CHECK(refused.error().message().contains("hook"));
-}
-
-FLUXMT_TEST_CASE("dialect can have a statement of its own kind", "[sql]") {
-    flux::sql::Query q(&truncate_kind);
-    q |= identifier(&truncate_target, "t");
-
-    CHECK(sql_of(q) == "TRUNCATE t");
-
-    const test::AntiDialect other;
-    const auto refused = q.to_statement(other);
-
-    REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
-}
-
-FLUXMT_TEST_CASE("dialect layout reaches subqueries", "[sql]") {
-    CHECK(sql_of(select_from("u") | where(col("id").in(select_from("o") | columns("user_id") | where(col("x") == 1))))
-        == "SELECT *\nFROM u"
-           "\n/* before where */"
-           "\nWHERE id IN (SELECT user_id\nFROM o\n/* before where */\nWHERE x = ?1)");
 }

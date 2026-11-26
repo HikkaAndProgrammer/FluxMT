@@ -15,30 +15,36 @@
 
 
 namespace flux::impl::sqlite {
-    constexpr function_spelling_t spell_function(std::string_view name, size_t arity) noexcept {
-        if (name == "now") {
-            if (arity != 0)
-                return { .supported = false, .reason = "now() takes no arguments" };
+    inline constexpr function_rule_t now_as_keyword {
+        .name       = "now",
+        .max_arity  = 0,
+        .spelling   = { .name = "CURRENT_TIMESTAMP", .call = false },
+    };
 
-            return { .name = "CURRENT_TIMESTAMP", .call = false };
-        }
+    inline constexpr function_rule_t greatest_as_max {
+        .name       = "greatest",
+        .min_arity  = 2,
+        .spelling   = { .name = "max" },
+    };
 
-        if (name == "greatest" || name == "least") {
-            if (arity < 2)
-                return { .supported = false, .reason = "needs two arguments or more, max() and min() of one are aggregates" };
+    inline constexpr function_rule_t least_as_min {
+        .name       = "least",
+        .min_arity  = 2,
+        .spelling   = { .name = "min" },
+    };
 
-            return { .name = name == "greatest" ? "max" : "min" };
-        }
-
-        return {};
-    }
+    inline constexpr function_rules_t sqlite_functions {
+        now_as_keyword,
+        greatest_as_max,
+        least_as_min,
+    };
 
     inline constexpr syntax_t sqlite_syntax {
-        .cast     = &syntax::cast_function,
-        .ilike    = &syntax::ilike_via_lower,
-        .any      = &syntax::any_as_in_list,
-        .excluded = &syntax::excluded_table,
-        .function = &spell_function,
+        .cast      = &syntax::cast_function,
+        .ilike     = &syntax::ilike_via_lower,
+        .any       = &syntax::any_as_in_list,
+        .excluded  = &syntax::excluded_table,
+        .functions = sqlite_functions,
     };
 
 

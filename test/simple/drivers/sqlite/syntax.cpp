@@ -53,16 +53,20 @@ FLUXMT_TEST_CASE("sqlite dialect is built on its syntax table", "[sqlite]") {
     CHECK(syntax.ilike == lite.ilike);
     CHECK(syntax.any == lite.any);
     CHECK(syntax.excluded == lite.excluded);
-    CHECK(syntax.function == lite.function);
+    CHECK(syntax.functions.data() == lite.functions.data());
+    CHECK(syntax.function == nullptr);
 }
 
 FLUXMT_TEST_CASE("sqlite spells functions at compile time and at render time the same way", "[sqlite]") {
-    constexpr auto now_with_argument = lite.function("now", 1);
-    constexpr auto one_greatest = lite.function("greatest", 1);
-    constexpr auto two_greatest = lite.function("greatest", 2);
+    constexpr auto now_with_argument = flux::impl::spelling_of(lite, "now", 1);
+    constexpr auto one_greatest = flux::impl::spelling_of(lite, "greatest", 1);
+    constexpr auto two_greatest = flux::impl::spelling_of(lite, "greatest", 2);
+    constexpr auto unknown = flux::impl::spelling_of(lite, "coalesce", 1);
 
     CHECK_FALSE(now_with_argument.supported);
     CHECK_FALSE(one_greatest.supported);
     CHECK(two_greatest.supported);
     CHECK(two_greatest.name == "max");
+    CHECK(unknown.supported);
+    CHECK(unknown.name.empty());
 }

@@ -33,11 +33,21 @@ namespace flux::impl {
     };
 
 
+    struct function_rule_t {
+        std::string_view name;
+        size_t min_arity = 0;
+        size_t max_arity = ~size_t {};
+        function_spelling_t spelling;
+    };
+
+
     struct syntax_t {
         ers::Status (*cast)(Context&, const Expr& operand, std::string_view type) = nullptr;
         ers::Status (*ilike)(Context&, const Expr& lhs, const Expr& rhs) = nullptr;
         ers::Status (*any)(Context&, const Expr& operand, const Expr& array) = nullptr;
         ers::Status (*excluded)(Context&, std::string_view column) = nullptr;
+
+        std::span<const function_rule_t> functions;
 
         function_spelling_t (*function)(std::string_view name, size_t arity) noexcept = nullptr;
     };

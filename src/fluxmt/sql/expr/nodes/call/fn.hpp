@@ -15,6 +15,7 @@
 #include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/expr/node.hpp>
 #include <fluxmt/sql/identifier.hpp>
+#include <fluxmt/sql/syntax.hpp>
 
 // nodes
 #include "../common.hpp"
@@ -39,15 +40,11 @@ namespace flux::impl::nodes {
                     _name);
             }
 
-            function_spelling_t spelling;
+            const auto spelling = spelling_of(ctx.dialect().syntax(), _name, _args.size());
 
-            if (const auto spell = ctx.dialect().syntax().function) {
-                spelling = spell(_name, _args.size());
-
-                if (!spelling.supported) {
-                    return ers::make_error(ESqlError::Unsupported, "{}() in '{}': {}",
-                        _name, ctx.dialect().name(), spelling.reason);
-                }
+            if (!spelling.supported) {
+                return ers::make_error(ESqlError::Unsupported, "{}() in '{}': {}",
+                    _name, ctx.dialect().name(), spelling.reason);
             }
 
             ctx.query += spelling.name.empty() ? _name : spelling.name;
