@@ -36,9 +36,9 @@ std::unique_ptr<test::fake_connection> flux::ext::backend_traits<test::fake_back
 ers::Diagnostic flux::ext::backend_traits<test::fake_backend>::diagnose(std::string_view label) try {
     throw;
 } catch (const test::fake_retryable& e) {
-    return ers::make_error(EDbError::Deadlock, "'{}': {}", label, e.what());
+    return ers::make_error(flux::EDbError::Deadlock, "'{}': {}", label, e.what());
 } catch (const std::exception& e) {
-    return ers::make_error(EDbError::Other, "'{}': {}", label, e.what());
+    return ers::make_error(flux::EDbError::Other, "'{}': {}", label, e.what());
 }
 
 bool flux::ext::backend_traits<test::fake_backend>::retryable() noexcept try {

@@ -99,7 +99,7 @@ function(fluxmt_add_driver name)
     fluxmt_add_library(fluxmt_${name} ${name})
 
     target_sources(fluxmt_${name} PRIVATE ${ARG_SOURCES})
-    target_link_libraries(fluxmt_${name} PUBLIC fluxmt_core)
+    target_link_libraries(fluxmt_${name} PUBLIC fluxmt_core fluxmt_executors)
 
     if(ARG_SQL)
         target_link_libraries(fluxmt_${name} PUBLIC fluxmt_sql)
@@ -211,6 +211,24 @@ target_link_libraries(fluxmt_sql
 )
 
 list(APPEND FLUXMT_TARGETS fluxmt_sql)
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# fluxmt::executors: with_tx, with_conn, with_query and their try forms, headers only
+#----------------------------------------------------------------------------------------------------------------------
+
+
+add_library(fluxmt_executors INTERFACE)
+add_library(fluxmt::executors ALIAS fluxmt_executors)
+
+set_target_properties(fluxmt_executors PROPERTIES EXPORT_NAME executors)
+
+target_link_libraries(fluxmt_executors
+	INTERFACE
+		fluxmt_query
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_executors)
 
 
 #----------------------------------------------------------------------------------------------------------------------

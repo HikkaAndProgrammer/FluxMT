@@ -3,6 +3,7 @@
 // Includes --------------------------------------------------------------------
 
 #include <fluxmt/core.hpp>
+#include <fluxmt/executors.hpp>
 #include <fluxmt/drivers/redis/args.hpp>
 #include <fluxmt/drivers/redis/backend.hpp>
 #include <fluxmt/drivers/redis/connection.hpp>
@@ -25,5 +26,4 @@ namespace flux::redis {
     using impl::redis::Database;
     using impl::redis::Tx;
     using impl::redis::TxOf;
-
 }

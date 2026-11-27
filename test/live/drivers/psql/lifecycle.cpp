@@ -150,7 +150,7 @@ FLUXMT_TEST_CASE("psql live: concurrent updates through the pool", "[psql]") {
             for (int r = 0; r < rounds; ++r) {
                 auto result = flux::try_with_tx(sb.db(), [&](pqxx::work& tx) {
                     tx.exec(sb.sql("UPDATE @.account SET balance = balance + 1 WHERE email = 'alice.example'"));
-                }, psql::tx_options_t {
+                }, flux::tx_options_t {
                     .label   = "increment",
                     .retries = 3
                 });

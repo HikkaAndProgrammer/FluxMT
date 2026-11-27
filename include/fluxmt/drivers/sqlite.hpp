@@ -3,6 +3,7 @@
 // Includes --------------------------------------------------------------------
 
 #include <fluxmt/core.hpp>
+#include <fluxmt/executors.hpp>
 #include <fluxmt/drivers/sqlite/backend.hpp>
 #include <fluxmt/drivers/sqlite/connection.hpp>
 #include <fluxmt/drivers/sqlite/dialect.hpp>

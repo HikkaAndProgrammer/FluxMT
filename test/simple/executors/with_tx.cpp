@@ -11,6 +11,7 @@
 
 // fluxmt
 #include <fluxmt/core.hpp>
+#include <fluxmt/executors.hpp>
 
 // test
 #include "support/fake_backend.hpp"
@@ -30,50 +31,55 @@ namespace {
 
 
 FLUXMT_TEST_CASE("commit on success, whichever way the callable takes its transaction", "[core]") {
-    test::fake_connection conn;
+    flux::Pool<backend> pool({}, { .min_size = 0, .max_size = 1 });
+    auto conn = pool.acquire_or_throw();
 
-    flux::with_tx<backend>(conn, [](test::fake_tx&) {});
-    flux::with_tx<backend>(conn, [](wrapped_t&) {});
-    flux::with_tx<backend>(conn, [](auto&) {});
+    flux::with_tx(conn, [](test::fake_tx&) {});
+    flux::with_tx(conn, [](wrapped_t&) {});
+    flux::with_tx(conn, [](auto&) {});
 
-    REQUIRE(conn.log == log_t{ "begin", "commit", "begin", "commit", "begin", "commit" });
+    REQUIRE(conn->log == log_t{ "begin", "commit", "begin", "commit", "begin", "commit" });
 }
 
 FLUXMT_TEST_CASE("the result of the callable is returned", "[core]") {
-    test::fake_connection conn;
+    flux::Pool<backend> pool({}, { .min_size = 0, .max_size = 1 });
+    auto conn = pool.acquire_or_throw();
 
-    REQUIRE(flux::with_tx<backend>(conn, [](test::fake_tx&) { return 7; }) == 7);
+    REQUIRE(flux::with_tx(conn, [](test::fake_tx&) { return 7; }) == 7);
 }
 
 FLUXMT_TEST_CASE("an exception rolls back and propagates", "[core]") {
-    test::fake_connection conn;
+    flux::Pool<backend> pool({}, { .min_size = 0, .max_size = 1 });
+    auto conn = pool.acquire_or_throw();
 
     REQUIRE_THROWS_AS(
-        flux::with_tx<backend>(conn, [](test::fake_tx&) { throw std::runtime_error("x"); }),
+        flux::with_tx(conn, [](test::fake_tx&) { throw std::runtime_error("x"); }),
         std::runtime_error
     );
-    REQUIRE(conn.log == log_t{ "begin", "rollback" });
+    REQUIRE(conn->log == log_t{ "begin", "rollback" });
 }
 
 FLUXMT_TEST_CASE("a Result error aborts", "[core]") {
-    test::fake_connection conn;
+    flux::Pool<backend> pool({}, { .min_size = 0, .max_size = 1 });
+    auto conn = pool.acquire_or_throw();
 
-    auto failed = flux::with_tx<backend>(conn, [](test::fake_tx&) -> ers::Result<int> {
+    auto failed = flux::with_tx(conn, [](test::fake_tx&) -> ers::Result<int> {
         return ers::make_error(flux::EDbError::Other, "no");
     });
     REQUIRE(!failed);
-    REQUIRE(conn.log == log_t{ "begin", "abort" });
+    REQUIRE(conn->log == log_t{ "begin", "abort" });
 
-    conn.log.clear();
+    conn->log.clear();
 
-    auto fine = flux::with_tx<backend>(conn, [](test::fake_tx&) -> ers::Result<int> { return 5; });
+    auto fine = flux::with_tx(conn, [](test::fake_tx&) -> ers::Result<int> { return 5; });
     REQUIRE(fine);
     REQUIRE(*fine == 5);
-    REQUIRE(conn.log == log_t{ "begin", "commit" });
+    REQUIRE(conn->log == log_t{ "begin", "commit" });
 }
 
 FLUXMT_TEST_CASE("retry repeats on retryable errors only", "[core]") {
-    test::fake_connection conn;
+    flux::Pool<backend> pool({}, { .min_size = 0, .max_size = 1 });
+    auto conn = pool.acquire_or_throw();
     int calls = 0;
 
     auto flaky = [&](test::fake_tx&) {
@@ -82,17 +88,17 @@ FLUXMT_TEST_CASE("retry repeats on retryable errors only", "[core]") {
         return calls;
     };
 
-    REQUIRE(flux::with_tx<backend>(conn, flaky, retry(2)) == 3);
-    REQUIRE(conn.log == log_t{ "begin", "rollback", "begin", "rollback", "begin", "commit" });
+    REQUIRE(flux::with_tx(conn, flaky, retry(2)) == 3);
+    REQUIRE(conn->log == log_t{ "begin", "rollback", "begin", "rollback", "begin", "commit" });
 
-    conn.log.clear();
+    conn->log.clear();
     calls = 0;
-    REQUIRE_THROWS_AS(flux::with_tx<backend>(conn, flaky, retry(1)), test::fake_retryable);
+    REQUIRE_THROWS_AS(flux::with_tx(conn, flaky, retry(1)), test::fake_retryable);
     REQUIRE(calls == 2);
 
     calls = 0;
     REQUIRE_THROWS_AS(
-        flux::with_tx<backend>(conn, [&](test::fake_tx&) { ++calls; throw std::runtime_error("x"); }, retry(5)),
+        flux::with_tx(conn, [&](test::fake_tx&) { ++calls; throw std::runtime_error("x"); }, retry(5)),
         std::runtime_error
     );
     REQUIRE(calls == 1);

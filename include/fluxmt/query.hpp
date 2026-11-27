@@ -14,7 +14,6 @@
 #include <fluxmt/query/slot.hpp>
 #include <fluxmt/query/slot_clause.hpp>
 #include <fluxmt/query/statement.hpp>
-#include <fluxmt/query/with_query.hpp>
 
 
 // Exports ---------------------------------------------------------------------

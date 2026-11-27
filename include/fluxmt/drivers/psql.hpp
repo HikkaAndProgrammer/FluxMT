@@ -12,7 +12,7 @@
 #include <fluxmt/drivers/psql/orm.hpp>
 #include <fluxmt/drivers/psql/params.hpp>
 #include <fluxmt/drivers/psql/tx.hpp>
-#include <fluxmt/query/with_query.hpp>
+#include <fluxmt/executors.hpp>
 
 
 // Exports ---------------------------------------------------------------------
