@@ -26,13 +26,4 @@ namespace flux::redis {
     using impl::redis::Tx;
     using impl::redis::TxOf;
 
-    using impl::pool_options_t;
-    using impl::tx_options_t;
-
-    using impl::try_with_conn;
-    using impl::redis::try_with_tx;
-    using impl::try_with_tx;
-    using impl::redis::with_tx;
-    using impl::with_conn;
-    using impl::with_tx;
 }

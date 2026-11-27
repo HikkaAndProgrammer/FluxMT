@@ -16,7 +16,7 @@ namespace test::live {
     public:
         // Member functions
 
-        explicit Sandbox(flux::psql::pool_options_t pool_opts = {});
+        explicit Sandbox(flux::pool_options_t pool_opts = {});
         ~Sandbox();
 
         Sandbox(const Sandbox&) = delete;
@@ -32,7 +32,7 @@ namespace test::live {
 
         template<typename T>
         T scalar(std::string query) {
-            return flux::psql::with_tx(_db, [&](pqxx::work& tx) {
+            return flux::with_tx(_db, [&](pqxx::work& tx) {
                 return tx.query_value<T>(sql(std::move(query)));
             }, "scalar");
         }

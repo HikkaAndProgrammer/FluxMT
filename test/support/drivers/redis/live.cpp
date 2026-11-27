@@ -58,13 +58,13 @@ flux::redis::options_t test::live::require_options() {
     return opts;
 }
 
-test::live::Sandbox::Sandbox(flux::redis::pool_options_t pool_opts) :
+test::live::Sandbox::Sandbox(flux::pool_options_t pool_opts) :
     _db(require_options(), pool_opts),
     _prefix(make_prefix()) {
 }
 
 test::live::Sandbox::~Sandbox() {
-    auto cleaned = flux::redis::try_with_conn(_db, [&](flux::redis::connection& conn) {
+    auto cleaned = flux::try_with_conn(_db, [&](flux::redis::connection& conn) {
         std::string cursor = "0";
 
         do {

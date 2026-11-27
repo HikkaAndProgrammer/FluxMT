@@ -17,7 +17,7 @@
 
 FLUXMT_TEST_CASE("sql context numbers parameters from one", "[sql]") {
     test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     REQUIRE(ctx.bind(1) == "?1");
     REQUIRE(ctx.bind(std::string("a")) == "?2");
@@ -29,7 +29,7 @@ FLUXMT_TEST_CASE("sql context numbers parameters from one", "[sql]") {
 
 FLUXMT_TEST_CASE("sql context reuses a placeholder by key", "[sql]") {
     test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     int first = 0;
     int second = 0;
@@ -43,18 +43,18 @@ FLUXMT_TEST_CASE("sql context reuses a placeholder by key", "[sql]") {
 
 FLUXMT_TEST_CASE("sql context finish moves the text and parameters out", "[sql]") {
     test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     ctx.text = "SELECT " + ctx.bind(5);
 
     const auto statement = std::move(ctx).finish();
 
-    REQUIRE(statement == flux::sql::statement_t{ "SELECT ?1", { 5 } });
+    REQUIRE(statement == flux::statement_t{ "SELECT ?1", { 5 } });
 }
 
 FLUXMT_TEST_CASE("sql context rejects empty identifier parts", "[sql]") {
     test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     REQUIRE(!ctx.append_identifier(""));
     REQUIRE(!ctx.append_identifier("a..b"));
@@ -69,7 +69,7 @@ FLUXMT_TEST_CASE("sql context writes identifiers by the dialect policy", "[sql]"
     test::AntiDialect dialect;
 
     const auto render = [&](std::string_view name) {
-        flux::sql::Context ctx(dialect);
+        flux::ext::SqlContext ctx(dialect);
         REQUIRE(ctx.append_identifier(name));
 
         return ctx.text;

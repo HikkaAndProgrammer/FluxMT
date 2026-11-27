@@ -26,7 +26,7 @@ namespace {
 FLUXMT_TEST_CASE("redis ping", "[redis]") {
     test::live::Sandbox sandbox;
 
-    auto reply = redis::with_conn(sandbox.db(), [](redis::connection& conn) {
+    auto reply = flux::with_conn(sandbox.db(), [](redis::connection& conn) {
         return conn.exec({ "PING" });
     });
 
@@ -38,7 +38,7 @@ FLUXMT_TEST_CASE("redis set get and counters", "[redis]") {
     const auto greeting = sandbox.key("greeting");
     const auto counter = sandbox.key("counter");
 
-    redis::with_conn(sandbox.db(), [&](redis::connection& conn) {
+    flux::with_conn(sandbox.db(), [&](redis::connection& conn) {
         REQUIRE(as<std::string>(conn.exec({ "SET", greeting, "hello" })) == "OK");
         REQUIRE(as<std::string>(conn.exec({ "GET", greeting })) == "hello");
 
@@ -54,7 +54,7 @@ FLUXMT_TEST_CASE("redis values are binary safe", "[redis]") {
     const auto key = sandbox.key("blob");
     const flux::value_bytes_t blob { std::byte { 1 }, std::byte { 0 }, std::byte { 255 }, std::byte { 'z' } };
 
-    redis::with_conn(sandbox.db(), [&](redis::connection& conn) {
+    flux::with_conn(sandbox.db(), [&](redis::connection& conn) {
         conn.exec({ "SET", key, blob });
 
         const auto& stored = as<std::string>(conn.exec({ "GET", key }));
@@ -67,7 +67,7 @@ FLUXMT_TEST_CASE("redis arrays come back nested", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("hash");
 
-    redis::with_conn(sandbox.db(), [&](redis::connection& conn) {
+    flux::with_conn(sandbox.db(), [&](redis::connection& conn) {
         conn.exec({ "HSET", key, "a", 1, "b", 2 });
 
         const auto& fields = as<flux::value_array_t>(conn.exec({ "HMGET", key, "a", "b", "missing" }));
@@ -83,7 +83,7 @@ FLUXMT_TEST_CASE("redis server errors become typed errors", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("list");
 
-    auto failed = redis::try_with_conn(sandbox.db(), [&](redis::connection& conn) {
+    auto failed = flux::try_with_conn(sandbox.db(), [&](redis::connection& conn) {
         conn.exec({ "LPUSH", key, "x" });
         return conn.exec({ "GET", key });
     });
@@ -96,7 +96,7 @@ FLUXMT_TEST_CASE("redis refuses a null argument before sending", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("null");
 
-    redis::with_conn(sandbox.db(), [&](redis::connection& conn) {
+    flux::with_conn(sandbox.db(), [&](redis::connection& conn) {
         REQUIRE_THROWS_AS(conn.exec({ "SET", key, flux::Value{} }), std::invalid_argument);
         REQUIRE(as<std::string>(conn.exec({ "PING" })) == "PONG");
     });

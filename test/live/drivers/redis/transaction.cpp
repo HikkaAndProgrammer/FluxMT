@@ -23,13 +23,13 @@ namespace {
     }
 
     ers::i64 exists(redis::Database& db, const std::string& key) {
-        return redis::with_conn(db, [&](redis::connection& conn) {
+        return flux::with_conn(db, [&](redis::connection& conn) {
             return as<ers::i64>(conn.exec({ "EXISTS", key }));
         });
     }
 
     std::string ping(redis::Database& db) {
-        return redis::with_conn(db, [](redis::connection& conn) {
+        return flux::with_conn(db, [](redis::connection& conn) {
             return as<std::string>(conn.exec({ "PING" }));
         });
     }
@@ -40,7 +40,7 @@ FLUXMT_TEST_CASE("redis commit returns the queued answers", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("counter");
 
-    auto answers = redis::with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    auto answers = flux::with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.queue({ "INCR", key });
         tx.queue({ "INCR", key });
         tx.commit();
@@ -57,7 +57,7 @@ FLUXMT_TEST_CASE("redis Result error discards the queue", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("discarded");
 
-    auto failed = redis::with_tx(sandbox.db(), [&](redis::transaction& tx) -> ers::Result<int> {
+    auto failed = flux::with_tx(sandbox.db(), [&](redis::transaction& tx) -> ers::Result<int> {
         tx.queue({ "SET", key, "x" });
         return ers::make_error(flux::EDbError::Other, "no");
     });
@@ -70,7 +70,7 @@ FLUXMT_TEST_CASE("redis exception leaves the connection usable", "[redis]") {
     test::live::Sandbox sandbox({ .min_size = 1, .max_size = 1 });
     const auto key = sandbox.key("thrown");
 
-    REQUIRE_THROWS_AS(redis::with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    REQUIRE_THROWS_AS(flux::with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.queue({ "SET", key, "x" });
         throw std::runtime_error("boom");
     }), std::runtime_error);
@@ -82,7 +82,7 @@ FLUXMT_TEST_CASE("redis exception leaves the connection usable", "[redis]") {
 FLUXMT_TEST_CASE("redis server rejects a malformed queued command", "[redis]") {
     test::live::Sandbox sandbox({ .min_size = 1, .max_size = 1 });
 
-    REQUIRE_THROWS_AS(redis::with_tx(sandbox.db(), [](redis::transaction& tx) {
+    REQUIRE_THROWS_AS(flux::with_tx(sandbox.db(), [](redis::transaction& tx) {
         tx.queue({ "INCR" });
     }), redis::error);
 
@@ -93,7 +93,7 @@ FLUXMT_TEST_CASE("redis exec is closed once a command is queued", "[redis]") {
     test::live::Sandbox sandbox;
     const auto key = sandbox.key("misuse");
 
-    REQUIRE_THROWS_AS(redis::with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    REQUIRE_THROWS_AS(flux::with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.queue({ "SET", key, "x" });
         tx.exec({ "GET", key });
     }), std::logic_error);
@@ -105,7 +105,7 @@ FLUXMT_TEST_CASE("redis watch conflict is a serialization failure", "[redis]") {
 
     auto other = sandbox.db().acquire_or_throw();
 
-    auto result = redis::try_with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    auto result = flux::try_with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.watch(key);
         other->exec({ "SET", key, "theirs" });
 
@@ -125,7 +125,7 @@ FLUXMT_TEST_CASE("redis retries after a watch conflict", "[redis]") {
     auto other = sandbox.db().acquire_or_throw();
     int attempts = 0;
 
-    redis::with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    flux::with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.watch(key);
 
         if (++attempts == 1)
@@ -142,7 +142,7 @@ FLUXMT_TEST_CASE("redis watch without a queue just unwatches", "[redis]") {
     test::live::Sandbox sandbox({ .min_size = 1, .max_size = 1 });
     const auto key = sandbox.key("read only");
 
-    auto value = redis::with_tx(sandbox.db(), [&](redis::transaction& tx) {
+    auto value = flux::with_tx(sandbox.db(), [&](redis::transaction& tx) {
         tx.watch(key);
         return tx.exec({ "GET", key });
     });

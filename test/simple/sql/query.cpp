@@ -25,13 +25,13 @@ using std::string_literals::operator ""s;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         static const test::AntiDialect dialect;
 
         return query.to_statement(dialect);
     }
 
-    std::string sql_of(const flux::sql::Query& query) {
+    std::string sql_of(const flux::Query& query) {
         const auto r = statement_of(query);
 
         return r ? (*r).text : std::string("<error>");
@@ -265,7 +265,7 @@ FLUXMT_TEST_CASE("query with a layout of its own", "[sql]") {
         flux::impl::shared::from,
     };
 
-    auto q = flux::sql::Query(own);
+    auto q = flux::Query(own);
     q |= from("t");
 
     CHECK(sql_of(q) == "SELECT\nFROM t");

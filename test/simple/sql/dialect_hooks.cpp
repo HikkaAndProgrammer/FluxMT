@@ -98,7 +98,7 @@ namespace {
     };
 
 
-    class HookDialect final : public flux::sql::Dialect {
+    class HookDialect final : public flux::ext::SqlDialect {
     public:
         HookDialect() noexcept : SqlDialect(hook_syntax) {}
 
@@ -113,11 +113,11 @@ namespace {
         return dialect;
     }
 
-    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         return query.to_statement(hook());
     }
 
-    std::string sql_of(const flux::sql::Query& query) {
+    std::string sql_of(const flux::Query& query) {
         const auto r = statement_of(query);
 
         return r ? r->text : std::string("<error>");
@@ -128,8 +128,8 @@ namespace {
         return sql_of(builder.erased());
     }
 
-    std::string sql_of(const flux::sql::Expr& expr, const flux::sql::Dialect& dialect = hook()) {
-        flux::sql::Context ctx(dialect);
+    std::string sql_of(const flux::sql::Expr& expr, const flux::ext::SqlDialect& dialect = hook()) {
+        flux::ext::SqlContext ctx(dialect);
 
         return expr.render(ctx) ? ctx.text : "<error>";
     }
@@ -144,7 +144,7 @@ struct flux::ext::backend_traits<hook_backend> {
 
     static constexpr const flux::sql::syntax_t& syntax = hook_syntax;
 
-    static const flux::sql::Dialect& dialect() noexcept { return hook(); }
+    static const flux::ext::SqlDialect& dialect() noexcept { return hook(); }
 };
 
 namespace {
@@ -180,7 +180,7 @@ FLUXMT_TEST_CASE("dialect writes a function as a keyword", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("dialect can refuse a function", "[sql]") {
-    flux::sql::Context ctx(hook());
+    flux::ext::SqlContext ctx(hook());
 
     const auto r = forbidden(col("a")).render(ctx);
 
@@ -213,7 +213,7 @@ FLUXMT_TEST_CASE("dialect owns the text of a slot", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("a layout of its own makes a statement of its own", "[sql]") {
-    flux::sql::Query q(truncate_layout);
+    flux::Query q(truncate_layout);
     q |= identifier(&truncate_target, "t");
 
     CHECK(sql_of(q) == "TRUNCATE t");

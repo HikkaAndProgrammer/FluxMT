@@ -55,22 +55,16 @@
 namespace flux::sql {
     using impl::aliased_t;
     using impl::column_expr_t;
-    using impl::EOrder;
     using impl::Expr;
     using impl::ExprMethods;
     using impl::IsExprSource;
     using impl::TypedExpr;
 
-    using Context = impl::SqlContext;
-    using Dialect = impl::SqlDialect;
-
-    using impl::Query;
     using impl::IsSqlBackend;
     using impl::QueryBuilder;
     using impl::SqlClause;
     using impl::SqlClauses;
     using impl::clause_needs;
-    using impl::statement_t;
 
     using impl::ESyntax;
     using impl::function_rule_t;

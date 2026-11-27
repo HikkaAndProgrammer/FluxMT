@@ -18,7 +18,7 @@ using namespace flux::orm;
 
 namespace {
     std::string sql_of(const flux::sql::Expr& expr) {
-        flux::sql::Context ctx(flux::psql::dialect());
+        flux::ext::SqlContext ctx(flux::psql::dialect());
 
         return expr.render(ctx) ? ctx.text : "<error>";
     }
@@ -43,7 +43,7 @@ FLUXMT_TEST_CASE("psql expr keeps function names", "[psql]") {
 }
 
 FLUXMT_TEST_CASE("psql expr binds an array as one parameter", "[psql]") {
-    flux::sql::Context ctx(flux::psql::dialect());
+    flux::ext::SqlContext ctx(flux::psql::dialect());
 
     REQUIRE((col("a").any(std::vector<int>{ 1, 2 })).render(ctx));
     REQUIRE(ctx.params().size() == 1);

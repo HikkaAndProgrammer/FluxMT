@@ -35,7 +35,7 @@ namespace {
     constexpr flux::sql::syntax_t lean_syntax {};
 
 
-    class LeanDialect final : public flux::sql::Dialect {
+    class LeanDialect final : public flux::ext::SqlDialect {
     public:
         LeanDialect() noexcept : SqlDialect(lean_syntax) {}
 
@@ -54,7 +54,7 @@ struct flux::ext::backend_traits<lean_backend> {
 
     static constexpr const flux::sql::syntax_t& syntax = lean_syntax;
 
-    static const flux::sql::Dialect& dialect() noexcept {
+    static const flux::ext::SqlDialect& dialect() noexcept {
         static const LeanDialect instance;
         return instance;
     }
@@ -97,7 +97,7 @@ FLUXMT_TEST_CASE("builder hands out the plain query", "[sql]") {
 
     CHECK(q.erased().layout());
 
-    const flux::sql::Query plain = std::move(q);
+    const flux::Query plain = std::move(q);
 
     CHECK(plain.layout());
 }

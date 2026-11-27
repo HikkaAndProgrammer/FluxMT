@@ -22,7 +22,7 @@ struct flux::ext::backend_traits<test::anti_backend> {
 
     static constexpr const sql::syntax_t& syntax = test::anti::syntax;
 
-    static const flux::sql::Dialect& dialect() noexcept {
+    static const flux::ext::SqlDialect& dialect() noexcept {
         static const test::AntiDialect instance;
         return instance;
     }

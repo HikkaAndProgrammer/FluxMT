@@ -16,7 +16,7 @@ namespace test::live {
     public:
         // Member functions
 
-        explicit Sandbox(flux::redis::pool_options_t pool_opts = {});
+        explicit Sandbox(flux::pool_options_t pool_opts = {});
         ~Sandbox();
 
         Sandbox(const Sandbox&) = delete;

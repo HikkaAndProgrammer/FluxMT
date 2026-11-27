@@ -36,7 +36,7 @@ FLUXMT_TEST_CASE("sqlite knows its reserved words", "[sqlite]") {
 }
 
 FLUXMT_TEST_CASE("sqlite quotes only what needs it", "[sqlite]") {
-    flux::sql::Context ctx(flux::sqlite::dialect());
+    flux::ext::SqlContext ctx(flux::sqlite::dialect());
 
     REQUIRE(ctx.append_identifier("main.order"));
     ctx.text += ' ';

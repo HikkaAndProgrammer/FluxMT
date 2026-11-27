@@ -22,7 +22,7 @@ using std::string_literals::operator ""s;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    flux::sqlite::result_t run(flux::sqlite::connection& conn, const flux::sql::Query& query) {
+    flux::sqlite::result_t run(flux::sqlite::connection& conn, const flux::Query& query) {
         auto statement = query.to_statement(flux::sqlite::dialect());
         REQUIRE(statement);
 

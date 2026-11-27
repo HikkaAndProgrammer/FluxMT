@@ -77,7 +77,7 @@ namespace test::anti {
 
 
 namespace test {
-    class AntiDialect final : public flux::sql::Dialect {
+    class AntiDialect final : public flux::ext::SqlDialect {
     public:
         AntiDialect() noexcept : SqlDialect(anti::syntax) {}
 

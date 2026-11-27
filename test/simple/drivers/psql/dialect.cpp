@@ -33,7 +33,7 @@ FLUXMT_TEST_CASE("psql knows its reserved words", "[psql]") {
 }
 
 FLUXMT_TEST_CASE("psql quotes only what needs it", "[psql]") {
-    flux::sql::Context ctx(flux::psql::dialect());
+    flux::ext::SqlContext ctx(flux::psql::dialect());
 
     REQUIRE(ctx.append_identifier("public.order"));
     ctx.text += ' ';

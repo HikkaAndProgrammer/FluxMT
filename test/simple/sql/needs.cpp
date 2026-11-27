@@ -77,7 +77,7 @@ namespace {
     constexpr flux::sql::named_fn<"a_function_with_a_name_too_long"> too_long {};
 
 
-    class BareDialect final : public flux::sql::Dialect {
+    class BareDialect final : public flux::ext::SqlDialect {
     public:
         BareDialect() noexcept : SqlDialect(nothing) {}
 
@@ -115,8 +115,8 @@ static_assert(std::same_as<decltype(sql("a {}", col("b"))), Plain>);
 static_assert(std::same_as<decltype(std::declval<Expr>() == 1), Expr>);
 static_assert(std::same_as<decltype(col("a") == std::declval<Expr>()), Expr>);
 static_assert(std::same_as<decltype(col("a").in({ col("b"), 1 })), Expr>);
-static_assert(std::same_as<decltype(col("a").in(std::declval<flux::sql::Query>())), Expr>);
-static_assert(std::same_as<decltype(exists(std::declval<flux::sql::Query>())), Expr>);
+static_assert(std::same_as<decltype(col("a").in(std::declval<flux::Query>())), Expr>);
+static_assert(std::same_as<decltype(exists(std::declval<flux::Query>())), Expr>);
 static_assert(std::same_as<decltype(percentile_cont(0.5, { "a" })), Expr>);
 
 
@@ -203,8 +203,8 @@ FLUXMT_TEST_CASE("typed expr renders as the erased one", "[sql]") {
     const auto typed = col("a").ilike("x%") && col("b") == 1;
     const Expr erased = typed;
 
-    flux::sql::Context a(dialect);
-    flux::sql::Context b(dialect);
+    flux::ext::SqlContext a(dialect);
+    flux::ext::SqlContext b(dialect);
 
     REQUIRE(typed.render(a));
     REQUIRE(erased.render(b));
@@ -215,7 +215,7 @@ FLUXMT_TEST_CASE("typed expr renders as the erased one", "[sql]") {
 
 FLUXMT_TEST_CASE("erased expr is still checked when it is rendered", "[sql]") {
     const BareDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     const Expr erased = col("a").cast("int");
 
@@ -227,7 +227,7 @@ FLUXMT_TEST_CASE("erased expr is still checked when it is rendered", "[sql]") {
 
 FLUXMT_TEST_CASE("typed and erased operands meet in an erased result", "[sql]") {
     const test::AntiDialect dialect;
-    flux::sql::Context ctx(dialect);
+    flux::ext::SqlContext ctx(dialect);
 
     const Expr erased = col("b") == 1;
     const auto both = col("a").ilike("x") && erased;

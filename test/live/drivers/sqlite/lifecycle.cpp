@@ -30,7 +30,7 @@ namespace {
     }
 
     void create_schema(sqlite::Database& db) {
-        sqlite::with_tx(db, [](sqlite::transaction& tx) {
+        flux::with_tx(db, [](sqlite::transaction& tx) {
             tx.exec(R"(
                 CREATE TABLE account (
                     id      INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +49,7 @@ namespace {
     }
 
     ers::i64 accounts(sqlite::Database& db) {
-        return sqlite::with_tx(db, [](sqlite::transaction& tx) {
+        return flux::with_tx(db, [](sqlite::transaction& tx) {
             return *tx.exec("SELECT count(*) FROM account").rows.at(0).at(0).get_if<ers::i64>();
         });
     }
@@ -65,7 +65,7 @@ FLUXMT_TEST_CASE("sqlite commit makes changes visible", "[sqlite]") {
     auto db = open(file);
     create_schema(db);
 
-    sqlite::with_tx(db, [](sqlite::transaction& tx) { add(tx, "alice"); }, "insert");
+    flux::with_tx(db, [](sqlite::transaction& tx) { add(tx, "alice"); }, "insert");
 
     REQUIRE(accounts(db) == 1);
 }
@@ -75,7 +75,7 @@ FLUXMT_TEST_CASE("sqlite exception rolls back", "[sqlite]") {
     auto db = open(file);
     create_schema(db);
 
-    REQUIRE_THROWS_AS(sqlite::with_tx(db, [](sqlite::transaction& tx) {
+    REQUIRE_THROWS_AS(flux::with_tx(db, [](sqlite::transaction& tx) {
         add(tx, "alice");
         throw std::runtime_error("boom");
     }), std::runtime_error);
@@ -88,7 +88,7 @@ FLUXMT_TEST_CASE("sqlite Result error aborts", "[sqlite]") {
     auto db = open(file);
     create_schema(db);
 
-    auto failed = sqlite::with_tx(db, [](sqlite::transaction& tx) -> ers::Result<int> {
+    auto failed = flux::with_tx(db, [](sqlite::transaction& tx) -> ers::Result<int> {
         add(tx, "alice");
         return ers::make_error(flux::EDbError::Other, "no");
     });
@@ -101,10 +101,10 @@ FLUXMT_TEST_CASE("sqlite constraint violations are classified", "[sqlite]") {
     test::TempDb file;
     auto db = open(file);
     create_schema(db);
-    sqlite::with_tx(db, [](sqlite::transaction& tx) { add(tx, "alice", 10); });
+    flux::with_tx(db, [](sqlite::transaction& tx) { add(tx, "alice", 10); });
 
     auto code_of = [&](auto fn) {
-        auto result = sqlite::try_with_tx(db, fn, "violation");
+        auto result = flux::try_with_tx(db, fn, "violation");
         REQUIRE(!result);
         return result.error().code();
     };
@@ -129,7 +129,7 @@ FLUXMT_TEST_CASE("sqlite busy writer is reported", "[sqlite]") {
     auto holder = db.acquire_or_throw();
     sqlite::write_transaction lock(*holder, "lock");
 
-    auto blocked = sqlite::try_with_tx(db, [](sqlite::write_transaction& tx) { add(tx, "alice"); }, "blocked");
+    auto blocked = flux::try_with_tx(db, [](sqlite::write_transaction& tx) { add(tx, "alice"); }, "blocked");
 
     REQUIRE(!blocked);
     REQUIRE(blocked.error().code() == flux::EDbError::Busy);
@@ -148,7 +148,7 @@ FLUXMT_TEST_CASE("sqlite retries a busy writer", "[sqlite]") {
         lock.commit();
     });
 
-    sqlite::with_tx(db,
+    flux::with_tx(db,
         [](sqlite::write_transaction& tx) {
             add(tx, "alice");
         },

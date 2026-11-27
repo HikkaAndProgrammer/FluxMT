@@ -33,15 +33,6 @@ namespace flux::sqlite {
     using impl::sqlite::TxOf;
     using impl::sqlite::WriteTx;
 
-    using impl::pool_options_t;
-    using impl::tx_options_t;
-
-    using impl::try_with_conn;
-    using impl::sqlite::try_with_tx;
-    using impl::try_with_tx;
-    using impl::sqlite::with_tx;
-    using impl::with_conn;
-    using impl::with_tx;
 
     using impl::sqlite::dialect;
     using impl::sqlite::reserved_words;

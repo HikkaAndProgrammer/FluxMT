@@ -18,13 +18,16 @@
 
 // Exports ---------------------------------------------------------------------
 
+namespace flux {
+    using impl::Query;
+    using impl::statement_t;
+}
+
+
 namespace flux::query {
     using impl::Clause;
-    using impl::Context;
-    using impl::Dialect;
     using impl::EArity;
     using impl::Layout;
-    using impl::Query;
     using impl::SlotClause;
     
     using impl::clauses::when;
@@ -34,7 +37,6 @@ namespace flux::query {
     using impl::slot_info_view;
     using impl::slot_ref;
     using impl::slot_t;
-    using impl::statement_t;
 
     using impl::IsExecutor;
     using impl::IsStatementSource;

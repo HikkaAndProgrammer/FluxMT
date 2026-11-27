@@ -30,7 +30,7 @@ namespace {
     rendered_t render(const flux::sql::Expr& expr) {
         static const test::AntiDialect dialect;
 
-        flux::sql::Context ctx(dialect);
+        flux::ext::SqlContext ctx(dialect);
 
         if (!expr.render(ctx))
             return { "<error>", {} };

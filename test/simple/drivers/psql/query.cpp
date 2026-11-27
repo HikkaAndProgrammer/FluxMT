@@ -19,11 +19,11 @@ using std::string_literals::operator ""s;
 
 
 namespace {
-    ers::Result<flux::sql::statement_t> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         return query.to_statement(flux::psql::dialect());
     }
 
-    std::string sql_of(const flux::sql::Query& query) {
+    std::string sql_of(const flux::Query& query) {
         const auto r = statement_of(query);
 
         return r ? (*r).text : std::string("<error>");

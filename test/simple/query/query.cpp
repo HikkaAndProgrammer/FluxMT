@@ -62,25 +62,25 @@ namespace {
     };
 
 
-    class CommandDialect final : public flux::query::Dialect {
+    class CommandDialect final : public flux::ext::Dialect {
     public:
         std::string_view name() const noexcept override { return "command"; }
         std::string placeholder(size_t index) const override { return "$" + std::to_string(index); }
 
-        std::unique_ptr<flux::query::Context> make_context() const override {
-            return std::make_unique<flux::query::Context>(*this);
+        std::unique_ptr<flux::ext::Context> make_context() const override {
+            return std::make_unique<flux::ext::Context>(*this);
         }
     };
 
 
-    ers::Result<flux::query::statement_t> statement_of(const flux::query::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         static const CommandDialect dialect;
 
         return query.to_statement(dialect);
     }
 
-    flux::query::Query set_query() {
-        flux::query::Query q(set_layout);
+    flux::Query set_query() {
+        flux::Query q(set_layout);
         q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
         q |= flux::query::make_clause<ValueClause>(&value_slot, 5);
 
@@ -125,7 +125,7 @@ FLUXMT_TEST_CASE("query refuses what its layout does not have", "[query]") {
     CHECK(slot.error().code() == flux::EQueryError::ForeignSlot);
     CHECK(slot.error().message().contains("command"));
 
-    const auto empty = statement_of(flux::query::Query(flux::query::slot_info_view {}));
+    const auto empty = statement_of(flux::Query(flux::query::slot_info_view {}));
 
     REQUIRE_FALSE(empty);
     CHECK(empty.error().code() == flux::EQueryError::Unsupported);
@@ -161,7 +161,7 @@ FLUXMT_TEST_CASE("query renders the layout it was given", "[query]") {
         { .slot = &key_slot, .prefix = "GET " },
     };
 
-    flux::query::Query q { flux::query::slot_info_view(own) };
+    flux::Query q { flux::query::slot_info_view(own) };
     q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
 
     CHECK(statement_of(q)->text == "GET $1");
@@ -180,7 +180,7 @@ FLUXMT_TEST_CASE("query writes a lead before a slot when another is empty", "[qu
         { .slot = &ttl_slot, .prefix = " TTL ", .lead_unless = &nx_slot, .lead = " NONX" },
     };
 
-    flux::query::Query q { flux::query::slot_info_view(own) };
+    flux::Query q { flux::query::slot_info_view(own) };
     q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
 
     CHECK(statement_of(q)->text == "GET $1");
@@ -208,7 +208,7 @@ FLUXMT_TEST_CASE("query takes typed slot clauses", "[query]") {
         flux::query::SlotClause<&key_slot, true>
     >);
 
-    flux::query::Query q(set_layout);
+    flux::Query q(set_layout);
     q |= key_clause(flux::query::make_clause<ValueClause>(&key_slot, std::string("k")));
     q |= flux::query::when(true, value_clause(flux::query::make_clause<ValueClause>(&value_slot, 5)));
     q |= flux::query::when(false, flag_clauses(std::vector<flux::query::Clause> {}));
