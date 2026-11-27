@@ -27,7 +27,7 @@ namespace flux::impl {
     };
 
     template<typename T>
-    concept OptionalLike = !std::is_pointer_v<T> && requires(const T& what) {
+    concept IsOptionalLike = !std::is_pointer_v<T> && requires(const T& what) {
         static_cast<bool>(what);
         *what;
     };
@@ -60,7 +60,7 @@ namespace flux::impl {
             return Value(std::string(view));
         } else if constexpr (std::same_as<U, value_bytes_t>)
             return Value(what);
-        else if constexpr (OptionalLike<U>)
+        else if constexpr (IsOptionalLike<U>)
             return what ? to_value(*what) : Value();
         else if constexpr (std::ranges::input_range<U>) {
             value_array_t items;

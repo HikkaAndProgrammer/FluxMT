@@ -18,7 +18,7 @@ namespace flux::impl {
 
 
 namespace flux::impl::clauses {
-    template<ColumnItem... Args>
+    template<IsColumnItem... Args>
     SqlClauses<&slots::returning, column_needs<Args...>()> returning(Args&&... args) {
         return SqlClauses<&slots::returning, column_needs<Args...>()>(
             make_columns(&slots::returning, std::forward<Args>(args)...));

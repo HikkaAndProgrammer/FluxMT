@@ -11,12 +11,12 @@
 
 using backend = flux::sqlite::backend;
 
-static_assert(flux::Backend<backend>);
-static_assert(flux::Connectable<backend>);
-static_assert(flux::Supports<backend, flux::EFeature::Returning>);
-static_assert(flux::Supports<backend, flux::EFeature::Upsert>);
-static_assert(!flux::Supports<backend, flux::EFeature::DistinctOn>);
-static_assert(!flux::Supports<backend, flux::EFeature::NativeArrays>);
+static_assert(flux::IsBackend<backend>);
+static_assert(flux::IsConnectable<backend>);
+static_assert(flux::SupportsFeature<backend, flux::EFeature::Returning>);
+static_assert(flux::SupportsFeature<backend, flux::EFeature::Upsert>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::DistinctOn>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::NativeArrays>);
 
 
 FLUXMT_TEST_CASE("sqlite backend traits", "[sqlite]") {
@@ -31,7 +31,7 @@ FLUXMT_TEST_CASE("sqlite backend traits", "[sqlite]") {
 FLUXMT_TEST_CASE("sqlite backend is a sql backend at compile time", "[sqlite]") {
     namespace impl = flux::impl;
 
-    STATIC_REQUIRE(impl::SqlBackend<backend>);
+    STATIC_REQUIRE(impl::IsSqlBackend<backend>);
 
     STATIC_REQUIRE(impl::HasSlot<backend, impl::sqlite::insert_layout, &flux::slots::returning>);
     STATIC_REQUIRE(!impl::HasSlot<backend, impl::sqlite::insert_layout, &flux::slots::conflict_constraint>);

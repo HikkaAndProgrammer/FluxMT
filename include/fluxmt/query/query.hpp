@@ -95,23 +95,23 @@ namespace flux::impl {
 
 namespace flux::impl {
     template<typename T>
-    concept QueryPart = requires(Query& query, T part) {
+    concept IsQueryPart = requires(Query& query, T part) {
         query.add(std::move(part));
     };
 
-    template<QueryPart T>
+    template<IsQueryPart T>
     Query& operator|(Query& lhs, T rhs) {
         lhs.add(std::move(rhs));
         return lhs;
     }
 
-    template<QueryPart T>
+    template<IsQueryPart T>
     Query&& operator|(Query&& lhs, T rhs) {
         lhs.add(std::move(rhs));
         return std::move(lhs);
     }
 
-    template<QueryPart T>
+    template<IsQueryPart T>
     Query& operator|=(Query& lhs, T rhs) {
         lhs.add(std::move(rhs));
         return lhs;

@@ -22,7 +22,7 @@
 
 namespace flux::impl {
     template<typename N, typename B>
-    concept NativeTransaction = Backend<B>
+    concept IsNativeTransaction = IsBackend<B>
         && std::constructible_from<N, connection_t<B>&, std::string_view>
         && requires(N& native) {
             native.commit();
@@ -32,7 +32,7 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<Backend B, NativeTransaction<B> N>
+    template<IsBackend B, IsNativeTransaction<B> N>
     class Tx {
     public:
         using backend = B;
@@ -136,7 +136,7 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto with_tx_fn(connection_t<B>& conn, Fn&& fn, const tx_options_t& opts = {}) {
         using deduced = tx_deduce<B, std::remove_cvref_t<Fn>>;
         using tx_type = typename deduced::tx;
@@ -182,20 +182,20 @@ namespace flux::impl {
 
     // Pool level
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto with_tx(Pool<B>& pool, Fn&& fn, const tx_options_t& opts = {}) {
         auto lease = pool.acquire_or_throw();
         return with_tx_fn<B>(*lease, std::forward<Fn>(fn), opts);
     }
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto with_tx(Pool<B>& pool, Fn&& fn, std::string_view label) {
         return with_tx(pool, std::forward<Fn>(fn), tx_options_t {
             .label = label,
         });
     }
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
         requires std::invocable<Fn, connection_t<B>&>
     auto with_conn(Pool<B>& pool, Fn&& fn) {
         auto lease = pool.acquire_or_throw();
@@ -207,7 +207,7 @@ namespace flux::impl {
 // Exports ---------------------------------------------------------------------
 
 namespace flux {
-    using impl::NativeTransaction;
+    using impl::IsNativeTransaction;
     using impl::Tx;
     using impl::tx_options_t;
     using impl::with_conn;

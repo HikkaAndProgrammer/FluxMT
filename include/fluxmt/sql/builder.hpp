@@ -15,7 +15,7 @@
 
 
 namespace flux::impl {
-    template<SqlBackend B, const auto& L>
+    template<IsSqlBackend B, const auto& L>
     class QueryBuilder {
     public:
         using backend = B;
@@ -73,7 +73,7 @@ namespace flux::impl {
 
         template<typename C>
         static constexpr void _check() noexcept {
-            static_assert(HasSlot<B, L, C::slot>,"this statement has no such clause on this backend");
+            static_assert(HasSlot<B, L, C::slot>, "this statement has no such clause on this backend");
             static_assert(SupportsNeeds<B, clause_needs<C>()>, "this backend lacks syntax this clause needs");
         }
     };

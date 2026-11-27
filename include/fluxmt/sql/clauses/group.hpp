@@ -18,7 +18,7 @@ namespace flux::impl::clauses {
             make_columns(&slots::group, std::forward<Args>(args)...));
     }
 
-    template<ColumnNames R>
+    template<IsColumnNamesRange R>
     SqlClauses<&slots::group, no_needs> group_by(R&& names) {
         return SqlClauses<&slots::group, no_needs>(make_columns(&slots::group, std::forward<R>(names)));
     }

@@ -65,7 +65,7 @@ namespace flux::sql {
     using Dialect = impl::SqlDialect;
 
     using impl::Query;
-    using impl::SqlBackend;
+    using impl::IsSqlBackend;
     using impl::QueryBuilder;
     using impl::SqlClause;
     using impl::SqlClauses;

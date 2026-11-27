@@ -22,17 +22,17 @@
 
 namespace flux::impl {
     template<typename T>
-    concept ColumnItem = std::constructible_from<column_expr_t, T> || std::same_as<std::remove_cvref_t<T>, aliased_t>;
+    concept IsColumnItem = std::constructible_from<column_expr_t, T> || std::same_as<std::remove_cvref_t<T>, aliased_t>;
 
     template<typename R>
-    concept ColumnNames = std::ranges::input_range<R>
+    concept IsColumnNamesRange = std::ranges::input_range<R>
         && std::constructible_from<std::string, std::ranges::range_reference_t<R>>;
 
 
     FLUXMT_EXPORT Clause make_column_clause(slot_ref slot, column_expr_t what);
     FLUXMT_EXPORT Clause make_column_clause(slot_ref slot, aliased_t what);
 
-    template<ColumnItem... Args>
+    template<IsColumnItem... Args>
     std::vector<Clause> make_columns(slot_ref slot, Args&&... args) {
         std::vector<Clause> out;
         out.reserve(sizeof...(Args));
@@ -41,7 +41,7 @@ namespace flux::impl {
         return out;
     }
 
-    template<ColumnNames R>
+    template<IsColumnNamesRange R>
     std::vector<Clause> make_columns(slot_ref slot, R&& names) {
         std::vector<Clause> out;
 
@@ -59,18 +59,18 @@ namespace flux::impl {
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    template<ColumnItem T>
+    template<IsColumnItem T>
     SqlClause<&slots::column, column_need<T>()> column(T&& what) {
         return SqlClause<&slots::column, column_need<T>()>(make_column_clause(&slots::column, std::forward<T>(what)));
     }
 
-    template<ColumnItem... Args>
+    template<IsColumnItem... Args>
     SqlClauses<&slots::column, column_needs<Args...>()> columns(Args&&... args) {
         return SqlClauses<&slots::column, column_needs<Args...>()>(
             make_columns(&slots::column, std::forward<Args>(args)...));
     }
 
-    template<ColumnNames R>
+    template<IsColumnNamesRange R>
     SqlClauses<&slots::column, no_needs> columns(R&& names) {
         return SqlClauses<&slots::column, no_needs>(make_columns(&slots::column, std::forward<R>(names)));
     }

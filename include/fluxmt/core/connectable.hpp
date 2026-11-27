@@ -16,7 +16,7 @@
 
 namespace flux::impl {
     template<typename B>
-    concept Connectable = Backend<B> && requires(
+    concept IsConnectable = IsBackend<B> && requires(
         const typename backend_traits<B>::options& options,
         const connection_t<B>& connection,
         std::string_view label
@@ -33,5 +33,5 @@ namespace flux::impl {
 // Exports ---------------------------------------------------------------------
 
 namespace flux {
-    using impl::Connectable;
+    using impl::IsConnectable;
 }

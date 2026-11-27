@@ -18,7 +18,7 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<Connectable B, std::invocable Fn>
+    template<IsConnectable B, std::invocable Fn>
     auto try_invoke(Fn&& fn, std::string_view label = {}) -> ers::as_result_t<std::invoke_result_t<Fn>> {
         using std::string_view_literals::operator ""sv;
         using R = std::invoke_result_t<Fn>;
@@ -36,14 +36,14 @@ namespace flux::impl {
     }
 
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto try_with_tx_fn(connection_t<B>& conn, Fn&& fn, const tx_options_t& opts = {}) {
         return try_invoke<B>([&] {
             return with_tx_fn<B>(conn, std::forward<Fn>(fn), opts);
         }, opts.label);
     }
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto try_with_tx(Pool<B>& pool, Fn&& fn, const tx_options_t& opts = {}) {
         using R = ers::as_result_t<decltype(with_tx_fn<B>(
             std::declval<connection_t<B>&>(),
@@ -58,14 +58,14 @@ namespace flux::impl {
         return try_with_tx_fn<B>(**lease, std::forward<Fn>(fn), opts);
     }
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
     auto try_with_tx(Pool<B>& pool, Fn&& fn, std::string_view label) {
         return try_with_tx(pool, std::forward<Fn>(fn), tx_options_t {
             .label = label,
         });
     }
 
-    template<Connectable B, typename Fn>
+    template<IsConnectable B, typename Fn>
         requires std::invocable<Fn, connection_t<B>&>
     auto try_with_conn(Pool<B>& pool, Fn&& fn) {
         using R = ers::as_result_t<std::invoke_result_t<Fn, connection_t<B>&>>;

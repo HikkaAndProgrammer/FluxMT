@@ -10,14 +10,14 @@
 
 using backend = flux::redis::backend;
 
-static_assert(flux::Backend<backend>);
-static_assert(flux::Connectable<backend>);
-static_assert(flux::NativeTransaction<flux::redis::transaction, backend>);
-static_assert(flux::Supports<backend, flux::EFeature::Transactions>);
-static_assert(!flux::Supports<backend, flux::EFeature::Sql>);
-static_assert(!flux::Supports<backend, flux::EFeature::Returning>);
-static_assert(!flux::Supports<backend, flux::EFeature::Upsert>);
-static_assert(!flux::Supports<backend, flux::EFeature::NativeArrays>);
+static_assert(flux::IsBackend<backend>);
+static_assert(flux::IsConnectable<backend>);
+static_assert(flux::IsNativeTransaction<flux::redis::transaction, backend>);
+static_assert(flux::SupportsFeature<backend, flux::EFeature::Transactions>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::Sql>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::Returning>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::Upsert>);
+static_assert(!flux::SupportsFeature<backend, flux::EFeature::NativeArrays>);
 
 
 FLUXMT_TEST_CASE("redis backend traits", "[redis]") {
