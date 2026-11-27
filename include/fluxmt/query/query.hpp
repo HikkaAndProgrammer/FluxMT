@@ -47,8 +47,8 @@ namespace flux::impl {
         void add(Clause clause);
         void add(std::vector<Clause> clauses);
 
-        template<slot_ref S, bool Many, auto Meta>
-        void add(SlotClause<S, Many, Meta> clause) {
+        template<slot_ref Slot, bool Many, auto Meta>
+        void add(SlotClause<Slot, Many, Meta> clause) {
             add(std::move(clause).take_all());
         }
 

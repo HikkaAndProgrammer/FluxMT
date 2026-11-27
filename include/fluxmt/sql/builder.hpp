@@ -15,12 +15,12 @@
 
 
 namespace flux::impl {
-    template<IsSqlBackend B, const auto& L>
+    template<IsSqlBackend Backend, const auto& Layout>
     class QueryBuilder {
     public:
-        using backend = B;
+        using backend = Backend;
 
-        static constexpr slot_info_view layout = L;
+        static constexpr slot_info_view layout = Layout;
 
 
         // Member functions
@@ -37,7 +37,7 @@ namespace flux::impl {
         Query erased() && { return std::move(_query); }
 
         ers::Result<statement_t> to_statement() const {
-            return _query.to_statement(backend_traits<B>::dialect());
+            return _query.to_statement(backend_traits<Backend>::dialect());
         }
 
 
@@ -49,18 +49,18 @@ namespace flux::impl {
 
         // Operators
 
-        template<typename C>
-            requires is_slot_clause_v<C>
-        QueryBuilder& operator|=(C clause) {
-            _check<C>();
+        template<typename Tag>
+            requires is_slot_clause_v<Tag> && AcceptsClause<Backend, Layout, Tag>
+        QueryBuilder& operator|=(Tag clause) {
+            _check<Tag>();
             _query.add(std::move(clause));
 
             return *this;
         }
 
-        template<typename C>
-            requires is_slot_clause_v<C>
-        friend QueryBuilder operator|(QueryBuilder lhs, C clause) {
+        template<typename Tag>
+            requires is_slot_clause_v<Tag> && AcceptsClause<Backend, Layout, Tag>
+        friend QueryBuilder operator|(QueryBuilder lhs, Tag clause) {
             lhs |= std::move(clause);
 
             return lhs;
@@ -71,10 +71,10 @@ namespace flux::impl {
         Query _query;
 
 
-        template<typename C>
+        template<typename Tag>
         static constexpr void _check() noexcept {
-            static_assert(HasSlot<B, L, C::slot>, "this statement has no such clause on this backend");
-            static_assert(SupportsNeeds<B, clause_needs<C>()>, "this backend lacks syntax this clause needs");
+            static_assert(HasSlot<Backend, Layout, Tag::slot>, "this statement has no such clause on this backend");
+            static_assert(SupportsNeeds<Backend, clause_needs<Tag>()>, "this backend lacks syntax this clause needs");
         }
     };
 }

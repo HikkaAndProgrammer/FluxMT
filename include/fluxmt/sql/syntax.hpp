@@ -80,15 +80,15 @@ namespace flux::impl {
     template<typename... R>
     function_rules_t(R...) -> function_rules_t<sizeof...(R)>;
 
-    template<size_t A, size_t B>
-    constexpr function_rules_t<A + B> operator+(const function_rules_t<A>& lhs, const function_rules_t<B>& rhs) noexcept {
-        function_rules_t<A + B> out {};
+    template<size_t L, size_t R>
+    constexpr function_rules_t<L + R> operator+(const function_rules_t<L>& lhs, const function_rules_t<R>& rhs) noexcept {
+        function_rules_t<L + R> out {};
 
-        for (size_t i = 0; i < A; ++i)
+        for (size_t i = 0; i < L; ++i)
             out.rules[i] = lhs.rules[i];
 
-        for (size_t i = 0; i < B; ++i)
-            out.rules[A + i] = rhs.rules[i];
+        for (size_t i = 0; i < R; ++i)
+            out.rules[L + i] = rhs.rules[i];
 
         return out;
     }

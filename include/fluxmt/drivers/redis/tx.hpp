@@ -16,8 +16,8 @@ namespace flux::impl::redis {
 
     using Tx = impl::Tx<backend, transaction>;
 
-    template<typename N>
-    using TxOf = impl::Tx<backend, N>;
+    template<typename NativeTx>
+    using TxOf = impl::Tx<backend, NativeTx>;
 
 
     template<typename Fn>

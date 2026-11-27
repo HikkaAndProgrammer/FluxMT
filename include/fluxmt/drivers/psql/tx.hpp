@@ -20,8 +20,8 @@ namespace flux::impl::psql {
     using Tx = impl::Tx<backend, pqxx::work>;
     using ReadTx = impl::Tx<backend, pqxx::read_transaction>;
 
-    template<typename N>
-    using TxOf = impl::Tx<backend, N>;
+    template<typename NativeTx>
+    using TxOf = impl::Tx<backend, NativeTx>;
 
 
     template<typename Fn>

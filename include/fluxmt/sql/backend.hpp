@@ -13,10 +13,10 @@
 
 
 namespace flux::impl {
-    template<typename B>
-    concept IsSqlBackend = SupportsFeature<B, EFeature::Sql> && requires {
-        { backend_traits<B>::dialect() } -> std::convertible_to<const SqlDialect&>;
-        { backend_traits<B>::syntax } -> std::convertible_to<const syntax_t&>;
+    template<typename Backend>
+    concept IsSqlBackend = SupportsFeature<Backend, EFeature::Sql> && requires {
+        { backend_traits<Backend>::dialect() } -> std::convertible_to<const SqlDialect&>;
+        { backend_traits<Backend>::syntax } -> std::convertible_to<const syntax_t&>;
     };
 }
 
@@ -31,18 +31,21 @@ namespace flux::impl {
         return false;
     }
 
-    template<IsSqlBackend B>
+    template<IsSqlBackend Backend>
     consteval const syntax_t& syntax_of() noexcept {
-        return backend_traits<B>::syntax;
+        return backend_traits<Backend>::syntax;
     }
 
 
-    template<typename B, const auto& L, slot_ref S>
-    concept HasSlot = IsSqlBackend<B> && layout_has(slot_info_view(L), S);
+    template<typename Backend, const auto& Layout, slot_ref Slot>
+    concept HasSlot = IsSqlBackend<Backend>
+        && layout_has(slot_info_view(Layout), Slot);
 
-    template<typename B, needs_t N>
-    concept SupportsNeeds = IsSqlBackend<B> && supports(syntax_of<B>(), N);
+    template<typename Backend, needs_t Needs>
+    concept SupportsNeeds = IsSqlBackend<Backend>
+        && supports(syntax_of<Backend>(), Needs);
 
-    template<typename B, const auto& L, typename C>
-    concept AcceptsClause = HasSlot<B, L, C::slot> && SupportsNeeds<B, clause_needs<C>()>;
+    template<typename Backend, const auto& Layout, typename Tag>
+    concept AcceptsClause = HasSlot<Backend, Layout, Tag::slot>
+        && SupportsNeeds<Backend, clause_needs<Tag>()>;
 }

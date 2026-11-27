@@ -17,8 +17,8 @@ namespace flux::impl::sqlite {
     using Tx = impl::Tx<backend, transaction>;
     using WriteTx = impl::Tx<backend, write_transaction>;
 
-    template<typename N>
-    using TxOf = impl::Tx<backend, N>;
+    template<typename NativeTx>
+    using TxOf = impl::Tx<backend, NativeTx>;
 
 
     template<typename Fn>

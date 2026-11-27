@@ -29,12 +29,12 @@ namespace flux::impl::clauses {
         return clauses;
     }
 
-    template<slot_ref S, bool Many, auto Meta>
-    SlotClause<S, true, Meta> when(bool condition, SlotClause<S, Many, Meta> clause) {
+    template<slot_ref Slot, bool Many, auto Meta>
+    SlotClause<Slot, true, Meta> when(bool condition, SlotClause<Slot, Many, Meta> clause) {
         if (!condition)
             return {};
 
-        return SlotClause<S, true, Meta>(std::move(clause).take_all());
+        return SlotClause<Slot, true, Meta>(std::move(clause).take_all());
     }
 
     template<typename Fn>

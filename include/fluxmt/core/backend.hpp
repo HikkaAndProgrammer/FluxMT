@@ -43,21 +43,21 @@ namespace flux::impl {
     };
 
 
-    template<typename B>
+    template<typename Backend>
     struct backend_traits;
 
-    template<typename B>
+    template<typename Backend>
     concept IsBackend = requires {
-        typename backend_traits<B>::connection;
-        { backend_traits<B>::name } -> std::convertible_to<std::string_view>;
-        { backend_traits<B>::features } -> std::convertible_to<feature_set>;
+        typename backend_traits<Backend>::connection;
+        { backend_traits<Backend>::name } -> std::convertible_to<std::string_view>;
+        { backend_traits<Backend>::features } -> std::convertible_to<feature_set>;
     };
 
-    template<typename B, EFeature F>
-    concept SupportsFeature = IsBackend<B> && backend_traits<B>::features.contains(F);
+    template<typename Backend, EFeature Feature>
+    concept SupportsFeature = IsBackend<Backend> && backend_traits<Backend>::features.contains(Feature);
 
-    template<IsBackend B>
-    using connection_t = typename backend_traits<B>::connection;
+    template<IsBackend Backend>
+    using connection_t = typename backend_traits<Backend>::connection;
 }
 
 

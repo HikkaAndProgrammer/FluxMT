@@ -11,10 +11,10 @@
 
 
 namespace flux::impl {
-    template<slot_ref S, bool Many = false, auto Meta = 0>
+    template<slot_ref Slot, bool Many = false, auto Meta = 0>
     class SlotClause {
     public:
-        static constexpr slot_ref slot = S;
+        static constexpr slot_ref slot = Slot;
         static constexpr bool many = Many;
         static constexpr auto meta = Meta;
 
@@ -65,6 +65,6 @@ namespace flux::impl {
     template<typename T>
     inline constexpr bool is_slot_clause_v = false;
 
-    template<slot_ref S, bool Many, auto Meta>
-    inline constexpr bool is_slot_clause_v<SlotClause<S, Many, Meta>> = true;
+    template<slot_ref Slot, bool Many, auto Meta>
+    inline constexpr bool is_slot_clause_v<SlotClause<Slot, Many, Meta>> = true;
 }

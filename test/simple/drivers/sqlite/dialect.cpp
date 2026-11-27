@@ -15,7 +15,7 @@
 using backend = flux::sqlite::backend;
 using traits = flux::impl::backend_traits<backend>;
 
-static_assert(flux::sql::SqlBackend<backend>);
+static_assert(flux::sql::IsSqlBackend<backend>);
 
 
 FLUXMT_TEST_CASE("sqlite placeholders are numbered", "[sqlite]") {

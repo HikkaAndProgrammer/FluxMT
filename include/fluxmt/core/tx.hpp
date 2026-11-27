@@ -21,10 +21,10 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<typename N, typename B>
-    concept IsNativeTransaction = IsBackend<B>
-        && std::constructible_from<N, connection_t<B>&, std::string_view>
-        && requires(N& native) {
+    template<typename NativeTx, typename Backend>
+    concept IsNativeTransaction = IsBackend<Backend>
+        && std::constructible_from<NativeTx, connection_t<Backend>&, std::string_view>
+        && requires(NativeTx& native) {
             native.commit();
             native.abort();
         };
@@ -32,16 +32,16 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<IsBackend B, IsNativeTransaction<B> N>
+    template<IsBackend Backend, IsNativeTransaction<Backend> NativeTx>
     class Tx {
     public:
-        using backend = B;
-        using native_type = N;
+        using backend = Backend;
+        using native_type = NativeTx;
 
 
         // Member functions
 
-        Tx(connection_t<B>& conn, std::string_view label) :
+        Tx(connection_t<Backend>& conn, std::string_view label) :
             _native(conn, label) {
         }
 
@@ -51,11 +51,11 @@ namespace flux::impl {
 
         // Accessors
 
-        N& native() noexcept { return _native; }
-        const N& native() const noexcept { return _native; }
+        NativeTx& native() noexcept { return _native; }
+        const NativeTx& native() const noexcept { return _native; }
 
-        N& operator*() noexcept { return _native; }
-        N* operator->() noexcept { return &_native; }
+        NativeTx& operator*() noexcept { return _native; }
+        NativeTx* operator->() noexcept { return &_native; }
 
 
         // Modifiers
@@ -76,20 +76,20 @@ namespace flux::impl {
     template<typename T>
     inline constexpr bool is_tx_v = false;
 
-    template<typename B, typename N>
-    inline constexpr bool is_tx_v<Tx<B, N>> = true;
+    template<typename Backend, typename NativeTx>
+    inline constexpr bool is_tx_v<Tx<Backend, NativeTx>> = true;
 
 
-    template<typename B, typename P>
+    template<typename Backend, typename P>
     struct tx_for {
-        using type = Tx<B, P>;
+        using type = Tx<Backend, P>;
     };
 
-    template<typename B, typename Other, typename N>
-    struct tx_for<B, Tx<Other, N>> {
-        static_assert(std::same_as<B, Other>, "with_tx: the callable asks for a transaction of another backend");
+    template<typename Backend, typename Other, typename NativeTx>
+    struct tx_for<Backend, Tx<Other, NativeTx>> {
+        static_assert(std::same_as<Backend, Other>, "with_tx: the callable asks for a transaction of another backend");
 
-        using type = Tx<B, N>;
+        using type = Tx<Backend, NativeTx>;
     };
 
 
@@ -102,17 +102,17 @@ namespace flux::impl {
     };
 
 
-    template<typename B, typename Fn>
+    template<typename Backend, typename Fn>
     struct tx_deduce {
-        using tx = Tx<B, typename backend_traits<B>::default_tx>;
+        using tx = Tx<Backend, typename backend_traits<Backend>::default_tx>;
 
         static constexpr bool wrapped = true;
     };
 
-    template<typename B, HasFirstArg Fn>
-    struct tx_deduce<B, Fn> {
+    template<typename Backend, HasFirstArg Fn>
+    struct tx_deduce<Backend, Fn> {
         using param = first_arg_t<Fn>;
-        using tx = typename tx_for<B, param>::type;
+        using tx = typename tx_for<Backend, param>::type;
 
         static constexpr bool wrapped = is_tx_v<param>;
     };
@@ -136,9 +136,9 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<IsConnectable B, typename Fn>
-    auto with_tx_fn(connection_t<B>& conn, Fn&& fn, const tx_options_t& opts = {}) {
-        using deduced = tx_deduce<B, std::remove_cvref_t<Fn>>;
+    template<IsConnectable Backend, typename Fn>
+    auto with_tx_fn(connection_t<Backend>& conn, Fn&& fn, const tx_options_t& opts = {}) {
+        using deduced = tx_deduce<Backend, std::remove_cvref_t<Fn>>;
         using tx_type = typename deduced::tx;
 
         using return_type = decltype(call_with_tx<deduced::wrapped>(
@@ -171,7 +171,7 @@ namespace flux::impl {
             try {
                 return attempt();
             } catch (...) {
-                if (round >= opts.retries || !backend_traits<B>::retryable())
+                if (round >= opts.retries || !backend_traits<Backend>::retryable())
                     throw;
 
                 std::this_thread::sleep_for(opts.backoff * (round + 1));
@@ -182,22 +182,22 @@ namespace flux::impl {
 
     // Pool level
 
-    template<IsConnectable B, typename Fn>
-    auto with_tx(Pool<B>& pool, Fn&& fn, const tx_options_t& opts = {}) {
+    template<IsConnectable Backend, typename Fn>
+    auto with_tx(Pool<Backend>& pool, Fn&& fn, const tx_options_t& opts = {}) {
         auto lease = pool.acquire_or_throw();
-        return with_tx_fn<B>(*lease, std::forward<Fn>(fn), opts);
+        return with_tx_fn<Backend>(*lease, std::forward<Fn>(fn), opts);
     }
 
-    template<IsConnectable B, typename Fn>
-    auto with_tx(Pool<B>& pool, Fn&& fn, std::string_view label) {
+    template<IsConnectable Backend, typename Fn>
+    auto with_tx(Pool<Backend>& pool, Fn&& fn, std::string_view label) {
         return with_tx(pool, std::forward<Fn>(fn), tx_options_t {
             .label = label,
         });
     }
 
-    template<IsConnectable B, typename Fn>
-        requires std::invocable<Fn, connection_t<B>&>
-    auto with_conn(Pool<B>& pool, Fn&& fn) {
+    template<IsConnectable Backend, typename Fn>
+        requires std::invocable<Fn, connection_t<Backend>&>
+    auto with_conn(Pool<Backend>& pool, Fn&& fn) {
         auto lease = pool.acquire_or_throw();
         return std::forward<Fn>(fn)(*lease);
     }

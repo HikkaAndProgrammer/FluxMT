@@ -34,9 +34,9 @@ FLUXMT_TEST_CASE("backend traits", "[core]") {
     STATIC_REQUIRE(flux::IsBackend<fake_backend>);
     STATIC_REQUIRE(!flux::IsBackend<not_a_backend>);
 
-    STATIC_REQUIRE(flux::Supports<fake_backend, flux::EFeature::Returning>);
-    STATIC_REQUIRE(!flux::Supports<fake_backend, flux::EFeature::Upsert>);
-    STATIC_REQUIRE(!flux::Supports<not_a_backend, flux::EFeature::Sql>);
+    STATIC_REQUIRE(flux::SupportsFeature<fake_backend, flux::EFeature::Returning>);
+    STATIC_REQUIRE(!flux::SupportsFeature<fake_backend, flux::EFeature::Upsert>);
+    STATIC_REQUIRE(!flux::SupportsFeature<not_a_backend, flux::EFeature::Sql>);
 
     STATIC_REQUIRE(std::same_as<flux::connection_t<fake_backend>, int>);
 }

@@ -12,7 +12,7 @@
 #include "support/test_case.hpp"
 
 
-static_assert(flux::sql::SqlBackend<flux::psql::backend>);
+static_assert(flux::sql::IsSqlBackend<flux::psql::backend>);
 
 
 FLUXMT_TEST_CASE("psql placeholders start from one", "[psql]") {

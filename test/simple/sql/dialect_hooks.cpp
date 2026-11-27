@@ -123,8 +123,8 @@ namespace {
         return r ? r->text : std::string("<error>");
     }
 
-    template<typename B, const auto& L>
-    std::string sql_of(const flux::sql::QueryBuilder<B, L>& builder) {
+    template<typename Backend, const auto& Layout>
+    std::string sql_of(const flux::sql::QueryBuilder<Backend, Layout>& builder) {
         return sql_of(builder.erased());
     }
 

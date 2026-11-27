@@ -26,14 +26,14 @@
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
-    template<needs_t N>
+    template<needs_t Needs>
     class TypedExpr;
 
-    template<needs_t N>
-    using expr_for = std::conditional_t<N.partial, Expr, TypedExpr<N>>;
+    template<needs_t Needs>
+    using expr_for = std::conditional_t<Needs.partial, Expr, TypedExpr<Needs>>;
 
-    template<needs_t N>
-    expr_for<N> retype(Expr expr);
+    template<needs_t Needs>
+    expr_for<Needs> retype(Expr expr);
 
     template<typename... Ts>
     constexpr needs_t needs_of() noexcept;
@@ -185,13 +185,13 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<needs_t N>
+    template<needs_t Needs>
     class TypedExpr : public Expr {
-        static_assert(!N.partial, "TypedExpr<> has to know all it needs, an erased expression is Expr.");
+        static_assert(!Needs.partial, "TypedExpr<> has to know all it needs, an erased expression is Expr.");
 
 
     public:
-        static constexpr needs_t needs = N;
+        static constexpr needs_t needs = Needs;
 
 
         explicit TypedExpr(Expr expr) noexcept :
@@ -200,12 +200,12 @@ namespace flux::impl {
     };
 
 
-    template<needs_t N>
-    expr_for<N> retype(Expr expr) {
-        if constexpr (N.partial)
+    template<needs_t Needs>
+    expr_for<Needs> retype(Expr expr) {
+        if constexpr (Needs.partial)
             return expr;
         else
-            return expr_for<N>(std::move(expr));
+            return expr_for<Needs>(std::move(expr));
     }
 
     template<typename T>

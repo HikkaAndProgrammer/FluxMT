@@ -38,19 +38,19 @@ namespace flux::impl {
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    template<ers::fixed_string Fn, typename... Args>
+    template<ers::fixed_string Name, typename... Args>
         requires (std::constructible_from<column_expr_t, Args> && ...)
     auto agg(Args&&... args) {
-        return retype<needs_of<Args...>()>(make_aggregate(Fn.to_sv(), {
+        return retype<needs_of<Args...>()>(make_aggregate(Name.to_sv(), {
             .args = { column_expr_t(std::forward<Args>(args)).expr... }
         }));
     }
 
-    template<ers::fixed_string Fn, typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto agg_distinct(A&& what) {
-        return retype<needs_of<A>()>(make_aggregate(Fn.to_sv(), {
-            .args     = { column_expr_t(std::forward<A>(what)).expr },
+    template<ers::fixed_string Name, typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto agg_distinct(T&& what) {
+        return retype<needs_of<T>()>(make_aggregate(Name.to_sv(), {
+            .args     = { column_expr_t(std::forward<T>(what)).expr },
             .distinct = true
         }));
     }
@@ -60,83 +60,83 @@ namespace flux::impl::clauses {
         return retype<no_needs>(make_aggregate("count", { .args = { make_const("*") } }));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto count_of(A&& what) {
-        return agg<"count">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto count_of(T&& what) {
+        return agg<"count">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto count_distinct(A&& what) {
-        return agg_distinct<"count">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto count_distinct(T&& what) {
+        return agg_distinct<"count">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto min_of(A&& what) {
-        return agg<"min">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto min_of(T&& what) {
+        return agg<"min">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto max_of(A&& what) {
-        return agg<"max">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto max_of(T&& what) {
+        return agg<"max">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto sum_of(A&& what) {
-        return agg<"sum">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto sum_of(T&& what) {
+        return agg<"sum">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto avg_of(A&& what) {
-        return agg<"avg">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto avg_of(T&& what) {
+        return agg<"avg">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto array_agg_of(A&& what) {
-        return agg<"array_agg">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto array_agg_of(T&& what) {
+        return agg<"array_agg">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto bool_and_of(A&& what) {
-        return agg<"bool_and">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto bool_and_of(T&& what) {
+        return agg<"bool_and">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto bool_or_of(A&& what) {
-        return agg<"bool_or">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto bool_or_of(T&& what) {
+        return agg<"bool_or">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto stddev_of(A&& what) {
-        return agg<"stddev">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto stddev_of(T&& what) {
+        return agg<"stddev">(std::forward<T>(what));
     }
 
-    template<typename A>
-        requires std::constructible_from<column_expr_t, A>
-    auto variance_of(A&& what) {
-        return agg<"variance">(std::forward<A>(what));
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto variance_of(T&& what) {
+        return agg<"variance">(std::forward<T>(what));
     }
 
-    template<typename Y, typename X>
-        requires (std::constructible_from<column_expr_t, Y> && std::constructible_from<column_expr_t, X>)
-    auto corr_of(Y&& y, X&& x) {
-        return agg<"corr">(std::forward<Y>(y), std::forward<X>(x));
+    template<typename Dependent, typename Independent>
+        requires (std::constructible_from<column_expr_t, Dependent> && std::constructible_from<column_expr_t, Independent>)
+    auto corr_of(Dependent&& y, Independent&& x) {
+        return agg<"corr">(std::forward<Dependent>(y), std::forward<Independent>(x));
     }
 
-    template<typename A, IsExprLike D>
-        requires std::constructible_from<column_expr_t, A>
-    auto string_agg(A&& what, D&& delimiter) {
-        return retype<needs_of<A, D>()>(make_aggregate("string_agg", {
-            .args = { column_expr_t(std::forward<A>(what)).expr, Expr(std::forward<D>(delimiter)) }
+    template<typename T, IsExprLike Delimiter>
+        requires std::constructible_from<column_expr_t, T>
+    auto string_agg(T&& what, Delimiter&& delimiter) {
+        return retype<needs_of<T, Delimiter>()>(make_aggregate("string_agg", {
+            .args = { column_expr_t(std::forward<T>(what)).expr, Expr(std::forward<Delimiter>(delimiter)) }
         }));
     }
 
