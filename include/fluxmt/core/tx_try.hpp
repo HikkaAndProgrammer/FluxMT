@@ -37,15 +37,15 @@ namespace flux::impl {
 
 
     template<IsConnectable Backend, typename Fn>
-    auto try_with_tx_fn(connection_t<Backend>& conn, Fn&& fn, const tx_options_t& opts = {}) {
+    auto try_with_tx(connection_t<Backend>& conn, Fn&& fn, const tx_options_t& opts = {}) {
         return try_invoke<Backend>([&] {
-            return with_tx_fn<Backend>(conn, std::forward<Fn>(fn), opts);
+            return with_tx<Backend>(conn, std::forward<Fn>(fn), opts);
         }, opts.label);
     }
 
     template<IsConnectable Backend, typename Fn>
     auto try_with_tx(Pool<Backend>& pool, Fn&& fn, const tx_options_t& opts = {}) {
-        using R = ers::as_result_t<decltype(with_tx_fn<Backend>(
+        using R = ers::as_result_t<decltype(with_tx<Backend>(
             std::declval<connection_t<Backend>&>(),
             std::declval<Fn>(),
             opts
@@ -55,7 +55,7 @@ namespace flux::impl {
         if (!lease)
             return R(std::move(lease).extract_error());
 
-        return try_with_tx_fn<Backend>(**lease, std::forward<Fn>(fn), opts);
+        return try_with_tx<Backend>(**lease, std::forward<Fn>(fn), opts);
     }
 
     template<IsConnectable Backend, typename Fn>
@@ -84,5 +84,4 @@ namespace flux::impl {
 namespace flux {
     using impl::try_with_conn;
     using impl::try_with_tx;
-    using impl::try_with_tx_fn;
 }

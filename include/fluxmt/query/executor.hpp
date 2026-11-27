@@ -27,6 +27,9 @@ namespace flux::impl {
     template<typename NativeTx>
     using executor_result_t = typename ext::executor_traits<NativeTx>::result;
 
+    template<IsBackend Backend>
+    using default_result_t = executor_result_t<typename ext::backend_traits<Backend>::default_tx>;
+
 
     template<typename T>
     concept IsExecutor = requires(T& tx, const statement_t& statement) {

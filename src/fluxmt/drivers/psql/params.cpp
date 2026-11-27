@@ -94,9 +94,10 @@ void flux::impl::psql::append(pqxx::params& out, const Value& value) {
             out.append();
         else if constexpr (std::same_as<T, bool>
             || std::same_as<T, ers::i64> || std::same_as<T, ers::u64>
-            || std::same_as<T, ers::f64>
-            || std::same_as<T, std::string>)
+            || std::same_as<T, ers::f64>)
             out.append(v);
+        else if constexpr (std::same_as<T, std::string>)
+            out.append(pqxx::zview(v));
         else if constexpr (std::same_as<T, value_bytes_t>)
             out.append(pqxx::bytes_view { v.data(), v.size() });
         else

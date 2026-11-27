@@ -7,6 +7,7 @@
 #include <fluxmt/drivers/sqlite/connection.hpp>
 #include <fluxmt/drivers/sqlite/dialect.hpp>
 #include <fluxmt/drivers/sqlite/error.hpp>
+#include <fluxmt/drivers/sqlite/executor.hpp>
 #include <fluxmt/drivers/sqlite/options.hpp>
 #include <fluxmt/drivers/sqlite/orm.hpp>
 #include <fluxmt/drivers/sqlite/params.hpp>

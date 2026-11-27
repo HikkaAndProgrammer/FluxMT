@@ -137,7 +137,7 @@ namespace flux::impl {
 
 namespace flux::impl {
     template<IsConnectable Backend, typename Fn>
-    auto with_tx_fn(connection_t<Backend>& conn, Fn&& fn, const tx_options_t& opts = {}) {
+    auto with_tx(connection_t<Backend>& conn, Fn&& fn, const tx_options_t& opts = {}) {
         using deduced = tx_deduce<Backend, std::remove_cvref_t<Fn>>;
         using tx_type = typename deduced::tx;
 
@@ -185,7 +185,7 @@ namespace flux::impl {
     template<IsConnectable Backend, typename Fn>
     auto with_tx(Pool<Backend>& pool, Fn&& fn, const tx_options_t& opts = {}) {
         auto lease = pool.acquire_or_throw();
-        return with_tx_fn<Backend>(*lease, std::forward<Fn>(fn), opts);
+        return with_tx<Backend>(*lease, std::forward<Fn>(fn), opts);
     }
 
     template<IsConnectable Backend, typename Fn>
@@ -212,5 +212,4 @@ namespace flux {
     using impl::tx_options_t;
     using impl::with_conn;
     using impl::with_tx;
-    using impl::with_tx_fn;
 }
