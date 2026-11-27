@@ -8,6 +8,7 @@
 #include <fluxmt/drivers/psql/dialect.hpp>
 #include <fluxmt/drivers/psql/error.hpp>
 #include <fluxmt/drivers/psql/options.hpp>
+#include <fluxmt/drivers/psql/orm.hpp>
 #include <fluxmt/drivers/psql/params.hpp>
 #include <fluxmt/drivers/psql/tx.hpp>
 

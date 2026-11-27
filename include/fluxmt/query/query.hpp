@@ -15,7 +15,6 @@
 #include <fluxmt/query/clause.hpp>
 #include <fluxmt/query/context.hpp>
 #include <fluxmt/query/dialect.hpp>
-#include <fluxmt/query/kind.hpp>
 #include <fluxmt/query/layout.hpp>
 #include <fluxmt/query/slot_clause.hpp>
 #include <fluxmt/query/statement.hpp>
@@ -31,10 +30,6 @@ namespace flux::impl {
     public:
         // Member functions
 
-        explicit Query(kind_ref kind) noexcept :
-            _kind(kind) {
-        }
-
         explicit Query(slot_info_view layout) noexcept :
             _fixed(layout) {
         }
@@ -42,11 +37,9 @@ namespace flux::impl {
 
         // Observers
 
-        kind_ref kind() const noexcept { return _kind; }
-
         bool has(slot_ref slot) const;
 
-        ers::Result<Layout> layout(const Dialect& dialect) const;
+        ers::Result<Layout> layout() const;
 
 
         // Modifiers
@@ -83,7 +76,6 @@ namespace flux::impl {
         };
 
 
-        kind_ref _kind = nullptr;
         slot_info_view _fixed;
         std::vector<layout_edit_t> _edits;
         std::vector<Clause> _clauses;

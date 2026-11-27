@@ -13,10 +13,11 @@
 
 // test
 #include "support/sql/dialect.hpp"
+#include "support/sql/orm.hpp"
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace test::anti::orm;
 
 using std::string_literals::operator ""s;
 
@@ -248,11 +249,13 @@ FLUXMT_TEST_CASE("query identifiers are quoted, not trusted", "[sql]") {
     CHECK_FALSE(statement_of(select_from("a..b")));
 }
 
-FLUXMT_TEST_CASE("query rejects what the layout of the dialect does not have", "[sql]") {
-    const auto unsupported = statement_of(delete_from("t") | order_by("a"));
+FLUXMT_TEST_CASE("query rejects what its layout does not have", "[sql]") {
+    STATIC_REQUIRE(!flux::impl::AcceptsClause<test::anti_backend, test::anti::delete_layout, decltype(order_by("a"))>);
+
+    const auto unsupported = statement_of(delete_from("t").erased() | order_by("a"));
 
     REQUIRE_FALSE(unsupported);
-    CHECK(unsupported.error().code() == flux::EQueryError::Unsupported);
+    CHECK(unsupported.error().code() == flux::EQueryError::ForeignSlot);
     CHECK(unsupported.error().message().contains("anti"));
 }
 
@@ -281,31 +284,29 @@ FLUXMT_TEST_CASE("query bounds are not negative", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query raw clause binds its values", "[sql]") {
-    const auto r = statement_of(select_from("t") | raw(&flux::slots::where, "a = ? AND b = ?", 1, "x"));
+    const auto r = statement_of(select_from("t").erased() | raw(&flux::slots::where, "a = ? AND b = ?", 1, "x"));
 
     REQUIRE(r);
     CHECK((*r).text == "SELECT *\nFROM t\nWHERE a = ?1 AND b = ?2");
     CHECK((*r).params == std::vector<flux::Value>{ 1, std::string("x") });
 
-    const auto few = statement_of(select_from("t") | raw(&flux::slots::where, "a = ? AND b = ?", 1));
+    const auto few = statement_of(select_from("t").erased() | raw(&flux::slots::where, "a = ? AND b = ?", 1));
 
     REQUIRE_FALSE(few);
     CHECK(few.error().code() == flux::ESqlError::PlaceholderMismatch);
 
-    CHECK_FALSE(statement_of(select_from("t") | raw(&flux::slots::where, "a = ?", 1, 2)));
+    CHECK_FALSE(statement_of(select_from("t").erased() | raw(&flux::slots::where, "a = ?", 1, 2)));
 }
 
 FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
     static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
 
-    const test::AntiDialect dialect;
-
-    auto q = select_from("t");
+    auto q = select_from("t").erased();
 
     REQUIRE(q.insert_after(&flux::slots::from, { .slot = &extra, .prefix = "\n-- " }));
     q |= raw(&extra, "extra");
 
-    const auto layout = q.layout(dialect);
+    const auto layout = q.layout();
 
     REQUIRE(layout);
     CHECK((*layout).contains(&extra));
@@ -313,14 +314,14 @@ FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
 
     CHECK(sql_of(q) == "SELECT *\nFROM t\n-- extra");
 
-    CHECK_FALSE(select_from("t").insert_after(&flux::slots::from, { .slot = nullptr }));
-    CHECK_FALSE(select_from("t").insert_after(nullptr, { .slot = &extra }));
+    CHECK_FALSE(select_from("t").erased().insert_after(&flux::slots::from, { .slot = nullptr }));
+    CHECK_FALSE(select_from("t").erased().insert_after(nullptr, { .slot = &extra }));
 }
 
 FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dialect", "[sql]") {
     static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
 
-    auto twice = select_from("t");
+    auto twice = select_from("t").erased();
     REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
     REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
 
@@ -329,7 +330,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
     REQUIRE_FALSE(duplicate);
     CHECK(duplicate.error().code() == flux::EQueryError::DuplicateSlot);
 
-    auto lost = select_from("t");
+    auto lost = select_from("t").erased();
     REQUIRE(lost.insert_after(&flux::slots::returning, { .slot = &extra }));
 
     const auto unknown = statement_of(lost);
@@ -339,7 +340,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
 }
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {
-    CHECK(sql_of(select_from("prices")
+    CHECK(sql_of(select_from("prices").erased()
             | flux::ext::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
             | order_by("product_id")
             | order_by("at", EOrder::Desc))

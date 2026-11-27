@@ -5,7 +5,6 @@
 #include <fluxmt/query.hpp>
 #include <fluxmt/sql/backend.hpp>
 #include <fluxmt/sql/builder.hpp>
-#include <fluxmt/sql/builder.hpp>
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
 #include <fluxmt/sql/error.hpp>
@@ -50,12 +49,6 @@
 #include <fluxmt/sql/clauses/where.hpp>
 #include <fluxmt/sql/clauses/with.hpp>
 
-#include <fluxmt/sql/layouts/delete.hpp>
-#include <fluxmt/sql/layouts/exists.hpp>
-#include <fluxmt/sql/layouts/insert.hpp>
-#include <fluxmt/sql/layouts/select.hpp>
-#include <fluxmt/sql/layouts/update.hpp>
-
 
 // Exports ---------------------------------------------------------------------
 
@@ -83,7 +76,6 @@ namespace flux::sql {
     using impl::function_rule_t;
     using impl::function_rules_t;
     using impl::function_spelling_t;
-    using impl::layout_entry_t;
     using impl::syntax_t;
 
     using impl::needs_t;
@@ -103,8 +95,6 @@ namespace flux::sql {
 
 namespace flux {
     namespace slots = impl::slots;
-    namespace kinds = impl::kinds;
-    namespace builders = impl::builders;
     namespace syntax = impl::syntax;
 }
 
@@ -127,11 +117,10 @@ namespace flux::ext {
 }
 
 
-// The query language: 'using namespace flux::orm;'.
+// The clause vocabulary; statements come from the orm of a backend.
 
 namespace flux::orm {
     using namespace impl::clauses;
-    using namespace impl::layouts;
 
     using impl::EOrder;
 }

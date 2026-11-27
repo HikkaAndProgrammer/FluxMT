@@ -30,7 +30,6 @@ namespace flux::impl::psql {
         std::string_view name() const noexcept override;
         std::string placeholder(size_t index) const override;
         bool is_reserved(std::string_view word) const noexcept override;
-        slot_info_view layout(kind_ref kind) const noexcept override;
     };
 
 

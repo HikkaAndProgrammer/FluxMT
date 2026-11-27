@@ -1,16 +1,9 @@
 #pragma once
 
-// std
-#include <array>
-
 // fluxmt
 #include <fluxmt/drivers/shared.hpp>
-#include <fluxmt/query/dialect.hpp>
-#include <fluxmt/sql/layouts/delete.hpp>
-#include <fluxmt/sql/layouts/exists.hpp>
-#include <fluxmt/sql/layouts/insert.hpp>
-#include <fluxmt/sql/layouts/select.hpp>
-#include <fluxmt/sql/layouts/update.hpp>
+#include <fluxmt/sql/slots/limit.hpp>
+#include <fluxmt/sql/slots/offset.hpp>
 
 
 namespace flux::impl::sqlite {
@@ -70,12 +63,4 @@ namespace flux::impl::sqlite {
         shared::where,
         shared::exists_alias,
     };
-
-    inline constexpr auto layout_table = std::to_array<layout_entry_t>({
-        { .kind = &kinds::select, .layout = select_layout },
-        { .kind = &kinds::insert, .layout = insert_layout },
-        { .kind = &kinds::update, .layout = update_layout },
-        { .kind = &kinds::erase,  .layout = delete_layout },
-        { .kind = &kinds::exists, .layout = exists_layout },
-    });
 }

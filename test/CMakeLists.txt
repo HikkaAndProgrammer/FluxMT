@@ -13,6 +13,7 @@ add_library(test_support
 	STATIC
 		"support/fake_backend.cpp"
 		"support/livedb.cpp"
+		"support/sql/orm.cpp"
 		"support/test_case.cpp"
 )
 target_include_directories(test_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

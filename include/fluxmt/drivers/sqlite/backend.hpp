@@ -8,7 +8,6 @@
 #include <fluxmt/core/backend.hpp>
 #include <fluxmt/drivers/sqlite/connection.hpp>
 #include <fluxmt/drivers/sqlite/dialect.hpp>
-#include <fluxmt/drivers/sqlite/layouts.hpp>
 #include <fluxmt/drivers/sqlite/error.hpp>
 #include <fluxmt/drivers/sqlite/options.hpp>
 #include <fluxmt/drivers/sqlite/transaction.hpp>
@@ -44,8 +43,6 @@ struct flux::impl::backend_traits<flux::impl::sqlite::backend> {
     static ers::Diagnostic diagnose(std::string_view label) { return sqlite::diagnose(label); }
     static bool retryable() noexcept { return sqlite::retryable(); }
     static constexpr const syntax_t& syntax = sqlite::sqlite_syntax;
-
-    static constexpr slot_info_view layout(kind_ref kind) noexcept { return find_layout(sqlite::layout_table, kind); }
 
     static const SqlDialect& dialect() noexcept { return sqlite::dialect(); }
 };

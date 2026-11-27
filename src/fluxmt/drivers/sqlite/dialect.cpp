@@ -6,7 +6,6 @@
 #include <format>
 
 // fluxmt
-#include <fluxmt/drivers/sqlite/layouts.hpp>
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/error.hpp>
 
@@ -54,10 +53,6 @@ std::string_view flux::impl::sqlite::sqlite_dialect::name() const noexcept {
 
 std::string flux::impl::sqlite::sqlite_dialect::placeholder(size_t index) const {
     return std::format("?{}", index);
-}
-
-flux::impl::slot_info_view flux::impl::sqlite::sqlite_dialect::layout(kind_ref kind) const noexcept {
-    return find_layout(layout_table, kind);
 }
 
 bool flux::impl::sqlite::sqlite_dialect::is_reserved(std::string_view word) const noexcept {

@@ -33,11 +33,9 @@ FLUXMT_TEST_CASE("sqlite backend is a sql backend at compile time", "[sqlite]") 
 
     STATIC_REQUIRE(impl::SqlBackend<backend>);
 
-    STATIC_REQUIRE(impl::HasKind<backend, &flux::kinds::select>);
-
-    STATIC_REQUIRE(impl::HasSlot<backend, &flux::kinds::insert, &flux::slots::returning>);
-    STATIC_REQUIRE(!impl::HasSlot<backend, &flux::kinds::insert, &flux::slots::conflict_constraint>);
-    STATIC_REQUIRE(!impl::HasSlot<backend, &flux::kinds::select, &flux::slots::returning>);
+    STATIC_REQUIRE(impl::HasSlot<backend, impl::sqlite::insert_layout, &flux::slots::returning>);
+    STATIC_REQUIRE(!impl::HasSlot<backend, impl::sqlite::insert_layout, &flux::slots::conflict_constraint>);
+    STATIC_REQUIRE(!impl::HasSlot<backend, impl::sqlite::select_layout, &flux::slots::returning>);
 
     STATIC_REQUIRE(impl::SupportsNeeds<backend, impl::need_syntax(impl::ESyntax::Ilike)>);
     STATIC_REQUIRE(impl::SupportsNeeds<backend, impl::need_function("now", 0)>);
@@ -49,9 +47,9 @@ FLUXMT_TEST_CASE("sqlite backend accepts typed clauses", "[sqlite]") {
 
     namespace impl = flux::impl;
 
-    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::select, decltype(where(col("a").ilike("x%")))>);
-    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::insert, decltype(returning("id"))>);
-    STATIC_REQUIRE(impl::AcceptsClause<backend, &flux::kinds::insert, decltype(do_update("a", "b"))>);
-    STATIC_REQUIRE(!impl::AcceptsClause<backend, &flux::kinds::insert, decltype(on_conflict_constraint("c"))>);
-    STATIC_REQUIRE(!impl::AcceptsClause<backend, &flux::kinds::select, decltype(returning("id"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<backend, impl::sqlite::select_layout, decltype(where(col("a").ilike("x%")))>);
+    STATIC_REQUIRE(impl::AcceptsClause<backend, impl::sqlite::insert_layout, decltype(returning("id"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<backend, impl::sqlite::insert_layout, decltype(do_update("a", "b"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<backend, impl::sqlite::insert_layout, decltype(on_conflict_constraint("c"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<backend, impl::sqlite::select_layout, decltype(returning("id"))>);
 }

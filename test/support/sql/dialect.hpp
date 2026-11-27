@@ -63,14 +63,6 @@ namespace test::anti {
         shared::where,
         shared::exists_alias,
     };
-
-    inline constexpr auto layouts = std::to_array<flux::sql::layout_entry_t>({
-        { .kind = &flux::kinds::select, .layout = select_layout },
-        { .kind = &flux::kinds::insert, .layout = insert_layout },
-        { .kind = &flux::kinds::update, .layout = update_layout },
-        { .kind = &flux::kinds::erase, .layout = delete_layout },
-        { .kind = &flux::kinds::exists, .layout = exists_layout },
-    });
 }
 
 
@@ -92,9 +84,5 @@ namespace test {
         std::string_view name() const noexcept override { return "anti"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view word) const noexcept override { return word == "item" || word == "group"; }
-
-        flux::ext::slot_info_view layout(flux::ext::kind_ref kind) const noexcept override {
-            return flux::ext::find_layout(anti::layouts, kind);
-        }
     };
 }

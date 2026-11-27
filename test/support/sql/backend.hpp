@@ -22,10 +22,6 @@ struct flux::impl::backend_traits<test::anti_backend> {
 
     static constexpr const syntax_t& syntax = test::anti::syntax;
 
-    static constexpr slot_info_view layout(kind_ref kind) noexcept {
-        return find_layout(test::anti::layouts, kind);
-    }
-
     static const SqlDialect& dialect() noexcept {
         static const test::AntiDialect instance;
         return instance;

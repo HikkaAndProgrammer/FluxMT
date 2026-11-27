@@ -13,7 +13,7 @@
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace flux::sqlite::orm;
 
 using std::string_literals::operator ""s;
 
@@ -68,14 +68,17 @@ FLUXMT_TEST_CASE("sqlite query writes OFFSET after a LIMIT", "[sqlite]") {
 }
 
 FLUXMT_TEST_CASE("sqlite query refuses ON CONSTRAINT", "[sqlite]") {
-    const auto refused = statement_of(insert_into("t")
+    STATIC_REQUIRE(!flux::impl::AcceptsClause<
+        flux::sqlite::backend, flux::impl::sqlite::insert_layout, decltype(on_conflict_constraint("t_a_key"))>);
+
+    const auto refused = statement_of(insert_into("t").erased()
         | columns("a")
         | values(1)
         | on_conflict_constraint("t_a_key")
         | do_nothing());
 
     REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::EQueryError::Unsupported);
+    CHECK(refused.error().code() == flux::EQueryError::ForeignSlot);
 
     CHECK(sql_of(insert_into("t") | columns("a") | values(1) | on_conflict("a") | do_nothing())
         == "INSERT INTO t (a)\nVALUES (?1)\nON CONFLICT (a)\nDO NOTHING");

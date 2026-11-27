@@ -21,9 +21,6 @@
 // Details ---------------------------------------------------------------------
 
 namespace {
-    inline constexpr flux::ext::statement_kind_t set_kind { .name = "test.set" };
-    inline constexpr flux::ext::statement_kind_t other_kind { .name = "test.other" };
-
     inline constexpr flux::ext::slot_t key_slot { .name = "test.key", .arity = flux::ext::EArity::Single };
     inline constexpr flux::ext::slot_t value_slot { .name = "test.value", .arity = flux::ext::EArity::Single };
     inline constexpr flux::ext::slot_t nx_slot { .name = "test.nx", .arity = flux::ext::EArity::Single };
@@ -34,11 +31,6 @@ namespace {
         { .slot = &value_slot, .prefix = " " },
         { .slot = &nx_slot, .prefix = " NX" },
     };
-
-    constexpr auto table = std::to_array<flux::query::layout_entry_t>({
-        { &set_kind, set_layout },
-    });
-
 
     class ValueClause final : public flux::ext::IClause {
     public:
@@ -75,10 +67,6 @@ namespace {
         std::string_view name() const noexcept override { return "command"; }
         std::string placeholder(size_t index) const override { return "$" + std::to_string(index); }
 
-        flux::query::slot_info_view layout(flux::query::kind_ref kind) const noexcept override {
-            return flux::query::find_layout(table, kind);
-        }
-
         std::unique_ptr<flux::query::Context> make_context() const override {
             return std::make_unique<flux::query::Context>(*this);
         }
@@ -92,7 +80,7 @@ namespace {
     }
 
     flux::query::Query set_query() {
-        flux::query::Query q(&set_kind);
+        flux::query::Query q(set_layout);
         q |= flux::ext::make_clause<ValueClause>(&key_slot, std::string("k"));
         q |= flux::ext::make_clause<ValueClause>(&value_slot, 5);
 
@@ -127,20 +115,20 @@ FLUXMT_TEST_CASE("query replaces a clause of a single slot", "[query]") {
     CHECK(r->params == std::vector<flux::Value>{ std::string("k"), 7 });
 }
 
-FLUXMT_TEST_CASE("query refuses what the layout of the dialect does not have", "[query]") {
+FLUXMT_TEST_CASE("query refuses what its layout does not have", "[query]") {
     auto q = set_query();
     q |= flux::ext::make_clause<ValueClause>(&ttl_slot, 60);
 
     const auto slot = statement_of(q);
 
     REQUIRE_FALSE(slot);
-    CHECK(slot.error().code() == flux::EQueryError::Unsupported);
+    CHECK(slot.error().code() == flux::EQueryError::ForeignSlot);
     CHECK(slot.error().message().contains("command"));
 
-    const auto kind = statement_of(flux::query::Query(&other_kind));
+    const auto empty = statement_of(flux::query::Query(flux::ext::slot_info_view {}));
 
-    REQUIRE_FALSE(kind);
-    CHECK(kind.error().code() == flux::EQueryError::Unsupported);
+    REQUIRE_FALSE(empty);
+    CHECK(empty.error().code() == flux::EQueryError::Unsupported);
 }
 
 FLUXMT_TEST_CASE("query layout is extended per query", "[query]") {
@@ -168,7 +156,7 @@ FLUXMT_TEST_CASE("query layout is extended per query", "[query]") {
     CHECK(duplicate.error().code() == flux::EQueryError::DuplicateSlot);
 }
 
-FLUXMT_TEST_CASE("query with a layout of its own does not ask the dialect", "[query]") {
+FLUXMT_TEST_CASE("query renders the layout it was given", "[query]") {
     static constexpr flux::ext::slot_info_t own[] = {
         { .slot = &key_slot, .prefix = "GET " },
     };
@@ -220,7 +208,7 @@ FLUXMT_TEST_CASE("query takes typed slot clauses", "[query]") {
         flux::query::SlotClause<&key_slot, true>
     >);
 
-    flux::query::Query q(&set_kind);
+    flux::query::Query q(set_layout);
     q |= key_clause(flux::ext::make_clause<ValueClause>(&key_slot, std::string("k")));
     q |= flux::query::when(true, value_clause(flux::ext::make_clause<ValueClause>(&value_slot, 5)));
     q |= flux::query::when(false, flag_clauses(std::vector<flux::ext::Clause> {}));

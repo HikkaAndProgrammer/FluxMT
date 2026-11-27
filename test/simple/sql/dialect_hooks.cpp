@@ -12,7 +12,7 @@
 #include <fluxmt/sql.hpp>
 
 // test
-#include "support/sql/dialect.hpp"
+#include "support/sql/backend.hpp"
 #include "support/test_case.hpp"
 
 
@@ -26,8 +26,6 @@ namespace {
 
     inline constexpr flux::ext::named_fn<"forbidden"> forbidden {};
 
-
-    inline constexpr flux::ext::statement_kind_t truncate_kind { .name = "test.truncate" };
 
     inline constexpr flux::ext::slot_t truncate_target {
         .name  = "test.truncate_target",
@@ -66,11 +64,7 @@ namespace {
         { .slot = &truncate_target, .prefix = "TRUNCATE " },
     };
 
-    constexpr auto layouts = std::to_array<flux::sql::layout_entry_t>({
-        { .kind = &flux::kinds::select, .layout = select_layout },
-        { .kind = &flux::kinds::insert, .layout = insert_layout },
-        { .kind = &truncate_kind, .layout = truncate_layout },
-    });
+    struct hook_backend {};
 
 
     constexpr flux::sql::function_rule_t now_keyword {
@@ -111,10 +105,6 @@ namespace {
         std::string_view name() const noexcept override { return "hook"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view) const noexcept override { return false; }
-
-        flux::ext::slot_info_view layout(flux::ext::kind_ref kind) const noexcept override {
-            return flux::ext::find_layout(layouts, kind);
-        }
     };
 
 
@@ -133,10 +123,39 @@ namespace {
         return r ? r->text : std::string("<error>");
     }
 
+    template<typename B, const auto& L>
+    std::string sql_of(const flux::sql::QueryBuilder<B, L>& builder) {
+        return sql_of(builder.erased());
+    }
+
     std::string sql_of(const flux::sql::Expr& expr, const flux::sql::Dialect& dialect = hook()) {
         flux::sql::Context ctx(dialect);
 
         return expr.render(ctx) ? ctx.text : "<error>";
+    }
+}
+
+template<>
+struct flux::impl::backend_traits<hook_backend> {
+    using connection = int;
+
+    static constexpr std::string_view name = "hook";
+    static constexpr feature_set features { EFeature::Sql, EFeature::Returning };
+
+    static constexpr const syntax_t& syntax = hook_syntax;
+
+    static const SqlDialect& dialect() noexcept { return hook(); }
+};
+
+namespace {
+    auto select_from(std::string table, std::string alias = "") {
+        return flux::sql::QueryBuilder<hook_backend, select_layout>()
+            | from(std::move(table), std::move(alias));
+    }
+
+    auto insert_into(std::string table) {
+        return flux::sql::QueryBuilder<hook_backend, insert_layout>()
+            | insert_target(std::move(table));
     }
 }
 
@@ -173,10 +192,13 @@ FLUXMT_TEST_CASE("dialect can refuse a function", "[sql]") {
 // Slots -----------------------------------------------------------------------
 
 FLUXMT_TEST_CASE("dialect refuses a slot it does not support", "[sql]") {
-    const auto refused = statement_of(insert_into("t") | columns("a") | values(1) | returning("a"));
+    STATIC_REQUIRE(!flux::impl::AcceptsClause<hook_backend, insert_layout, decltype(returning("a"))>);
+
+    const auto refused = statement_of(
+        insert_into("t").erased() | columns("a") | values(1) | returning("a"));
 
     REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::EQueryError::Unsupported);
+    CHECK(refused.error().code() == flux::EQueryError::ForeignSlot);
     CHECK(refused.error().message().contains("hook"));
 
     CHECK(sql_of(insert_into("t") | columns("a") | values(1)) == "INSERT INTO t (a)\nVALUES (?1)");
@@ -190,25 +212,11 @@ FLUXMT_TEST_CASE("dialect owns the text of a slot", "[sql]") {
     CHECK(sql_of(select_from("t") | with_limit(3)) == "SELECT *\nFROM t\nFETCH FIRST ?1 ROWS ONLY");
 }
 
-FLUXMT_TEST_CASE("dialect refuses a statement it has no layout for", "[sql]") {
-    const auto refused = statement_of(delete_from("t"));
-
-    REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::EQueryError::Unsupported);
-    CHECK(refused.error().message().contains("hook"));
-}
-
-FLUXMT_TEST_CASE("dialect can have a statement of its own kind", "[sql]") {
-    flux::sql::Query q(&truncate_kind);
+FLUXMT_TEST_CASE("a layout of its own makes a statement of its own", "[sql]") {
+    flux::sql::Query q(truncate_layout);
     q |= identifier(&truncate_target, "t");
 
     CHECK(sql_of(q) == "TRUNCATE t");
-
-    const test::AntiDialect other;
-    const auto refused = q.to_statement(other);
-
-    REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::EQueryError::Unsupported);
 }
 
 FLUXMT_TEST_CASE("dialect layout reaches subqueries", "[sql]") {

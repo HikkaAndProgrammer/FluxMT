@@ -84,7 +84,6 @@ namespace {
         std::string_view name() const noexcept override { return "bare"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view) const noexcept override { return false; }
-        flux::ext::slot_info_view layout(flux::ext::kind_ref) const noexcept override { return {}; }
     };
 }
 

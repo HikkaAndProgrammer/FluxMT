@@ -15,19 +15,18 @@
 
 
 namespace flux::impl {
-    template<typename B, kind_ref K>
-        requires HasKind<B, K>
+    template<SqlBackend B, const auto& L>
     class QueryBuilder {
     public:
         using backend = B;
 
-        static constexpr kind_ref kind = K;
+        static constexpr slot_info_view layout = L;
 
 
         // Member functions
 
-        explicit QueryBuilder(Query query) :
-            _query(std::move(query)) {
+        QueryBuilder() :
+            _query(layout) {
         }
 
 
@@ -40,6 +39,12 @@ namespace flux::impl {
         ers::Result<statement_t> to_statement() const {
             return _query.to_statement(backend_traits<B>::dialect());
         }
+
+
+        // Conversions
+
+        operator Query() const & { return _query; }
+        operator Query() && { return std::move(_query); }
 
 
         // Operators
@@ -68,7 +73,7 @@ namespace flux::impl {
 
         template<typename C>
         static constexpr void _check() noexcept {
-            static_assert(HasSlot<B, K, C::slot>, "this statement has no such clause on this backend");
+            static_assert(HasSlot<B, L, C::slot>,"this statement has no such clause on this backend");
             static_assert(SupportsNeeds<B, clause_needs<C>()>, "this backend lacks syntax this clause needs");
         }
     };

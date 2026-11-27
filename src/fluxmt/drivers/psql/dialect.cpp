@@ -5,9 +5,6 @@
 #include <array>
 #include <format>
 
-// fluxmt
-#include <fluxmt/drivers/psql/layouts.hpp>
-
 
 // Details ---------------------------------------------------------------------
 
@@ -46,10 +43,6 @@ std::string_view flux::impl::psql::postgres_dialect::name() const noexcept {
 
 std::string flux::impl::psql::postgres_dialect::placeholder(size_t index) const {
     return std::format("${}", index);
-}
-
-flux::impl::slot_info_view flux::impl::psql::postgres_dialect::layout(kind_ref kind) const noexcept {
-    return find_layout(layout_table, kind);
 }
 
 bool flux::impl::psql::postgres_dialect::is_reserved(std::string_view word) const noexcept {

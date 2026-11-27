@@ -13,6 +13,7 @@
 // test
 #include "support/sql/backend.hpp"
 #include "support/sql/dialect.hpp"
+#include "support/sql/orm.hpp"
 #include "support/test_case.hpp"
 
 
@@ -31,10 +32,6 @@ namespace {
         flux::impl::shared::where,
     };
 
-    constexpr auto lean_layouts = std::to_array<flux::sql::layout_entry_t>({
-        { .kind = &flux::kinds::select, .layout = lean_select },
-    });
-
     constexpr flux::sql::syntax_t lean_syntax {};
 
 
@@ -45,10 +42,6 @@ namespace {
         std::string_view name() const noexcept override { return "lean"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view) const noexcept override { return false; }
-
-        flux::ext::slot_info_view layout(flux::ext::kind_ref kind) const noexcept override {
-            return flux::ext::find_layout(lean_layouts, kind);
-        }
     };
 }
 
@@ -61,10 +54,6 @@ struct flux::impl::backend_traits<lean_backend> {
 
     static constexpr const syntax_t& syntax = lean_syntax;
 
-    static constexpr slot_info_view layout(kind_ref kind) noexcept {
-        return find_layout(lean_layouts, kind);
-    }
-
     static const SqlDialect& dialect() noexcept {
         static const LeanDialect instance;
         return instance;
@@ -75,7 +64,7 @@ struct flux::impl::backend_traits<lean_backend> {
 // Tests -----------------------------------------------------------------------
 
 FLUXMT_TEST_CASE("builder collects clauses and renders", "[sql]") {
-    auto q = flux::builders::select_from<test::anti_backend>("users")
+    auto q = test::anti::orm::select_from("users")
         | where(col("a") == 1)
         | order_by("id")
         | with_limit(3);
@@ -90,13 +79,13 @@ FLUXMT_TEST_CASE("builder keeps its type while clauses are added", "[sql]") {
     using anti = test::anti_backend;
 
     STATIC_REQUIRE(std::same_as<
-        decltype(flux::builders::select_from<anti>("t") | where(col("a") == 1)),
-        flux::sql::QueryBuilder<anti, &flux::kinds::select>
+        decltype(test::anti::orm::select_from("t") | where(col("a") == 1)),
+        flux::sql::QueryBuilder<anti, test::anti::select_layout>
         >);
 }
 
 FLUXMT_TEST_CASE("builder takes conditional clauses", "[sql]") {
-    auto q = flux::builders::select_from<test::anti_backend>("t")
+    auto q = test::anti::orm::select_from("t")
         | when(false, where(col("a") == 1))
         | when(true, where(col("b") == 2));
 
@@ -104,26 +93,35 @@ FLUXMT_TEST_CASE("builder takes conditional clauses", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("builder hands out the plain query", "[sql]") {
-    auto q = flux::builders::select_from<test::anti_backend>("t");
+    auto q = test::anti::orm::select_from("t");
 
-    CHECK(q.erased().kind() == &flux::kinds::select);
+    CHECK(q.erased().layout());
 
-    auto plain = std::move(q).erased();
-    plain |= where(col("a") == 1);
+    const flux::sql::Query plain = std::move(q);
 
-    CHECK(plain.to_statement(flux::impl::backend_traits<test::anti_backend>::dialect())->text == "SELECT *\nFROM t\nWHERE a = ?1");
+    CHECK(plain.layout());
 }
 
-FLUXMT_TEST_CASE("backends accept only the clauses they can run", "[sql]") {
+FLUXMT_TEST_CASE("builder takes its layout from the one it was given", "[sql]") {
+    const auto q = test::anti::orm::select_from("t");
+
+    const auto layout = q.erased().layout();
+
+    REQUIRE(layout);
+    CHECK((*layout).contains(&flux::slots::offset));
+
+    const auto lean = (flux::sql::QueryBuilder<lean_backend, lean_select>() | from("t")).erased().layout();
+
+    REQUIRE(lean);
+    CHECK_FALSE((*lean).contains(&flux::slots::offset));
+}
+
+FLUXMT_TEST_CASE("builders accept only the clauses their layout and backend can run", "[sql]") {
     using flux::impl::AcceptsClause;
-    using flux::impl::HasKind;
 
-    STATIC_REQUIRE(AcceptsClause<test::anti_backend, &flux::kinds::insert, decltype(returning("id"))>);
+    STATIC_REQUIRE(AcceptsClause<test::anti_backend, test::anti::insert_layout, decltype(returning("id"))>);
 
-    STATIC_REQUIRE(HasKind<lean_backend, &flux::kinds::select>);
-    STATIC_REQUIRE(!HasKind<lean_backend, &flux::kinds::insert>);
-
-    STATIC_REQUIRE(AcceptsClause<lean_backend, &flux::kinds::select, decltype(where(col("a") == 1))>);
-    STATIC_REQUIRE(!AcceptsClause<lean_backend, &flux::kinds::select, decltype(with_limit(1))>);
-    STATIC_REQUIRE(!AcceptsClause<lean_backend, &flux::kinds::select, decltype(where(col("a").ilike("x")))>);
+    STATIC_REQUIRE(AcceptsClause<lean_backend, lean_select, decltype(where(col("a") == 1))>);
+    STATIC_REQUIRE(!AcceptsClause<lean_backend, lean_select, decltype(with_limit(1))>);
+    STATIC_REQUIRE(!AcceptsClause<lean_backend, lean_select, decltype(where(col("a").ilike("x")))>);
 }

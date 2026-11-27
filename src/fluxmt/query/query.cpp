@@ -17,15 +17,11 @@ bool flux::impl::Query::has(slot_ref slot) const {
     });
 }
 
-ers::Result<flux::impl::Layout> flux::impl::Query::layout(const Dialect& dialect) const {
-    const auto base = _kind ? dialect.layout(_kind) : _fixed;
+ers::Result<flux::impl::Layout> flux::impl::Query::layout() const {
+    if (_fixed.empty())
+        return ers::make_error(EQueryError::Unsupported, "empty layout");
 
-    if (base.empty()) {
-        return ers::make_error(EQueryError::Unsupported, "'{}' statement in '{}'",
-            _kind ? _kind->name : std::string_view("custom"), dialect.name());
-    }
-
-    Layout out(base);
+    Layout out(_fixed);
 
     for (const auto& edit : _edits) {
         switch (edit.op) {
@@ -92,7 +88,7 @@ ers::Status flux::impl::Query::_add_edit(EEdit op, slot_ref anchor, const slot_i
 // Executors
 
 ers::Status flux::impl::Query::build(Context& ctx) const {
-    const auto resolved = ERS_TRY(layout(ctx.dialect()));
+    const auto resolved = ERS_TRY(layout());
 
     ERS_TRY(_validate(resolved, ctx.dialect()));
 
@@ -174,12 +170,7 @@ ers::Status flux::impl::Query::_validate(const Layout& layout, const Dialect& di
         if (layout.contains(it->slot()))
             continue;
 
-        if (_kind) {
-            return ers::make_error(EQueryError::Unsupported, "'{}' in '{}' for '{}'",
-                it->slot()->name, dialect.name(), _kind->name);
-        }
-
-        return ers::make_error(EQueryError::ForeignSlot, "'{}'", it->slot()->name);
+        return ers::make_error(EQueryError::ForeignSlot, "'{}' in '{}'", it->slot()->name, dialect.name());
     }
 
     for (const auto& binding : layout.bindings()) {

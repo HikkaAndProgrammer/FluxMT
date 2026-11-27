@@ -14,7 +14,7 @@
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace flux::sqlite::orm;
 
 using std::string_literals::operator ""s;
 

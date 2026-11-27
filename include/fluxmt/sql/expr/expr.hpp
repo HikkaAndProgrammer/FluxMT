@@ -150,10 +150,10 @@ namespace flux::impl {
                 make_in(self, std::move(items)));
         }
 
-        template<typename Self, std::same_as<Query> Q>
+        template<typename Self, std::convertible_to<Query> Q>
         auto in(this const Self& self, Q subquery) {
             return retype<needs_of<Self, Expr>()>(
-                make_in(self, std::move(subquery)));
+                make_in(self, Query(std::move(subquery))));
         }
 
 
@@ -305,7 +305,7 @@ namespace flux::impl {
         auto in(this const auto& self, R&& values) {
             return self.to_expr().in(std::forward<R>(values));
         }
-        template<std::same_as<Query> Q>
+        template<std::convertible_to<Query> Q>
         auto in(this const auto& self, Q subquery) {
             return self.to_expr().in(std::move(subquery));
         }

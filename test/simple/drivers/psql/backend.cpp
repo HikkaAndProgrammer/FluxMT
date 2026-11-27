@@ -39,12 +39,9 @@ FLUXMT_TEST_CASE("psql backend is a sql backend at compile time", "[psql]") {
 
     STATIC_REQUIRE(impl::SqlBackend<B>);
 
-    STATIC_REQUIRE(impl::HasKind<B, &flux::kinds::select>);
-    STATIC_REQUIRE(impl::HasKind<B, &flux::kinds::exists>);
-
-    STATIC_REQUIRE(impl::HasSlot<B, &flux::kinds::insert, &flux::slots::returning>);
-    STATIC_REQUIRE(impl::HasSlot<B, &flux::kinds::insert, &flux::slots::conflict_constraint>);
-    STATIC_REQUIRE(!impl::HasSlot<B, &flux::kinds::select, &flux::slots::returning>);
+    STATIC_REQUIRE(impl::HasSlot<B, impl::psql::insert_layout, &flux::slots::returning>);
+    STATIC_REQUIRE(impl::HasSlot<B, impl::psql::insert_layout, &flux::slots::conflict_constraint>);
+    STATIC_REQUIRE(!impl::HasSlot<B, impl::psql::select_layout, &flux::slots::returning>);
 
     STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Ilike)>);
     STATIC_REQUIRE(impl::SupportsNeeds<B, impl::need_syntax(impl::ESyntax::Any)>);
@@ -56,8 +53,8 @@ FLUXMT_TEST_CASE("psql backend accepts typed clauses", "[psql]") {
 
     namespace impl = flux::impl;
 
-    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::select, decltype(where(col("a").ilike("x%")))>);
-    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::insert, decltype(on_conflict_constraint("c"))>);
-    STATIC_REQUIRE(impl::AcceptsClause<B, &flux::kinds::insert, decltype(do_update("a", "b"))>);
-    STATIC_REQUIRE(!impl::AcceptsClause<B, &flux::kinds::select, decltype(returning("id"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<B, impl::psql::select_layout, decltype(where(col("a").ilike("x%")))>);
+    STATIC_REQUIRE(impl::AcceptsClause<B, impl::psql::insert_layout, decltype(on_conflict_constraint("c"))>);
+    STATIC_REQUIRE(impl::AcceptsClause<B, impl::psql::insert_layout, decltype(do_update("a", "b"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<B, impl::psql::select_layout, decltype(returning("id"))>);
 }
