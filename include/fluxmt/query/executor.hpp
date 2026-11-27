@@ -14,27 +14,30 @@
 #include <fluxmt/query/statement.hpp>
 
 
-namespace flux::impl {
+namespace flux::ext {
     template<typename NativeTx>
     struct executor_traits;
+}
+
+
+namespace flux::impl {
+    template<typename NativeTx>
+    using executor_backend_t = typename ext::executor_traits<NativeTx>::backend;
 
     template<typename NativeTx>
-    using executor_backend_t = typename executor_traits<NativeTx>::backend;
-
-    template<typename NativeTx>
-    using executor_result_t = typename executor_traits<NativeTx>::result;
+    using executor_result_t = typename ext::executor_traits<NativeTx>::result;
 
 
     template<typename T>
     concept IsExecutor = requires(T& tx, const statement_t& statement) {
-        typename executor_traits<T>::backend;
-        typename executor_traits<T>::result;
+        typename ext::executor_traits<T>::backend;
+        typename ext::executor_traits<T>::result;
 
         requires IsBackend<executor_backend_t<T>>;
         requires IsNativeTransaction<T, executor_backend_t<T>>;
 
-        { backend_traits<executor_backend_t<T>>::dialect() } -> std::convertible_to<const Dialect&>;
-        { executor_traits<T>::exec(tx, statement) } -> std::same_as<executor_result_t<T>>;
+        { ext::backend_traits<executor_backend_t<T>>::dialect() } -> std::convertible_to<const Dialect&>;
+        { ext::executor_traits<T>::exec(tx, statement) } -> std::same_as<executor_result_t<T>>;
     };
 
 
@@ -64,7 +67,7 @@ namespace flux::impl {
 
             return source.to_statement();
         } else {
-            return source.to_statement(backend_traits<executor_backend_t<NativeTx>>::dialect());
+            return source.to_statement(ext::backend_traits<executor_backend_t<NativeTx>>::dialect());
         }
     }
 }

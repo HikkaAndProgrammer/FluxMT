@@ -15,8 +15,8 @@
 namespace flux::impl {
     template<typename T>
     concept IsSqlBackend = SupportsFeature<T, EFeature::Sql> && requires {
-        { backend_traits<T>::dialect() } -> std::convertible_to<const SqlDialect&>;
-        { backend_traits<T>::syntax } -> std::convertible_to<const syntax_t&>;
+        { ext::backend_traits<T>::dialect() } -> std::convertible_to<const SqlDialect&>;
+        { ext::backend_traits<T>::syntax } -> std::convertible_to<const syntax_t&>;
     };
 }
 
@@ -33,7 +33,7 @@ namespace flux::impl {
 
     template<IsSqlBackend Backend>
     consteval const syntax_t& syntax_of() noexcept {
-        return backend_traits<Backend>::syntax;
+        return ext::backend_traits<Backend>::syntax;
     }
 
 

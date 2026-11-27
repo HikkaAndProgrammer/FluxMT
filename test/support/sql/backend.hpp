@@ -14,15 +14,15 @@ namespace test {
 }
 
 template<>
-struct flux::impl::backend_traits<test::anti_backend> {
+struct flux::ext::backend_traits<test::anti_backend> {
     using connection = int;
 
     static constexpr std::string_view name = "anti";
     static constexpr feature_set features { EFeature::Sql, EFeature::Returning, EFeature::Upsert };
 
-    static constexpr const syntax_t& syntax = test::anti::syntax;
+    static constexpr const sql::syntax_t& syntax = test::anti::syntax;
 
-    static const SqlDialect& dialect() noexcept {
+    static const flux::sql::Dialect& dialect() noexcept {
         static const test::AntiDialect instance;
         return instance;
     }

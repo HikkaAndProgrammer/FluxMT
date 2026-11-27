@@ -22,7 +22,7 @@ FLUXMT_TEST_CASE("psql backend", "[psql]") {
 
     STATIC_REQUIRE(flux::IsBackend<B>);
     STATIC_REQUIRE(std::same_as<flux::connection_t<B>, pqxx::connection>);
-    STATIC_REQUIRE(flux::impl::backend_traits<B>::name == "psql");
+    STATIC_REQUIRE(flux::ext::backend_traits<B>::name == "psql");
 
     STATIC_REQUIRE(flux::SupportsFeature<B, flux::EFeature::Sql>);
     STATIC_REQUIRE(flux::SupportsFeature<B, flux::EFeature::Transactions>);

@@ -90,6 +90,16 @@ namespace flux::sql {
     using impl::quote_identifier;
     using impl::is_valid_name;
     using impl::is_type_name;
+
+    using impl::EPrecedence;
+    using impl::binary_op_fn;
+    using impl::named_fn;
+    using impl::make_expr;
+    using impl::need_function;
+    using impl::need_syntax;
+    using impl::retype;
+    using impl::sql_of;
+    using impl::sql_text;
 }
 
 
@@ -99,21 +109,12 @@ namespace flux {
 }
 
 
-// Extension points
+// Extension points: traits and polymorphic bases, nothing else
 
 namespace flux::ext {
-    using impl::EPrecedence;
     using impl::IExprNode;
     using impl::SqlContext;
     using impl::SqlDialect;
-    using impl::binary_op_fn;
-    using impl::named_fn;
-    using impl::make_expr;
-    using impl::need_function;
-    using impl::need_syntax;
-    using impl::retype;
-    using impl::sql_of;
-    using impl::sql_text;
 }
 
 

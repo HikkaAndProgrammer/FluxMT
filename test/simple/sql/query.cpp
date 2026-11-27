@@ -49,7 +49,7 @@ namespace {
         }
 
         ers::Status render(flux::ext::Context& base) const override {
-            auto& ctx = flux::ext::sql_of(base);
+            auto& ctx = flux::sql::sql_of(base);
 
             ctx.text += " DISTINCT ON (";
 
@@ -260,7 +260,7 @@ FLUXMT_TEST_CASE("query rejects what its layout does not have", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query with a layout of its own", "[sql]") {
-    static constexpr flux::ext::slot_info_t own[] = {
+    static constexpr flux::query::slot_info_t own[] = {
         flux::impl::shared::select_keyword,
         flux::impl::shared::from,
     };
@@ -299,7 +299,7 @@ FLUXMT_TEST_CASE("query raw clause binds its values", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
-    static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
+    static constexpr flux::query::slot_t extra { .name = "test.extra", .arity = flux::query::EArity::Single };
 
     auto q = select_from("t").erased();
 
@@ -319,7 +319,7 @@ FLUXMT_TEST_CASE("query layout can be extended", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dialect", "[sql]") {
-    static constexpr flux::ext::slot_t extra { .name = "test.extra", .arity = flux::ext::EArity::Single };
+    static constexpr flux::query::slot_t extra { .name = "test.extra", .arity = flux::query::EArity::Single };
 
     auto twice = select_from("t").erased();
     REQUIRE(twice.insert_after(&flux::slots::from, { .slot = &extra }));
@@ -341,7 +341,7 @@ FLUXMT_TEST_CASE("query layout changes are checked against the layout of the dia
 
 FLUXMT_TEST_CASE("query custom clause", "[sql]") {
     CHECK(sql_of(select_from("prices").erased()
-            | flux::ext::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
+            | flux::query::make_clause<DistinctOnClause>(std::vector<flux::sql::Expr>{ col("product_id") })
             | order_by("product_id")
             | order_by("at", EOrder::Desc))
         == "SELECT DISTINCT ON (product_id) *\nFROM prices\nORDER BY product_id ASC, at DESC");

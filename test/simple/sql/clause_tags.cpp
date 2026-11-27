@@ -14,7 +14,7 @@
 
 using namespace flux::orm;
 
-using flux::ext::need_syntax;
+using flux::sql::need_syntax;
 using flux::sql::clause_needs;
 using flux::sql::ESyntax;
 using flux::sql::no_needs;
@@ -45,9 +45,9 @@ FLUXMT_TEST_CASE("clause tags know how many clauses they hold", "[sql]") {
     STATIC_REQUIRE(!decltype(where(col("a") == 1))::many);
     STATIC_REQUIRE(decltype(returning("id"))::many);
 
-    STATIC_REQUIRE(std::convertible_to<decltype(where(col("a") == 1)), flux::ext::Clause>);
-    STATIC_REQUIRE(!std::convertible_to<decltype(returning("id")), flux::ext::Clause>);
-    STATIC_REQUIRE(std::convertible_to<decltype(returning("id")), std::vector<flux::ext::Clause>>);
+    STATIC_REQUIRE(std::convertible_to<decltype(where(col("a") == 1)), flux::query::Clause>);
+    STATIC_REQUIRE(!std::convertible_to<decltype(returning("id")), flux::query::Clause>);
+    STATIC_REQUIRE(std::convertible_to<decltype(returning("id")), std::vector<flux::query::Clause>>);
 }
 
 FLUXMT_TEST_CASE("clause tags carry what the expressions need", "[sql]") {

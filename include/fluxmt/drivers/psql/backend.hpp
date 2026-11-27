@@ -24,9 +24,9 @@ namespace flux::impl::psql {
 // Specializations -------------------------------------------------------------
 
 template<>
-struct flux::impl::backend_traits<flux::impl::psql::backend> {
+struct flux::ext::backend_traits<flux::impl::psql::backend> {
     using connection = pqxx::connection;
-    using options = psql::options_t;
+    using options = impl::psql::options_t;
     using default_tx = pqxx::work;
 
 
@@ -41,11 +41,11 @@ struct flux::impl::backend_traits<flux::impl::psql::backend> {
     };
 
 
-    static std::unique_ptr<connection> open(const options& opts) { return psql::open_connection(opts); }
-    static bool alive(const connection& conn) noexcept { return psql::is_alive(conn); }
-    static ers::Diagnostic diagnose(std::string_view label) { return psql::diagnose(label); }
-    static bool retryable() noexcept { return psql::retryable(); }
-    static constexpr const syntax_t& syntax = psql::postgres_syntax;
+    static std::unique_ptr<connection> open(const options& opts) { return impl::psql::open_connection(opts); }
+    static bool alive(const connection& conn) noexcept { return impl::psql::is_alive(conn); }
+    static ers::Diagnostic diagnose(std::string_view label) { return impl::psql::diagnose(label); }
+    static bool retryable() noexcept { return impl::psql::retryable(); }
+    static constexpr const impl::syntax_t& syntax = impl::psql::postgres_syntax;
 
-    static const SqlDialect& dialect() noexcept { return psql::dialect(); }
+    static const impl::SqlDialect& dialect() noexcept { return impl::psql::dialect(); }
 };

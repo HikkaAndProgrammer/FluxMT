@@ -9,6 +9,14 @@
 #include <erslib/core/type/general.hpp>
 
 
+// Extension points ------------------------------------------------------------
+
+namespace flux::ext {
+    template<typename Backend>
+    struct backend_traits;
+}
+
+
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
@@ -43,21 +51,18 @@ namespace flux::impl {
     };
 
 
-    template<typename Backend>
-    struct backend_traits;
-
     template<typename T>
     concept IsBackend = requires {
-        typename backend_traits<T>::connection;
-        { backend_traits<T>::name } -> std::convertible_to<std::string_view>;
-        { backend_traits<T>::features } -> std::convertible_to<feature_set>;
+        typename ext::backend_traits<T>::connection;
+        { ext::backend_traits<T>::name } -> std::convertible_to<std::string_view>;
+        { ext::backend_traits<T>::features } -> std::convertible_to<feature_set>;
     };
 
     template<IsBackend Backend, EFeature Feature>
-    concept SupportsFeature = backend_traits<Backend>::features.contains(Feature);
+    concept SupportsFeature = ext::backend_traits<Backend>::features.contains(Feature);
 
     template<IsBackend Backend>
-    using connection_t = typename backend_traits<Backend>::connection;
+    using connection_t = typename ext::backend_traits<Backend>::connection;
 }
 
 

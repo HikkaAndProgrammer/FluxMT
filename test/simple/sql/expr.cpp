@@ -44,9 +44,9 @@ namespace {
         return render(expr).sql;
     }
 
-    constexpr flux::ext::named_fn<"lower"> lower {};
-    constexpr flux::ext::named_fn<"date_trunc"> date_trunc {};
-    constexpr flux::ext::binary_op_fn<"%"> similar {};
+    constexpr flux::sql::named_fn<"lower"> lower {};
+    constexpr flux::sql::named_fn<"date_trunc"> date_trunc {};
+    constexpr flux::sql::binary_op_fn<"%"> similar {};
 
     struct NameColumn : flux::sql::ExprMethods {
         flux::sql::Expr to_expr() const { return col("name"); }
@@ -156,13 +156,13 @@ FLUXMT_TEST_CASE("expr custom node", "[sql]") {
 
         ers::Status render(flux::ext::SqlContext& ctx) const override {
             ctx.text += "0 < ";
-            return value.render(ctx, flux::ext::EPrecedence::Comparison);
+            return value.render(ctx, flux::sql::EPrecedence::Comparison);
         }
 
-        flux::ext::EPrecedence precedence() const noexcept override { return flux::ext::EPrecedence::Comparison; }
+        flux::sql::EPrecedence precedence() const noexcept override { return flux::sql::EPrecedence::Comparison; }
     };
 
-    const auto custom = flux::ext::make_expr<ZeroLess>(col("x") + col("y"));
+    const auto custom = flux::sql::make_expr<ZeroLess>(col("x") + col("y"));
 
     CHECK(sql_of(custom && col("z") == 1) == "0 < x + y AND z = ?1");
 }

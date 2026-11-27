@@ -26,14 +26,14 @@ void test::fake_tx::abort() {
 
 // backend_traits --------------------------------------------------------------
 
-std::unique_ptr<test::fake_connection> flux::impl::backend_traits<test::fake_backend>::open(const options& opts) {
+std::unique_ptr<test::fake_connection> flux::ext::backend_traits<test::fake_backend>::open(const options& opts) {
     if (opts.fail)
         throw std::runtime_error("down");
 
     return std::make_unique<connection>();
 }
 
-ers::Diagnostic flux::impl::backend_traits<test::fake_backend>::diagnose(std::string_view label) try {
+ers::Diagnostic flux::ext::backend_traits<test::fake_backend>::diagnose(std::string_view label) try {
     throw;
 } catch (const test::fake_retryable& e) {
     return ers::make_error(EDbError::Deadlock, "'{}': {}", label, e.what());
@@ -41,7 +41,7 @@ ers::Diagnostic flux::impl::backend_traits<test::fake_backend>::diagnose(std::st
     return ers::make_error(EDbError::Other, "'{}': {}", label, e.what());
 }
 
-bool flux::impl::backend_traits<test::fake_backend>::retryable() noexcept try {
+bool flux::ext::backend_traits<test::fake_backend>::retryable() noexcept try {
     throw;
 } catch (const test::fake_retryable&) {
     return true;

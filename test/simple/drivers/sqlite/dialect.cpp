@@ -13,7 +13,7 @@
 
 
 using backend = flux::sqlite::backend;
-using traits = flux::impl::backend_traits<backend>;
+using traits = flux::ext::backend_traits<backend>;
 
 static_assert(flux::sql::IsSqlBackend<backend>);
 

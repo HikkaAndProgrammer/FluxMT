@@ -15,15 +15,20 @@
 #include <fluxmt/core/value.hpp>
 
 
+// Extension points ------------------------------------------------------------
+
+namespace flux::ext {
+    template<typename T>
+    struct value_traits {};
+}
+
+
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
     template<typename T>
-    struct value_traits {};
-
-    template<typename T>
     concept HasValueTraits = requires(const T& what) {
-        { value_traits<T>::to_value(what) } -> std::same_as<Value>;
+        { ext::value_traits<T>::to_value(what) } -> std::same_as<Value>;
     };
 
     template<typename T>
@@ -42,7 +47,7 @@ namespace flux::impl {
         using U = std::remove_cvref_t<T>;
 
         if constexpr (HasValueTraits<U>)
-            return value_traits<U>::to_value(what);
+            return ext::value_traits<U>::to_value(what);
         else if constexpr (std::same_as<U, Value>)
             return what;
         else if constexpr (std::same_as<U, bool>)
@@ -79,5 +84,4 @@ namespace flux::impl {
 
 namespace flux {
     using impl::to_value;
-    using impl::value_traits;
 }

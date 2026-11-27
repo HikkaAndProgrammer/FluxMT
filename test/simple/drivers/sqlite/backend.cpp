@@ -20,7 +20,7 @@ static_assert(!flux::SupportsFeature<backend, flux::EFeature::NativeArrays>);
 
 
 FLUXMT_TEST_CASE("sqlite backend traits", "[sqlite]") {
-    using traits = flux::impl::backend_traits<backend>;
+    using traits = flux::ext::backend_traits<backend>;
 
     REQUIRE(traits::name == "sqlite");
     REQUIRE(traits::features.contains(flux::EFeature::Sql));

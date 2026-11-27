@@ -25,7 +25,7 @@ using namespace flux::orm;
 namespace {
     struct lean_backend {};
 
-    constexpr flux::ext::slot_info_t lean_select[] = {
+    constexpr flux::query::slot_info_t lean_select[] = {
         flux::impl::shared::select_keyword,
         flux::impl::shared::select_columns,
         flux::impl::shared::from,
@@ -46,15 +46,15 @@ namespace {
 }
 
 template<>
-struct flux::impl::backend_traits<lean_backend> {
+struct flux::ext::backend_traits<lean_backend> {
     using connection = int;
 
     static constexpr std::string_view name = "lean";
     static constexpr feature_set features { EFeature::Sql };
 
-    static constexpr const syntax_t& syntax = lean_syntax;
+    static constexpr const flux::sql::syntax_t& syntax = lean_syntax;
 
-    static const SqlDialect& dialect() noexcept {
+    static const flux::sql::Dialect& dialect() noexcept {
         static const LeanDialect instance;
         return instance;
     }

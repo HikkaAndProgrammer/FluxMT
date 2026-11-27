@@ -21,7 +21,7 @@ static_assert(!flux::SupportsFeature<backend, flux::EFeature::NativeArrays>);
 
 
 FLUXMT_TEST_CASE("redis backend traits", "[redis]") {
-    using traits = flux::impl::backend_traits<backend>;
+    using traits = flux::ext::backend_traits<backend>;
 
     REQUIRE(traits::name == "redis");
     REQUIRE(traits::features.contains(flux::EFeature::Transactions));

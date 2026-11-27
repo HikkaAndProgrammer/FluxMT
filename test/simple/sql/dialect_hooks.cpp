@@ -24,27 +24,27 @@ using namespace flux::orm;
 namespace {
     namespace shared = flux::impl::shared;
 
-    inline constexpr flux::ext::named_fn<"forbidden"> forbidden {};
+    inline constexpr flux::sql::named_fn<"forbidden"> forbidden {};
 
 
-    inline constexpr flux::ext::slot_t truncate_target {
+    inline constexpr flux::query::slot_t truncate_target {
         .name  = "test.truncate_target",
-        .arity = flux::ext::EArity::Single,
+        .arity = flux::query::EArity::Single,
     };
 
-    constexpr flux::ext::slot_info_t hook_where {
+    constexpr flux::query::slot_info_t hook_where {
         .slot      = &flux::slots::where,
         .prefix    = "\n/* before where */\nWHERE ",
         .separator = " AND ",
     };
 
-    constexpr flux::ext::slot_info_t hook_limit {
+    constexpr flux::query::slot_info_t hook_limit {
         .slot   = &flux::slots::limit,
         .prefix = "\nFETCH FIRST ",
         .suffix = " ROWS ONLY",
     };
 
-    constexpr flux::ext::slot_info_t select_layout[] = {
+    constexpr flux::query::slot_info_t select_layout[] = {
         shared::select_keyword,
         shared::select_columns,
         shared::from,
@@ -53,14 +53,14 @@ namespace {
         hook_limit,
     };
 
-    constexpr flux::ext::slot_info_t insert_layout[] = {
+    constexpr flux::query::slot_info_t insert_layout[] = {
         shared::insert_into,
         shared::set_as_values,
         shared::insert_columns,
         shared::values,
     };
 
-    constexpr flux::ext::slot_info_t truncate_layout[] = {
+    constexpr flux::query::slot_info_t truncate_layout[] = {
         { .slot = &truncate_target, .prefix = "TRUNCATE " },
     };
 
@@ -136,15 +136,15 @@ namespace {
 }
 
 template<>
-struct flux::impl::backend_traits<hook_backend> {
+struct flux::ext::backend_traits<hook_backend> {
     using connection = int;
 
     static constexpr std::string_view name = "hook";
     static constexpr feature_set features { EFeature::Sql, EFeature::Returning };
 
-    static constexpr const syntax_t& syntax = hook_syntax;
+    static constexpr const flux::sql::syntax_t& syntax = hook_syntax;
 
-    static const SqlDialect& dialect() noexcept { return hook(); }
+    static const flux::sql::Dialect& dialect() noexcept { return hook(); }
 };
 
 namespace {

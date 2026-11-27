@@ -37,7 +37,7 @@ namespace flux::impl {
         Query erased() && { return std::move(_query); }
 
         ers::Result<statement_t> to_statement() const {
-            return _query.to_statement(backend_traits<Backend>::dialect());
+            return _query.to_statement(ext::backend_traits<Backend>::dialect());
         }
 
 

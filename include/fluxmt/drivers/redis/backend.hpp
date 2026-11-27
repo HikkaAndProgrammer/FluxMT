@@ -22,10 +22,10 @@ namespace flux::impl::redis {
 // Specializations -------------------------------------------------------------
 
 template<>
-struct flux::impl::backend_traits<flux::impl::redis::backend> {
-    using connection = redis::connection;
-    using options = redis::options_t;
-    using default_tx = redis::transaction;
+struct flux::ext::backend_traits<flux::impl::redis::backend> {
+    using connection = impl::redis::connection;
+    using options = impl::redis::options_t;
+    using default_tx = impl::redis::transaction;
 
 
     static constexpr std::string_view name = "redis";
@@ -36,6 +36,6 @@ struct flux::impl::backend_traits<flux::impl::redis::backend> {
 
     static std::unique_ptr<connection> open(const options& opts) { return std::make_unique<connection>(opts); }
     static bool alive(const connection& conn) noexcept { return conn.is_open(); }
-    static ers::Diagnostic diagnose(std::string_view label) { return redis::diagnose(label); }
-    static bool retryable() noexcept { return redis::retryable(); }
+    static ers::Diagnostic diagnose(std::string_view label) { return impl::redis::diagnose(label); }
+    static bool retryable() noexcept { return impl::redis::retryable(); }
 };

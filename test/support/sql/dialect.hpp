@@ -14,7 +14,7 @@
 namespace test::anti {
     namespace shared = flux::impl::shared;
 
-    inline constexpr flux::ext::slot_info_t select_layout[] = {
+    inline constexpr flux::query::slot_info_t select_layout[] = {
         shared::with,
         shared::select_keyword,
         shared::distinct,
@@ -30,7 +30,7 @@ namespace test::anti {
         shared::set_union,
     };
 
-    inline constexpr flux::ext::slot_info_t insert_layout[] = {
+    inline constexpr flux::query::slot_info_t insert_layout[] = {
         shared::with,
         shared::insert_into,
         shared::set_as_values,
@@ -42,7 +42,7 @@ namespace test::anti {
         shared::returning,
     };
 
-    inline constexpr flux::ext::slot_info_t update_layout[] = {
+    inline constexpr flux::query::slot_info_t update_layout[] = {
         shared::with,
         shared::update_target,
         shared::set,
@@ -50,14 +50,14 @@ namespace test::anti {
         shared::returning,
     };
 
-    inline constexpr flux::ext::slot_info_t delete_layout[] = {
+    inline constexpr flux::query::slot_info_t delete_layout[] = {
         shared::with,
         shared::delete_from,
         shared::where,
         shared::returning,
     };
 
-    inline constexpr flux::ext::slot_info_t exists_layout[] = {
+    inline constexpr flux::query::slot_info_t exists_layout[] = {
         shared::with,
         shared::exists_target,
         shared::where,

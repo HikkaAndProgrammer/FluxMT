@@ -21,12 +21,12 @@
 // Details ---------------------------------------------------------------------
 
 namespace {
-    inline constexpr flux::ext::slot_t key_slot { .name = "test.key", .arity = flux::ext::EArity::Single };
-    inline constexpr flux::ext::slot_t value_slot { .name = "test.value", .arity = flux::ext::EArity::Single };
-    inline constexpr flux::ext::slot_t nx_slot { .name = "test.nx", .arity = flux::ext::EArity::Single };
-    inline constexpr flux::ext::slot_t ttl_slot { .name = "test.ttl", .arity = flux::ext::EArity::Single };
+    inline constexpr flux::query::slot_t key_slot { .name = "test.key", .arity = flux::query::EArity::Single };
+    inline constexpr flux::query::slot_t value_slot { .name = "test.value", .arity = flux::query::EArity::Single };
+    inline constexpr flux::query::slot_t nx_slot { .name = "test.nx", .arity = flux::query::EArity::Single };
+    inline constexpr flux::query::slot_t ttl_slot { .name = "test.ttl", .arity = flux::query::EArity::Single };
 
-    constexpr flux::ext::slot_info_t set_layout[] = {
+    constexpr flux::query::slot_info_t set_layout[] = {
         { .slot = &key_slot, .prefix = "SET " },
         { .slot = &value_slot, .prefix = " " },
         { .slot = &nx_slot, .prefix = " NX" },
@@ -34,7 +34,7 @@ namespace {
 
     class ValueClause final : public flux::ext::IClause {
     public:
-        ValueClause(flux::ext::slot_ref slot, flux::Value value) :
+        ValueClause(flux::query::slot_ref slot, flux::Value value) :
             IClause(slot),
             _value(std::move(value)) {
         }
@@ -52,7 +52,7 @@ namespace {
 
     class FlagClause final : public flux::ext::IClause {
     public:
-        explicit FlagClause(flux::ext::slot_ref slot) :
+        explicit FlagClause(flux::query::slot_ref slot) :
             IClause(slot) {
         }
 
@@ -81,8 +81,8 @@ namespace {
 
     flux::query::Query set_query() {
         flux::query::Query q(set_layout);
-        q |= flux::ext::make_clause<ValueClause>(&key_slot, std::string("k"));
-        q |= flux::ext::make_clause<ValueClause>(&value_slot, 5);
+        q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
+        q |= flux::query::make_clause<ValueClause>(&value_slot, 5);
 
         return q;
     }
@@ -93,7 +93,7 @@ namespace {
 
 FLUXMT_TEST_CASE("query renders a statement that is not SQL", "[query]") {
     auto q = set_query();
-    q |= flux::ext::make_clause<FlagClause>(&nx_slot);
+    q |= flux::query::make_clause<FlagClause>(&nx_slot);
 
     const auto r = statement_of(q);
 
@@ -106,7 +106,7 @@ FLUXMT_TEST_CASE("query renders a statement that is not SQL", "[query]") {
 
 FLUXMT_TEST_CASE("query replaces a clause of a single slot", "[query]") {
     auto q = set_query();
-    q |= flux::ext::make_clause<ValueClause>(&value_slot, 7);
+    q |= flux::query::make_clause<ValueClause>(&value_slot, 7);
 
     const auto r = statement_of(q);
 
@@ -117,7 +117,7 @@ FLUXMT_TEST_CASE("query replaces a clause of a single slot", "[query]") {
 
 FLUXMT_TEST_CASE("query refuses what its layout does not have", "[query]") {
     auto q = set_query();
-    q |= flux::ext::make_clause<ValueClause>(&ttl_slot, 60);
+    q |= flux::query::make_clause<ValueClause>(&ttl_slot, 60);
 
     const auto slot = statement_of(q);
 
@@ -125,7 +125,7 @@ FLUXMT_TEST_CASE("query refuses what its layout does not have", "[query]") {
     CHECK(slot.error().code() == flux::EQueryError::ForeignSlot);
     CHECK(slot.error().message().contains("command"));
 
-    const auto empty = statement_of(flux::query::Query(flux::ext::slot_info_view {}));
+    const auto empty = statement_of(flux::query::Query(flux::query::slot_info_view {}));
 
     REQUIRE_FALSE(empty);
     CHECK(empty.error().code() == flux::EQueryError::Unsupported);
@@ -135,7 +135,7 @@ FLUXMT_TEST_CASE("query layout is extended per query", "[query]") {
     auto q = set_query();
 
     REQUIRE(q.insert_after(&value_slot, { .slot = &ttl_slot, .prefix = " EX " }));
-    q |= flux::ext::make_clause<ValueClause>(&ttl_slot, 60);
+    q |= flux::query::make_clause<ValueClause>(&ttl_slot, 60);
 
     const auto r = statement_of(q);
 
@@ -157,16 +157,16 @@ FLUXMT_TEST_CASE("query layout is extended per query", "[query]") {
 }
 
 FLUXMT_TEST_CASE("query renders the layout it was given", "[query]") {
-    static constexpr flux::ext::slot_info_t own[] = {
+    static constexpr flux::query::slot_info_t own[] = {
         { .slot = &key_slot, .prefix = "GET " },
     };
 
-    flux::query::Query q { flux::ext::slot_info_view(own) };
-    q |= flux::ext::make_clause<ValueClause>(&key_slot, std::string("k"));
+    flux::query::Query q { flux::query::slot_info_view(own) };
+    q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
 
     CHECK(statement_of(q)->text == "GET $1");
 
-    q |= flux::ext::make_clause<ValueClause>(&value_slot, 1);
+    q |= flux::query::make_clause<ValueClause>(&value_slot, 1);
 
     const auto foreign = statement_of(q);
 
@@ -175,17 +175,17 @@ FLUXMT_TEST_CASE("query renders the layout it was given", "[query]") {
 }
 
 FLUXMT_TEST_CASE("query writes a lead before a slot when another is empty", "[query]") {
-    static constexpr flux::ext::slot_info_t own[] = {
+    static constexpr flux::query::slot_info_t own[] = {
         { .slot = &key_slot, .prefix = "GET " },
         { .slot = &ttl_slot, .prefix = " TTL ", .lead_unless = &nx_slot, .lead = " NONX" },
     };
 
-    flux::query::Query q { flux::ext::slot_info_view(own) };
-    q |= flux::ext::make_clause<ValueClause>(&key_slot, std::string("k"));
+    flux::query::Query q { flux::query::slot_info_view(own) };
+    q |= flux::query::make_clause<ValueClause>(&key_slot, std::string("k"));
 
     CHECK(statement_of(q)->text == "GET $1");
 
-    q |= flux::ext::make_clause<ValueClause>(&ttl_slot, 5);
+    q |= flux::query::make_clause<ValueClause>(&ttl_slot, 5);
 
     CHECK(statement_of(q)->text == "GET $1 NONX TTL $2");
 }
@@ -199,9 +199,9 @@ FLUXMT_TEST_CASE("query takes typed slot clauses", "[query]") {
     using flag_clauses = flux::query::SlotClause<&nx_slot, true>;
 
     STATIC_REQUIRE(key_clause::slot == &key_slot);
-    STATIC_REQUIRE(std::convertible_to<key_clause, flux::ext::Clause>);
-    STATIC_REQUIRE(!std::convertible_to<flag_clauses, flux::ext::Clause>);
-    STATIC_REQUIRE(std::convertible_to<flag_clauses, std::vector<flux::ext::Clause>>);
+    STATIC_REQUIRE(std::convertible_to<key_clause, flux::query::Clause>);
+    STATIC_REQUIRE(!std::convertible_to<flag_clauses, flux::query::Clause>);
+    STATIC_REQUIRE(std::convertible_to<flag_clauses, std::vector<flux::query::Clause>>);
 
     STATIC_REQUIRE(std::same_as<
         decltype(flux::query::when(true, std::declval<key_clause>())),
@@ -209,9 +209,9 @@ FLUXMT_TEST_CASE("query takes typed slot clauses", "[query]") {
     >);
 
     flux::query::Query q(set_layout);
-    q |= key_clause(flux::ext::make_clause<ValueClause>(&key_slot, std::string("k")));
-    q |= flux::query::when(true, value_clause(flux::ext::make_clause<ValueClause>(&value_slot, 5)));
-    q |= flux::query::when(false, flag_clauses(std::vector<flux::ext::Clause> {}));
+    q |= key_clause(flux::query::make_clause<ValueClause>(&key_slot, std::string("k")));
+    q |= flux::query::when(true, value_clause(flux::query::make_clause<ValueClause>(&value_slot, 5)));
+    q |= flux::query::when(false, flag_clauses(std::vector<flux::query::Clause> {}));
 
     const auto r = statement_of(q);
 

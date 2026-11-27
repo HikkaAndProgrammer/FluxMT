@@ -31,7 +31,7 @@ namespace flux::impl {
                 return std::invoke(std::forward<Fn>(fn));
             }
         } catch (...) {
-            return backend_traits<Backend>::diagnose(label.empty() ? "database call"sv : label);
+            return ext::backend_traits<Backend>::diagnose(label.empty() ? "database call"sv : label);
         }
     }
 

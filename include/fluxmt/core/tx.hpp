@@ -103,7 +103,7 @@ namespace flux::impl {
 
     template<IsConnectable Backend, typename Fn>
     struct tx_deduce {
-        using tx = Tx<Backend, typename backend_traits<Backend>::default_tx>;
+        using tx = Tx<Backend, typename ext::backend_traits<Backend>::default_tx>;
 
         static constexpr bool wrapped = true;
     };
@@ -170,7 +170,7 @@ namespace flux::impl {
             try {
                 return attempt();
             } catch (...) {
-                if (round >= opts.retries || !backend_traits<Backend>::retryable())
+                if (round >= opts.retries || !ext::backend_traits<Backend>::retryable())
                     throw;
 
                 std::this_thread::sleep_for(opts.backoff * (round + 1));

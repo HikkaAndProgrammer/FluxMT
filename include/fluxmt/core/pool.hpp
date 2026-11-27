@@ -225,7 +225,7 @@ namespace flux::impl {
 namespace flux::impl {
     template<IsConnectable Backend>
     class Pool {
-        using traits = backend_traits<Backend>;
+        using traits = ext::backend_traits<Backend>;
 
 
     public:

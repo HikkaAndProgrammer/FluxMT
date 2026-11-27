@@ -67,14 +67,14 @@ namespace {
     constexpr syntax_t nothing {};
     constexpr auto& anti = test::anti::syntax;
 
-    constexpr flux::ext::named_fn<"forbidden"> forbidden {};
-    constexpr flux::ext::named_fn<"pair"> pair {};
-    constexpr flux::ext::named_fn<"f1"> f1 {};
-    constexpr flux::ext::named_fn<"f2"> f2 {};
-    constexpr flux::ext::named_fn<"f3"> f3 {};
-    constexpr flux::ext::named_fn<"f4"> f4 {};
-    constexpr flux::ext::named_fn<"f5"> f5 {};
-    constexpr flux::ext::named_fn<"a_function_with_a_name_too_long"> too_long {};
+    constexpr flux::sql::named_fn<"forbidden"> forbidden {};
+    constexpr flux::sql::named_fn<"pair"> pair {};
+    constexpr flux::sql::named_fn<"f1"> f1 {};
+    constexpr flux::sql::named_fn<"f2"> f2 {};
+    constexpr flux::sql::named_fn<"f3"> f3 {};
+    constexpr flux::sql::named_fn<"f4"> f4 {};
+    constexpr flux::sql::named_fn<"f5"> f5 {};
+    constexpr flux::sql::named_fn<"a_function_with_a_name_too_long"> too_long {};
 
 
     class BareDialect final : public flux::sql::Dialect {
