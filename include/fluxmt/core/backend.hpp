@@ -58,8 +58,8 @@ namespace flux::impl {
         { ext::backend_traits<T>::features } -> std::convertible_to<feature_set>;
     };
 
-    template<IsBackend Backend, EFeature Feature>
-    concept SupportsFeature = ext::backend_traits<Backend>::features.contains(Feature);
+    template<typename Backend, EFeature Feature>
+    concept SupportsFeature = IsBackend<Backend> && ext::backend_traits<Backend>::features.contains(Feature);
 
     template<IsBackend Backend>
     using connection_t = typename ext::backend_traits<Backend>::connection;

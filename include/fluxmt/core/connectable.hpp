@@ -15,8 +15,8 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<IsBackend Backend>
-    concept IsConnectable = requires(
+    template<typename Backend>
+    concept IsConnectable = IsBackend<Backend> && requires(
         const typename ext::backend_traits<Backend>::options& options,
         const connection_t<Backend>& connection,
         std::string_view label

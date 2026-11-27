@@ -21,8 +21,9 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<typename T, IsBackend Backend>
-    concept IsNativeTransaction = std::constructible_from<T, connection_t<Backend>&, std::string_view>
+    template<typename T, typename Backend>
+    concept IsNativeTransaction = IsBackend<Backend>
+        && std::constructible_from<T, connection_t<Backend>&, std::string_view>
         && requires(T& native) {
             native.commit();
             native.abort();

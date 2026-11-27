@@ -37,13 +37,13 @@ namespace flux::impl {
     }
 
 
-    template<IsSqlBackend Backend, const auto& Layout, slot_ref Slot>
-    concept HasSlot = layout_has(slot_info_view(Layout), Slot);
+    template<typename Backend, const auto& Layout, slot_ref Slot>
+    concept HasSlot = IsBackend<Backend> && layout_has(slot_info_view(Layout), Slot);
 
-    template<IsSqlBackend Backend, needs_t Needs>
-    concept SupportsNeeds = supports(syntax_of<Backend>(), Needs);
+    template<typename Backend, needs_t Needs>
+    concept SupportsNeeds = IsBackend<Backend> && supports(syntax_of<Backend>(), Needs);
 
-    template<IsSqlBackend Backend, const auto& Layout, typename Tag>
+    template<typename Backend, const auto& Layout, typename Tag>
     concept AcceptsClause = HasSlot<Backend, Layout, Tag::slot>
         && SupportsNeeds<Backend, clause_needs<Tag>()>;
 }
