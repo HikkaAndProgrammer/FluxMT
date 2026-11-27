@@ -21,10 +21,9 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<typename NativeTx, typename Backend>
-    concept IsNativeTransaction = IsBackend<Backend>
-        && std::constructible_from<NativeTx, connection_t<Backend>&, std::string_view>
-        && requires(NativeTx& native) {
+    template<typename T, IsBackend Backend>
+    concept IsNativeTransaction = std::constructible_from<T, connection_t<Backend>&, std::string_view>
+        && requires(T& native) {
             native.commit();
             native.abort();
         };
@@ -80,12 +79,12 @@ namespace flux::impl {
     inline constexpr bool is_tx_v<Tx<Backend, NativeTx>> = true;
 
 
-    template<typename Backend, typename P>
+    template<IsBackend Backend, typename T>
     struct tx_for {
-        using type = Tx<Backend, P>;
+        using type = Tx<Backend, T>;
     };
 
-    template<typename Backend, typename Other, typename NativeTx>
+    template<IsBackend Backend, typename Other, typename NativeTx>
     struct tx_for<Backend, Tx<Other, NativeTx>> {
         static_assert(std::same_as<Backend, Other>, "with_tx: the callable asks for a transaction of another backend");
 
@@ -102,14 +101,14 @@ namespace flux::impl {
     };
 
 
-    template<typename Backend, typename Fn>
+    template<IsConnectable Backend, typename Fn>
     struct tx_deduce {
         using tx = Tx<Backend, typename backend_traits<Backend>::default_tx>;
 
         static constexpr bool wrapped = true;
     };
 
-    template<typename Backend, HasFirstArg Fn>
+    template<IsConnectable Backend, HasFirstArg Fn>
     struct tx_deduce<Backend, Fn> {
         using param = first_arg_t<Fn>;
         using tx = typename tx_for<Backend, param>::type;

@@ -13,10 +13,10 @@
 
 
 namespace flux::impl {
-    template<typename Backend>
-    concept IsSqlBackend = SupportsFeature<Backend, EFeature::Sql> && requires {
-        { backend_traits<Backend>::dialect() } -> std::convertible_to<const SqlDialect&>;
-        { backend_traits<Backend>::syntax } -> std::convertible_to<const syntax_t&>;
+    template<typename T>
+    concept IsSqlBackend = SupportsFeature<T, EFeature::Sql> && requires {
+        { backend_traits<T>::dialect() } -> std::convertible_to<const SqlDialect&>;
+        { backend_traits<T>::syntax } -> std::convertible_to<const syntax_t&>;
     };
 }
 
@@ -37,15 +37,13 @@ namespace flux::impl {
     }
 
 
-    template<typename Backend, const auto& Layout, slot_ref Slot>
-    concept HasSlot = IsSqlBackend<Backend>
-        && layout_has(slot_info_view(Layout), Slot);
+    template<IsSqlBackend Backend, const auto& Layout, slot_ref Slot>
+    concept HasSlot = layout_has(slot_info_view(Layout), Slot);
 
-    template<typename Backend, needs_t Needs>
-    concept SupportsNeeds = IsSqlBackend<Backend>
-        && supports(syntax_of<Backend>(), Needs);
+    template<IsSqlBackend Backend, needs_t Needs>
+    concept SupportsNeeds = supports(syntax_of<Backend>(), Needs);
 
-    template<typename Backend, const auto& Layout, typename Tag>
+    template<IsSqlBackend Backend, const auto& Layout, typename Tag>
     concept AcceptsClause = HasSlot<Backend, Layout, Tag::slot>
         && SupportsNeeds<Backend, clause_needs<Tag>()>;
 }
