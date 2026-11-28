@@ -41,17 +41,6 @@ if(TARGET fluxmt::psql)
     set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
 endif()
 
-if(TARGET fluxmt::redis)
-    add_library(test_support_redis STATIC "support/drivers/redis/live.cpp")
-    target_link_libraries(test_support_redis PUBLIC test_support fluxmt::redis Catch2::Catch2)
-    target_compile_definitions(test_support_redis PRIVATE
-        FLUXMT_TEST_REDIS_HOST_DEFAULT="${FLUXMT_TEST_REDIS_HOST}"
-        FLUXMT_TEST_REDIS_PORT_DEFAULT="${FLUXMT_TEST_REDIS_PORT}"
-        FLUXMT_TEST_REDIS_DB_DEFAULT="${FLUXMT_TEST_REDIS_DB}"
-    )
-    set_target_properties(test_support_redis PROPERTIES FOLDER "tests/support")
-endif()
-
 if(TARGET fluxmt::sqlite)
     add_library(test_support_sqlite STATIC "support/drivers/sqlite/db.cpp")
     target_link_libraries(test_support_sqlite PUBLIC test_support fluxmt::sqlite)
@@ -201,10 +190,6 @@ if(TARGET fluxmt::sqlite)
     add_header_check(sqlite)
 endif()
 
-if(TARGET fluxmt::redis)
-    add_header_check(redis)
-endif()
-
 
 #----------------------------------------------------------------------------------------------------------------------
 # layering
@@ -224,22 +209,18 @@ endfunction()
 
 add_layering_check(core pqxx "pqxx/")
 add_layering_check(core sqlite3 "sqlite3")
-add_layering_check(core hiredis "hiredis")
 add_layering_check(core query "fluxmt/query")
 add_layering_check(core sql "fluxmt/sql")
 add_layering_check(core executors "fluxmt/executors")
 
 add_layering_check(query pqxx "pqxx/")
 add_layering_check(query sqlite3 "sqlite3")
-add_layering_check(query hiredis "hiredis")
 add_layering_check(query sql "fluxmt/sql")
 add_layering_check(query executors "fluxmt/executors")
 
 add_layering_check(sql pqxx "pqxx/")
 add_layering_check(sql sqlite3 "sqlite3")
-add_layering_check(sql hiredis "hiredis")
 
 add_layering_check(executors pqxx "pqxx/")
 add_layering_check(executors sqlite3 "sqlite3")
-add_layering_check(executors hiredis "hiredis")
 add_layering_check(executors sql "fluxmt/sql")

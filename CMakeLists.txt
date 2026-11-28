@@ -24,9 +24,8 @@ option(FLUXMT_SHARED_LIBS "Build as .so" OFF)
 option(FLUXMT_BUILD_TESTS "Build fluxmt tests" OFF)
 option(FLUXMT_INSTALL "Generate target for installing fluxmt" ${IS_TOP_LEVEL})
 
-option(FLUXMT_BUILD_PSQL "Build fluxmt::psql (PostgreSQL through libpqxx)" OFF)
-option(FLUXMT_BUILD_REDIS "Build fluxmt::redis (Redis through hiredis)" OFF)
-option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite (SQLite through the C API)" OFF)
+option(FLUXMT_BUILD_PSQL "Build fluxmt::psql" OFF)
+option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite" OFF)
 
 
 set(FLUXMT_ERSLIB_REPOSITORY "https://github.com/HikkaAndProgrammer/erslib.git"
@@ -269,24 +268,6 @@ if(FLUXMT_BUILD_PSQL)
 
     target_link_libraries(fluxmt_psql PUBLIC fluxmt_shared)
     fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
-endif()
-
-
-#----------------------------------------------------------------------------------------------------------------------
-# fluxmt::redis
-#----------------------------------------------------------------------------------------------------------------------
-
-
-if(FLUXMT_BUILD_REDIS)
-    fluxmt_add_driver(redis
-        SOURCES
-            "src/fluxmt/drivers/redis/args.cpp"
-            "src/fluxmt/drivers/redis/connection.cpp"
-            "src/fluxmt/drivers/redis/error.cpp"
-            "src/fluxmt/drivers/redis/transaction.cpp"
-    )
-
-    fluxmt_required_package(fluxmt_redis hiredis hiredis::hiredis)
 endif()
 
 
