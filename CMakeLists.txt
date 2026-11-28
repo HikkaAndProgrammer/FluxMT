@@ -223,8 +223,8 @@ add_library(fluxmt::executors ALIAS fluxmt_executors)
 set_target_properties(fluxmt_executors PROPERTIES EXPORT_NAME executors)
 
 target_link_libraries(fluxmt_executors
-	INTERFACE
-		fluxmt_query
+    INTERFACE
+        fluxmt_query
 )
 
 list(APPEND FLUXMT_TARGETS fluxmt_executors)
@@ -260,7 +260,7 @@ if(FLUXMT_BUILD_PSQL)
             "src/fluxmt/drivers/psql/connection.cpp"
             "src/fluxmt/drivers/psql/dialect.cpp"
             "src/fluxmt/drivers/psql/error.cpp"
-			"src/fluxmt/drivers/psql/executor.cpp"
+            "src/fluxmt/drivers/psql/executor.cpp"
             "src/fluxmt/drivers/psql/expressions/aggregate.cpp"
             "src/fluxmt/drivers/psql/options.cpp"
             "src/fluxmt/drivers/psql/orm.cpp"
@@ -284,7 +284,7 @@ if(FLUXMT_BUILD_SQLITE)
             "src/fluxmt/drivers/sqlite/connection.cpp"
             "src/fluxmt/drivers/sqlite/dialect.cpp"
             "src/fluxmt/drivers/sqlite/error.cpp"
-			"src/fluxmt/drivers/sqlite/executor.cpp"
+            "src/fluxmt/drivers/sqlite/executor.cpp"
             "src/fluxmt/drivers/sqlite/options.cpp"
             "src/fluxmt/drivers/sqlite/orm.cpp"
             "src/fluxmt/drivers/sqlite/params.cpp"

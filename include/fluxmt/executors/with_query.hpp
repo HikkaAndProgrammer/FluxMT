@@ -74,9 +74,14 @@ namespace flux::impl {
             Pool<Backend>& pool, const Source& source, const tx_options_t& opts = {}
         ) const {
             using native = typename ext::backend_traits<Backend>::default_tx;
+            using R = ers::Result<default_result_t<Backend>>;
+
+            auto statement = build_statement<native>(source);
+            if (!statement)
+                return R(std::move(statement).extract_error());
 
             return try_with_tx(pool, [&](native& tx) {
-                return (*this)(tx, source, opts.label);
+                return with_query(tx, *statement);
             }, opts);
         }
 

@@ -64,6 +64,11 @@ namespace flux::impl {
         }
 
         template<IsConnectable Backend, typename Fn>
+        auto operator()(Lease<ext::backend_traits<Backend>>&& lease, Fn&& fn, const tx_options_t& opts = {}) const {
+            return (*this)(lease, std::forward<Fn>(fn), opts);
+        }
+
+        template<IsConnectable Backend, typename Fn>
         auto operator()(Pool<Backend>& pool, Fn&& fn, const tx_options_t& opts = {}) const {
             auto lease = pool.acquire_or_throw();
             return (*this)(lease, std::forward<Fn>(fn), opts);
