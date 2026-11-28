@@ -28,11 +28,11 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
-            ctx.query += '(';
+        ers::Status render(SqlContext& ctx) const override {
+            ctx.text += '(';
             ERS_TRY(render_list(ctx, _items));
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             return ers::ok;
         }

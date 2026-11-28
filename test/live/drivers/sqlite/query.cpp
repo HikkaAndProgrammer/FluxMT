@@ -14,7 +14,7 @@
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace flux::sqlite::orm;
 
 using std::string_literals::operator ""s;
 
@@ -22,11 +22,11 @@ using std::string_literals::operator ""s;
 // Details ---------------------------------------------------------------------
 
 namespace {
-    flux::sqlite::result_t run(flux::sqlite::connection& conn, const flux::sql::Query& query) {
+    flux::sqlite::result_t run(flux::sqlite::connection& conn, const flux::Query& query) {
         auto statement = query.to_statement(flux::sqlite::dialect());
         REQUIRE(statement);
 
-        return conn.exec((*statement).sql, (*statement).params);
+        return conn.exec((*statement).text, (*statement).params);
     }
 
     ers::i64 integer(const flux::sqlite::result_t& result, size_t row = 0) {

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(fluxmt
-	VERSION 0.1.0
-	DESCRIPTION "Multi-target database layer: one core, a driver per database"
-	LANGUAGES CXX
+    VERSION 0.1.0
+    DESCRIPTION "Multi-target database layer: one core, a driver per database"
+    LANGUAGES CXX
 )
 
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -24,25 +24,24 @@ option(FLUXMT_SHARED_LIBS "Build as .so" OFF)
 option(FLUXMT_BUILD_TESTS "Build fluxmt tests" OFF)
 option(FLUXMT_INSTALL "Generate target for installing fluxmt" ${IS_TOP_LEVEL})
 
-option(FLUXMT_BUILD_PSQL "Build fluxmt::psql (PostgreSQL through libpqxx)" OFF)
-option(FLUXMT_BUILD_REDIS "Build fluxmt::redis (Redis through hiredis)" OFF)
-option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite (SQLite through the C API)" OFF)
+option(FLUXMT_BUILD_PSQL "Build fluxmt::psql" OFF)
+option(FLUXMT_BUILD_SQLITE "Build fluxmt::sqlite" OFF)
 
 
 set(FLUXMT_ERSLIB_REPOSITORY "https://github.com/HikkaAndProgrammer/erslib.git"
-	CACHE STRING "Where to fetch erslib from when find_package can't find it"
+    CACHE STRING "Where to fetch erslib from when find_package can't find it"
 )
 set(FLUXMT_ERSLIB_TAG "v1.2.13"
-	CACHE STRING "erslib branch, tag or commit to fetch"
+    CACHE STRING "erslib branch, tag or commit to fetch"
 )
 
 set_if_undefined(FLUXMT_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/fluxmt"
-	CACHE STRING "Install path for fluxmt package-related CMake files"
+    CACHE STRING "Install path for fluxmt package-related CMake files"
 )
 
 if(NOT DEFINED CMAKE_BUILD_TYPE AND NOT DEFINED CMAKE_CONFIGURATION_TYPES)
-	set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 
@@ -64,55 +63,55 @@ fluxmt_provide_erslib()
 
 
 function(fluxmt_add_library target_name alias_name)
-	if(FLUXMT_SHARED_LIBS)
-		add_library(${target_name} SHARED)
-	else()
-		add_library(${target_name} STATIC)
-	endif()
+    if(FLUXMT_SHARED_LIBS)
+        add_library(${target_name} SHARED)
+    else()
+        add_library(${target_name} STATIC)
+    endif()
 
-	add_library(fluxmt::${alias_name} ALIAS ${target_name})
+    add_library(fluxmt::${alias_name} ALIAS ${target_name})
 
-	set_target_properties(${target_name} PROPERTIES EXPORT_NAME ${alias_name})
+    set_target_properties(${target_name} PROPERTIES EXPORT_NAME ${alias_name})
 
-	target_compile_features(${target_name} PUBLIC cxx_std_26)
+    target_compile_features(${target_name} PUBLIC cxx_std_26)
 
-	target_include_directories(${target_name}
-		PUBLIC
-			"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-			"$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-	)
+    target_include_directories(${target_name}
+        PUBLIC
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+    )
 
-	target_compile_definitions(${target_name}
-		PUBLIC
-			"$<$<NOT:$<BOOL:${FLUXMT_SHARED_LIBS}>>:FLUXMT_STATIC_DEFINE>"
-	)
+    target_compile_definitions(${target_name}
+        PUBLIC
+            "$<$<NOT:$<BOOL:${FLUXMT_SHARED_LIBS}>>:FLUXMT_STATIC_DEFINE>"
+    )
 
-	message(STATUS "fluxmt: added target ${target_name} with alias ${alias_name}")
+    message(STATUS "fluxmt: added target ${target_name} with alias ${alias_name}")
 endfunction()
 
 
 # A driver is fluxmt::<name>: fluxmt::core plus the client library of one database.
 # A driver with the SQL keyword also links fluxmt::sql.
 function(fluxmt_add_driver name)
-	cmake_parse_arguments(ARG "SQL" "" "SOURCES" ${ARGN})
+    cmake_parse_arguments(ARG "SQL" "" "SOURCES" ${ARGN})
 
-	fluxmt_add_library(fluxmt_${name} ${name})
+    fluxmt_add_library(fluxmt_${name} ${name})
 
-	target_sources(fluxmt_${name} PRIVATE ${ARG_SOURCES})
-	target_link_libraries(fluxmt_${name} PUBLIC fluxmt_core)
+    target_sources(fluxmt_${name} PRIVATE ${ARG_SOURCES})
+    target_link_libraries(fluxmt_${name} PUBLIC fluxmt_core fluxmt_executors)
 
-	if(ARG_SQL)
-		target_link_libraries(fluxmt_${name} PUBLIC fluxmt_sql)
-	endif()
+    if(ARG_SQL)
+        target_link_libraries(fluxmt_${name} PUBLIC fluxmt_sql)
+    endif()
 
-	set(FLUXMT_TARGETS ${FLUXMT_TARGETS} fluxmt_${name} PARENT_SCOPE)
-	set(FLUXMT_DRIVERS ${FLUXMT_DRIVERS} ${name} PARENT_SCOPE)
+    set(FLUXMT_TARGETS ${FLUXMT_TARGETS} fluxmt_${name} PARENT_SCOPE)
+    set(FLUXMT_DRIVERS ${FLUXMT_DRIVERS} ${name} PARENT_SCOPE)
 endfunction()
 
 
 function(fluxmt_required_package target_name package_name dep_target_name)
-	find_package(${package_name} CONFIG REQUIRED)
-	target_link_libraries(${target_name} PUBLIC ${dep_target_name})
+    find_package(${package_name} CONFIG REQUIRED)
+    target_link_libraries(${target_name} PUBLIC ${dep_target_name})
 endfunction()
 
 
@@ -128,30 +127,52 @@ set(FLUXMT_DRIVERS "")
 fluxmt_add_library(fluxmt_core core)
 
 target_sources(fluxmt_core
-	PRIVATE
-		"include/fluxmt/export.hpp"
+    PRIVATE
+        "include/fluxmt/export.hpp"
 
-		"src/fluxmt/core/error.cpp"
-		"src/fluxmt/core/value.cpp"
-		"src/fluxmt/core/value_text.cpp"
-		"src/fluxmt/core/version.cpp"
+        "src/fluxmt/core/error.cpp"
+        "src/fluxmt/core/value.cpp"
+        "src/fluxmt/core/value_text.cpp"
+        "src/fluxmt/core/version.cpp"
 )
 
 fluxmt_required_package(fluxmt_core boost_uuid Boost::uuid)
 
 target_link_libraries(fluxmt_core
-	PUBLIC
-		erslib::core
+    PUBLIC
+        erslib::core
 )
 
 target_compile_options(fluxmt_core
-	PUBLIC
-		$<$<COMPILE_LANG_AND_ID:CXX,GNU>:-freflection>
+    PUBLIC
+        $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-freflection>
 )
 
 configure_file(cmake/version.hpp.in include/fluxmt/version.hpp @ONLY)
 
 list(APPEND FLUXMT_TARGETS fluxmt_core)
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# fluxmt::query
+#----------------------------------------------------------------------------------------------------------------------
+
+
+fluxmt_add_library(fluxmt_query query)
+
+target_sources(fluxmt_query
+    PRIVATE
+        "src/fluxmt/query/context.cpp"
+        "src/fluxmt/query/layout.cpp"
+        "src/fluxmt/query/query.cpp"
+)
+
+target_link_libraries(fluxmt_query
+    PUBLIC
+        fluxmt_core
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_query)
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -162,39 +183,51 @@ list(APPEND FLUXMT_TARGETS fluxmt_core)
 fluxmt_add_library(fluxmt_sql sql)
 
 target_sources(fluxmt_sql
-	PRIVATE
-		"src/fluxmt/sql/context.cpp"
-		"src/fluxmt/sql/identifier.cpp"
-		"src/fluxmt/sql/syntax.cpp"
-		"src/fluxmt/sql/expr/aggregate.cpp"
-		"src/fluxmt/sql/expr/expr.cpp"
-		"src/fluxmt/sql/query/layout.cpp"
-		"src/fluxmt/sql/query/query.cpp"
-		"src/fluxmt/sql/query/clauses/assign.cpp"
-		"src/fluxmt/sql/query/clauses/bound.cpp"
-		"src/fluxmt/sql/query/clauses/column.cpp"
-		"src/fluxmt/sql/query/clauses/conflict.cpp"
-		"src/fluxmt/sql/query/clauses/distinct.cpp"
-		"src/fluxmt/sql/query/clauses/identity.cpp"
-		"src/fluxmt/sql/query/clauses/join.cpp"
-		"src/fluxmt/sql/query/clauses/order.cpp"
-		"src/fluxmt/sql/query/clauses/raw.cpp"
-		"src/fluxmt/sql/query/clauses/returning.cpp"
-		"src/fluxmt/sql/query/clauses/values.cpp"
-		"src/fluxmt/sql/query/clauses/where.cpp"
-		"src/fluxmt/sql/query/layouts/delete.cpp"
-		"src/fluxmt/sql/query/layouts/exists.cpp"
-		"src/fluxmt/sql/query/layouts/insert.cpp"
-		"src/fluxmt/sql/query/layouts/select.cpp"
-		"src/fluxmt/sql/query/layouts/update.cpp"
+    PRIVATE
+        "src/fluxmt/sql/context.cpp"
+        "src/fluxmt/sql/identifier.cpp"
+        "src/fluxmt/sql/syntax.cpp"
+        "src/fluxmt/sql/expr/aggregate.cpp"
+        "src/fluxmt/sql/expr/expr.cpp"
+        "src/fluxmt/sql/clauses/assign.cpp"
+        "src/fluxmt/sql/clauses/bound.cpp"
+        "src/fluxmt/sql/clauses/column.cpp"
+        "src/fluxmt/sql/clauses/conflict.cpp"
+        "src/fluxmt/sql/clauses/distinct.cpp"
+        "src/fluxmt/sql/clauses/identity.cpp"
+        "src/fluxmt/sql/clauses/join.cpp"
+        "src/fluxmt/sql/clauses/order.cpp"
+        "src/fluxmt/sql/clauses/raw.cpp"
+        "src/fluxmt/sql/clauses/returning.cpp"
+        "src/fluxmt/sql/clauses/values.cpp"
+        "src/fluxmt/sql/clauses/where.cpp"
+        "src/fluxmt/sql/clauses/with.cpp"
 )
 
 target_link_libraries(fluxmt_sql
-	PUBLIC
-		fluxmt_core
+    PUBLIC
+        fluxmt_query
 )
 
 list(APPEND FLUXMT_TARGETS fluxmt_sql)
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# fluxmt::executors: with_tx, with_conn, with_query and their try forms, headers only
+#----------------------------------------------------------------------------------------------------------------------
+
+
+add_library(fluxmt_executors INTERFACE)
+add_library(fluxmt::executors ALIAS fluxmt_executors)
+
+set_target_properties(fluxmt_executors PROPERTIES EXPORT_NAME executors)
+
+target_link_libraries(fluxmt_executors
+	INTERFACE
+		fluxmt_query
+)
+
+list(APPEND FLUXMT_TARGETS fluxmt_executors)
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -208,8 +241,8 @@ add_library(fluxmt::shared ALIAS fluxmt_shared)
 set_target_properties(fluxmt_shared PROPERTIES EXPORT_NAME shared)
 
 target_link_libraries(fluxmt_shared
-	INTERFACE
-		fluxmt_sql
+    INTERFACE
+        fluxmt_sql
 )
 
 list(APPEND FLUXMT_TARGETS fluxmt_shared)
@@ -221,37 +254,21 @@ list(APPEND FLUXMT_TARGETS fluxmt_shared)
 
 
 if(FLUXMT_BUILD_PSQL)
-	fluxmt_add_driver(psql
-		SQL
-		SOURCES
-			"src/fluxmt/drivers/psql/connection.cpp"
-			"src/fluxmt/drivers/psql/dialect.cpp"
-			"src/fluxmt/drivers/psql/error.cpp"
-			"src/fluxmt/drivers/psql/layouts.cpp"
-			"src/fluxmt/drivers/psql/options.cpp"
-			"src/fluxmt/drivers/psql/params.cpp"
-	)
+    fluxmt_add_driver(psql
+        SQL
+        SOURCES
+            "src/fluxmt/drivers/psql/connection.cpp"
+            "src/fluxmt/drivers/psql/dialect.cpp"
+            "src/fluxmt/drivers/psql/error.cpp"
+			"src/fluxmt/drivers/psql/executor.cpp"
+            "src/fluxmt/drivers/psql/expressions/aggregate.cpp"
+            "src/fluxmt/drivers/psql/options.cpp"
+            "src/fluxmt/drivers/psql/orm.cpp"
+            "src/fluxmt/drivers/psql/params.cpp"
+    )
 
-	target_link_libraries(fluxmt_psql PUBLIC fluxmt_shared)
-	fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
-endif()
-
-
-#----------------------------------------------------------------------------------------------------------------------
-# fluxmt::redis
-#----------------------------------------------------------------------------------------------------------------------
-
-
-if(FLUXMT_BUILD_REDIS)
-	fluxmt_add_driver(redis
-		SOURCES
-			"src/fluxmt/drivers/redis/args.cpp"
-			"src/fluxmt/drivers/redis/connection.cpp"
-			"src/fluxmt/drivers/redis/error.cpp"
-			"src/fluxmt/drivers/redis/transaction.cpp"
-	)
-
-	fluxmt_required_package(fluxmt_redis hiredis hiredis::hiredis)
+    target_link_libraries(fluxmt_psql PUBLIC fluxmt_shared)
+    fluxmt_required_package(fluxmt_psql libpqxx libpqxx::pqxx)
 endif()
 
 
@@ -261,20 +278,21 @@ endif()
 
 
 if(FLUXMT_BUILD_SQLITE)
-	fluxmt_add_driver(sqlite
-		SQL
-		SOURCES
-			"src/fluxmt/drivers/sqlite/connection.cpp"
-			"src/fluxmt/drivers/sqlite/dialect.cpp"
-			"src/fluxmt/drivers/sqlite/error.cpp"
-			"src/fluxmt/drivers/sqlite/layouts.cpp"
-			"src/fluxmt/drivers/sqlite/options.cpp"
-			"src/fluxmt/drivers/sqlite/params.cpp"
-			"src/fluxmt/drivers/sqlite/transaction.cpp"
-	)
+    fluxmt_add_driver(sqlite
+        SQL
+        SOURCES
+            "src/fluxmt/drivers/sqlite/connection.cpp"
+            "src/fluxmt/drivers/sqlite/dialect.cpp"
+            "src/fluxmt/drivers/sqlite/error.cpp"
+			"src/fluxmt/drivers/sqlite/executor.cpp"
+            "src/fluxmt/drivers/sqlite/options.cpp"
+            "src/fluxmt/drivers/sqlite/orm.cpp"
+            "src/fluxmt/drivers/sqlite/params.cpp"
+            "src/fluxmt/drivers/sqlite/transaction.cpp"
+    )
 
-	target_link_libraries(fluxmt_sqlite PUBLIC fluxmt_shared)
-	fluxmt_required_package(fluxmt_sqlite unofficial-sqlite3 unofficial::sqlite3::sqlite3)
+    target_link_libraries(fluxmt_sqlite PUBLIC fluxmt_shared)
+    fluxmt_required_package(fluxmt_sqlite unofficial-sqlite3 unofficial::sqlite3::sqlite3)
 endif()
 
 
@@ -287,12 +305,12 @@ include(GenerateExportHeader)
 set(EXPORT_FILE_NAME "export_shared.hpp")
 
 if(NOT FLUXMT_SHARED_LIBS)
-	set(EXPORT_FILE_NAME "export_static.hpp")
+    set(EXPORT_FILE_NAME "export_static.hpp")
 endif()
 
 generate_export_header(fluxmt_core
-	BASE_NAME fluxmt
-	EXPORT_FILE_NAME include/fluxmt/${EXPORT_FILE_NAME}
+    BASE_NAME fluxmt
+    EXPORT_FILE_NAME include/fluxmt/${EXPORT_FILE_NAME}
 )
 
 
@@ -302,62 +320,62 @@ generate_export_header(fluxmt_core
 
 
 if(FLUXMT_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
-	include(CMakePackageConfigHelpers)
+    include(CMakePackageConfigHelpers)
 
-	configure_package_config_file(
-		cmake/fluxmt-config.cmake.in
-		fluxmt-config.cmake
-		INSTALL_DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
-	)
+    configure_package_config_file(
+        cmake/fluxmt-config.cmake.in
+        fluxmt-config.cmake
+        INSTALL_DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
+    )
 
-	write_basic_package_version_file(
-		fluxmt-config-version.cmake
-		COMPATIBILITY SameMinorVersion
-	)
+    write_basic_package_version_file(
+        fluxmt-config-version.cmake
+        COMPATIBILITY SameMinorVersion
+    )
 
-	install(TARGETS ${FLUXMT_TARGETS} EXPORT fluxmt_export
-		RUNTIME COMPONENT fluxmt
-		LIBRARY COMPONENT fluxmt NAMELINK_COMPONENT fluxmt_dev
-		ARCHIVE COMPONENT fluxmt_dev
-		INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-	)
+    install(TARGETS ${FLUXMT_TARGETS} EXPORT fluxmt_export
+        RUNTIME COMPONENT fluxmt
+        LIBRARY COMPONENT fluxmt NAMELINK_COMPONENT fluxmt_dev
+        ARCHIVE COMPONENT fluxmt_dev
+        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
 
-	install(
-		DIRECTORY include/
-		TYPE INCLUDE
-		COMPONENT fluxmt_dev
-		PATTERN "export_static.hpp" EXCLUDE
-		PATTERN "export_shared.hpp" EXCLUDE
-	)
+    install(
+        DIRECTORY include/
+        TYPE INCLUDE
+        COMPONENT fluxmt_dev
+        PATTERN "export_static.hpp" EXCLUDE
+        PATTERN "export_shared.hpp" EXCLUDE
+    )
 
-	install(
-		FILES
-			"${CMAKE_CURRENT_BINARY_DIR}/include/fluxmt/${EXPORT_FILE_NAME}"
-			"${CMAKE_CURRENT_BINARY_DIR}/include/fluxmt/version.hpp"
-		COMPONENT fluxmt_dev
-		DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/fluxmt"
-	)
+    install(
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/include/fluxmt/${EXPORT_FILE_NAME}"
+            "${CMAKE_CURRENT_BINARY_DIR}/include/fluxmt/version.hpp"
+        COMPONENT fluxmt_dev
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/fluxmt"
+    )
 
-	if(FLUXMT_SHARED_LIBS)
-		set(TARGETS_FILE "fluxmt-shared-targets.cmake")
-	else()
-		set(TARGETS_FILE "fluxmt-static-targets.cmake")
-	endif()
+    if(FLUXMT_SHARED_LIBS)
+        set(TARGETS_FILE "fluxmt-shared-targets.cmake")
+    else()
+        set(TARGETS_FILE "fluxmt-static-targets.cmake")
+    endif()
 
-	install(EXPORT fluxmt_export
-		COMPONENT fluxmt_dev
-		FILE "${TARGETS_FILE}"
-		DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
-		NAMESPACE fluxmt::
-	)
+    install(EXPORT fluxmt_export
+        COMPONENT fluxmt_dev
+        FILE "${TARGETS_FILE}"
+        DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
+        NAMESPACE fluxmt::
+    )
 
-	install(
-		FILES
-			"${CMAKE_CURRENT_BINARY_DIR}/fluxmt-config.cmake"
-			"${CMAKE_CURRENT_BINARY_DIR}/fluxmt-config-version.cmake"
-		COMPONENT fluxmt_dev
-		DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
-	)
+    install(
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/fluxmt-config.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/fluxmt-config-version.cmake"
+        COMPONENT fluxmt_dev
+        DESTINATION "${FLUXMT_INSTALL_CMAKEDIR}"
+    )
 endif()
 
 
@@ -367,6 +385,6 @@ endif()
 
 
 if(FLUXMT_BUILD_TESTS)
-	enable_testing()
-	add_subdirectory(test)
+    enable_testing()
+    add_subdirectory(test)
 endif()

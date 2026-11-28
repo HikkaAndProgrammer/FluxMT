@@ -1,0 +1,59 @@
+#pragma once
+
+// fluxmt
+#include <fluxmt/drivers/psql/clauses/distinct_on.hpp>
+#include <fluxmt/drivers/shared.hpp>
+
+
+namespace flux::impl::psql {
+    inline constexpr slot_info_t select_layout[] = {
+        shared::with,
+        shared::select_keyword,
+        shared::distinct,
+        distinct_on_fragment,
+        shared::select_columns,
+        shared::from,
+        shared::join,
+        shared::where,
+        shared::group,
+        shared::having,
+        shared::order,
+        shared::limit,
+        shared::offset,
+        shared::set_union,
+    };
+
+    inline constexpr slot_info_t insert_layout[] = {
+        shared::with,
+        shared::insert_into,
+        shared::set_as_values,
+        shared::insert_columns,
+        shared::values,
+        shared::conflict,
+        shared::conflict_constraint,
+        shared::conflict_action,
+        shared::returning,
+    };
+
+    inline constexpr slot_info_t update_layout[] = {
+        shared::with,
+        shared::update_target,
+        shared::set,
+        shared::where,
+        shared::returning,
+    };
+
+    inline constexpr slot_info_t delete_layout[] = {
+        shared::with,
+        shared::delete_from,
+        shared::where,
+        shared::returning,
+    };
+
+    inline constexpr slot_info_t exists_layout[] = {
+        shared::with,
+        shared::exists_target,
+        shared::where,
+        shared::exists_alias,
+    };
+}

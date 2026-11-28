@@ -23,9 +23,12 @@ namespace {
 }
 
 template<>
-struct flux::impl::value_traits<Money> {
-    static flux::Value to_value(const Money& what) {
-        return flux::custom_value_t { "money", std::to_string(what.cents) };
+struct flux::ext::value_traits<Money> {
+    static Value to_value(const Money& what) {
+        return custom_value_t {
+            .type = "money",
+            .text = std::to_string(what.cents)
+        };
     }
 };
 

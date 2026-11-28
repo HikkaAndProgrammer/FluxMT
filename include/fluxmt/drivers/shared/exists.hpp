@@ -1,17 +1,17 @@
 #pragma once
 
 // fluxmt
-#include <fluxmt/sql/query/slot.hpp>
-#include <fluxmt/sql/query/slots/head.hpp>
+#include <fluxmt/query/slot.hpp>
+#include <fluxmt/sql/slots/head.hpp>
 
 
 namespace flux::impl::shared {
-    inline constexpr SlotBinding exists_target {
+    inline constexpr slot_info_t exists_target {
         .slot   = &slots::exists_target,
         .prefix = "SELECT EXISTS (\nSELECT 1 FROM ",
     };
 
-    inline constexpr SlotBinding exists_alias {
+    inline constexpr slot_info_t exists_alias {
         .slot     = &slots::exists_alias,
         .prefix   = "\n) AS ",
         .fallback = "\"exists\"",

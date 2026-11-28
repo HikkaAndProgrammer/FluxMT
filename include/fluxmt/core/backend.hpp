@@ -9,6 +9,14 @@
 #include <erslib/core/type/general.hpp>
 
 
+// Extension points ------------------------------------------------------------
+
+namespace flux::ext {
+    template<typename Backend>
+    struct backend_traits;
+}
+
+
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
@@ -43,22 +51,18 @@ namespace flux::impl {
     };
 
 
-    // Specialized once per driver: its connection, features and dialect.
-    template<typename B>
-    struct backend_traits;
-
-    template<typename B>
-    concept Backend = requires {
-        typename backend_traits<B>::connection;
-        { backend_traits<B>::name } -> std::convertible_to<std::string_view>;
-        { backend_traits<B>::features } -> std::convertible_to<feature_set>;
+    template<typename T>
+    concept IsBackend = requires {
+        typename ext::backend_traits<T>::connection;
+        { ext::backend_traits<T>::name } -> std::convertible_to<std::string_view>;
+        { ext::backend_traits<T>::features } -> std::convertible_to<feature_set>;
     };
 
-    template<typename B, EFeature F>
-    concept Supports = Backend<B> && backend_traits<B>::features.contains(F);
+    template<typename Backend, EFeature Feature>
+    concept SupportsFeature = IsBackend<Backend> && ext::backend_traits<Backend>::features.contains(Feature);
 
-    template<Backend B>
-    using connection_t = typename backend_traits<B>::connection;
+    template<IsBackend Backend>
+    using connection_t = typename ext::backend_traits<Backend>::connection;
 }
 
 
@@ -67,7 +71,7 @@ namespace flux::impl {
 namespace flux {
     using impl::EFeature;
     using impl::feature_set;
-    using impl::Backend;
-    using impl::Supports;
+    using impl::IsBackend;
+    using impl::SupportsFeature;
     using impl::connection_t;
 }

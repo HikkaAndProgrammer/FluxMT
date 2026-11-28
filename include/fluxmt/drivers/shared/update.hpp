@@ -1,18 +1,18 @@
 #pragma once
 
 // fluxmt
-#include <fluxmt/sql/query/slot.hpp>
-#include <fluxmt/sql/query/slots/head.hpp>
-#include <fluxmt/sql/query/slots/set.hpp>
+#include <fluxmt/query/slot.hpp>
+#include <fluxmt/sql/slots/head.hpp>
+#include <fluxmt/sql/slots/set.hpp>
 
 
 namespace flux::impl::shared {
-    inline constexpr SlotBinding update_target {
+    inline constexpr slot_info_t update_target {
         .slot   = &slots::update_target,
         .prefix = "UPDATE ",
     };
 
-    inline constexpr SlotBinding set {
+    inline constexpr slot_info_t set {
         .slot      = &slots::set,
         .prefix    = "\nSET ",
         .separator = ", ",

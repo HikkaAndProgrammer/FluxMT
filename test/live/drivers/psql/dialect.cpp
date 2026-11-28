@@ -33,14 +33,14 @@ namespace {
 FLUXMT_TEST_CASE("psql reserved words match the server list", "[psql]") {
     test::live::Sandbox sandbox;
 
-    const auto server = flux::psql::with_tx(sandbox.db(), [](pqxx::work& tx) {
+    const auto server = flux::with_tx(sandbox.db(), [](pqxx::work& tx) {
         std::set<std::string> words;
 
         for (const auto& row : tx.exec("SELECT word FROM pg_get_keywords() WHERE catcode IN ('R', 'T')"))
             words.insert(row[0].as<std::string>());
 
         return words;
-        }, "keywords");
+    }, "keywords");
 
     std::set<std::string> ours;
     for (const auto word : flux::psql::reserved_words())

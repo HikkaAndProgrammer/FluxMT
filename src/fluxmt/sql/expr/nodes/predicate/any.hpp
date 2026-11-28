@@ -15,7 +15,6 @@
 
 
 namespace flux::impl::nodes {
-    // How it is written is up to the dialect: "x = ANY(array)" or "x IN (...)".
     class AnyNode final : public IExprNode {
     public:
         // Member functions
@@ -33,11 +32,11 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             const auto any = ctx.dialect().syntax().any;
 
             if (!any) {
-                return ers::make_error(ESqlError::Unsupported, "ANY in '{}'",
+                return ers::make_error(EQueryError::Unsupported, "ANY in '{}'",
                     ctx.dialect().name());
             }
 

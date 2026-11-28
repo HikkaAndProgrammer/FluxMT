@@ -14,3 +14,4 @@ include/fluxmt/version.hpp
 CMakeUserPresets.json
 *.code-workspace
 *.DotSettings.user
+docs/plan.md

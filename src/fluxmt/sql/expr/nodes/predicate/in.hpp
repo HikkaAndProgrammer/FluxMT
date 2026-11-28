@@ -36,19 +36,19 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             if (_items.empty()) {
-                ctx.query += "FALSE";
+                ctx.text += "FALSE";
 
                 return ers::ok;
             }
 
             ERS_TRY(_operand.render(ctx, EPrecedence::Other));
 
-            ctx.query += " IN (";
+            ctx.text += " IN (";
             ERS_TRY(render_list(ctx, _items));
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             return ers::ok;
         }

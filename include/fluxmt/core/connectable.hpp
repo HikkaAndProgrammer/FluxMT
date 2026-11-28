@@ -15,17 +15,17 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl {
-    template<typename B>
-    concept Connectable = Backend<B> && requires(
-        const typename backend_traits<B>::options& options,
-        const connection_t<B>& connection,
+    template<typename Backend>
+    concept IsConnectable = IsBackend<Backend> && requires(
+        const typename ext::backend_traits<Backend>::options& options,
+        const connection_t<Backend>& connection,
         std::string_view label
     ) {
-        typename backend_traits<B>::default_tx;
-        { backend_traits<B>::open(options) } -> std::same_as<std::unique_ptr<connection_t<B>>>;
-        { backend_traits<B>::alive(connection) } -> std::convertible_to<bool>;
-        { backend_traits<B>::diagnose(label) } -> std::same_as<ers::Diagnostic>;
-        { backend_traits<B>::retryable() } -> std::convertible_to<bool>;
+        typename ext::backend_traits<Backend>::default_tx;
+        { ext::backend_traits<Backend>::open(options) } -> std::same_as<std::unique_ptr<connection_t<Backend>>>;
+        { ext::backend_traits<Backend>::alive(connection) } -> std::convertible_to<bool>;
+        { ext::backend_traits<Backend>::diagnose(label) } -> std::same_as<ers::Diagnostic>;
+        { ext::backend_traits<Backend>::retryable() } -> std::convertible_to<bool>;
     };
 }
 
@@ -33,5 +33,5 @@ namespace flux::impl {
 // Exports ---------------------------------------------------------------------
 
 namespace flux {
-    using impl::Connectable;
+    using impl::IsConnectable;
 }

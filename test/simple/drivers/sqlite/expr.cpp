@@ -18,9 +18,9 @@ using namespace flux::orm;
 
 namespace {
     std::string sql_of(const flux::sql::Expr& expr) {
-        flux::sql::Context ctx(flux::sqlite::dialect());
+        flux::ext::SqlContext ctx(flux::sqlite::dialect());
 
-        return expr.render(ctx) ? ctx.query : "<error>";
+        return expr.render(ctx) ? ctx.text : "<error>";
     }
 }
 
@@ -45,16 +45,16 @@ FLUXMT_TEST_CASE("sqlite expr spells functions its own way", "[sqlite]") {
 }
 
 FLUXMT_TEST_CASE("sqlite expr refuses greatest and least of one argument", "[sqlite]") {
-    flux::sql::Context ctx(flux::sqlite::dialect());
+    flux::ext::SqlContext ctx(flux::sqlite::dialect());
 
     const auto r = greatest(col("a")).render(ctx);
 
     REQUIRE(!r);
-    CHECK(r.error().code() == flux::ESqlError::Unsupported);
+    CHECK(r.error().code() == flux::EQueryError::Unsupported);
 }
 
 FLUXMT_TEST_CASE("sqlite expr spreads an array into parameters", "[sqlite]") {
-    flux::sql::Context ctx(flux::sqlite::dialect());
+    flux::ext::SqlContext ctx(flux::sqlite::dialect());
 
     REQUIRE((col("a").any(std::vector<int>{ 1, 2 })).render(ctx));
     REQUIRE(ctx.params() == std::vector<flux::Value>{ 1, 2 });

@@ -13,20 +13,20 @@
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace flux::sqlite::orm;
 
 using std::string_literals::operator ""s;
 
 
 namespace {
-    ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         return query.to_statement(flux::sqlite::dialect());
     }
 
-    std::string sql_of(const flux::sql::Query& query) {
+    std::string sql_of(const flux::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? (*r).text : std::string("<error>");
     }
 }
 
@@ -68,14 +68,17 @@ FLUXMT_TEST_CASE("sqlite query writes OFFSET after a LIMIT", "[sqlite]") {
 }
 
 FLUXMT_TEST_CASE("sqlite query refuses ON CONSTRAINT", "[sqlite]") {
-    const auto refused = statement_of(insert_into("t")
+    STATIC_REQUIRE(!flux::impl::AcceptsClause<
+        flux::sqlite::backend, flux::impl::sqlite::insert_layout, decltype(on_conflict_constraint("t_a_key"))>);
+
+    const auto refused = statement_of(insert_into("t").erased()
         | columns("a")
         | values(1)
         | on_conflict_constraint("t_a_key")
         | do_nothing());
 
     REQUIRE(!refused);
-    CHECK(refused.error().code() == flux::ESqlError::Unsupported);
+    CHECK(refused.error().code() == flux::EQueryError::ForeignSlot);
 
     CHECK(sql_of(insert_into("t") | columns("a") | values(1) | on_conflict("a") | do_nothing())
         == "INSERT INTO t (a)\nVALUES (?1)\nON CONFLICT (a)\nDO NOTHING");
@@ -85,6 +88,6 @@ FLUXMT_TEST_CASE("sqlite query spreads an array into parameters", "[sqlite]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE id IN (?1, ?2)");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE id IN (?1, ?2)");
     CHECK((*r).params == std::vector<flux::Value>{ 1, 2 });
 }

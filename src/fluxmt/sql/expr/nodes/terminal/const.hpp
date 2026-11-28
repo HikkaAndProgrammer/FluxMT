@@ -23,8 +23,8 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
-            ctx.query += _text;
+        ers::Status render(SqlContext& ctx) const override {
+            ctx.text += _text;
 
             return ers::ok;
         }

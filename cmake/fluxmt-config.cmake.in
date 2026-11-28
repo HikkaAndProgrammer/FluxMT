@@ -22,10 +22,6 @@ if(NOT TARGET fluxmt::core)
         find_dependency(libpqxx CONFIG)
     endif()
 
-	if(@FLUXMT_BUILD_REDIS@)
-        find_dependency(hiredis CONFIG)
-    endif()
-
 	if(@FLUXMT_BUILD_SQLITE@)
         find_dependency(unofficial-sqlite3 CONFIG)
     endif()

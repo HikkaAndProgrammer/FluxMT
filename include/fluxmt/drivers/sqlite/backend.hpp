@@ -23,10 +23,10 @@ namespace flux::impl::sqlite {
 // Specializations -------------------------------------------------------------
 
 template<>
-struct flux::impl::backend_traits<flux::impl::sqlite::backend> {
-    using connection = sqlite::connection;
-    using options = sqlite::options_t;
-    using default_tx = sqlite::transaction;
+struct flux::ext::backend_traits<flux::impl::sqlite::backend> {
+    using connection = impl::sqlite::connection;
+    using options = impl::sqlite::options_t;
+    using default_tx = impl::sqlite::transaction;
 
 
     static constexpr std::string_view name = "sqlite";
@@ -40,7 +40,9 @@ struct flux::impl::backend_traits<flux::impl::sqlite::backend> {
 
     static std::unique_ptr<connection> open(const options& opts) { return std::make_unique<connection>(opts); }
     static bool alive(const connection& conn) noexcept { return conn.is_open(); }
-    static ers::Diagnostic diagnose(std::string_view label) { return sqlite::diagnose(label); }
-    static bool retryable() noexcept { return sqlite::retryable(); }
-    static const Dialect& dialect() noexcept { return sqlite::dialect(); }
+    static ers::Diagnostic diagnose(std::string_view label) { return impl::sqlite::diagnose(label); }
+    static bool retryable() noexcept { return impl::sqlite::retryable(); }
+    static constexpr const impl::syntax_t& syntax = impl::sqlite::sqlite_syntax;
+
+    static const impl::SqlDialect& dialect() noexcept { return impl::sqlite::dialect(); }
 };

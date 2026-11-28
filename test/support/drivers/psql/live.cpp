@@ -65,16 +65,16 @@ flux::psql::options_t test::live::require_options() {
     return opts;
 }
 
-test::live::Sandbox::Sandbox(flux::psql::pool_options_t pool_opts) :
+test::live::Sandbox::Sandbox(flux::pool_options_t pool_opts) :
     _db(require_options(), pool_opts),
     _schema(make_schema_name()) {
-    flux::psql::with_tx(_db, [&](pqxx::work& tx) {
+    flux::with_tx(_db, [&](pqxx::work& tx) {
         tx.exec(std::format("CREATE SCHEMA {}", _schema));
     }, "sandbox create");
 }
 
 test::live::Sandbox::~Sandbox() {
-    auto dropped = flux::psql::try_with_tx(_db, [&](pqxx::work& tx) {
+    auto dropped = flux::try_with_tx(_db, [&](pqxx::work& tx) {
         tx.exec(std::format("DROP SCHEMA IF EXISTS {} CASCADE", _schema));
     }, "sandbox drop");
 

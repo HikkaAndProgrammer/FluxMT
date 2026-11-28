@@ -2,7 +2,6 @@
 
 // std
 #include <concepts>
-#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -20,7 +19,6 @@
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
-    // fn([DISTINCT] args [ORDER BY order_by]) [WITHIN GROUP (ORDER BY within_group)]
     struct aggregate_t {
         std::vector<Expr> args;
         std::vector<Expr> order_by;
@@ -32,56 +30,68 @@ namespace flux::impl {
 
     FLUXMT_EXPORT Expr make_aggregate(std::string_view name, aggregate_t what);
 
-    FLUXMT_EXPORT std::vector<Expr> to_exprs(std::vector<ColumnExpr> items);
+    FLUXMT_EXPORT std::vector<Expr> to_exprs(std::vector<column_expr_t> items);
 }
 
 
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    // For anything without a shorthand: agg<"regr_slope">("y", "x").
-    template<ers::fixed_string Fn, typename... Args>
-        requires (std::constructible_from<ColumnExpr, Args> && ...)
-    Expr agg(Args&&... args) {
-        return make_aggregate(Fn.to_sv(), {
-            .args = { ColumnExpr(std::forward<Args>(args)).expr... }
-        });
+    template<ers::fixed_string Name, typename... Args>
+        requires (std::constructible_from<column_expr_t, Args> && ...)
+    auto agg(Args&&... args) {
+        return retype<needs_of<Args...>()>(make_aggregate(Name.to_sv(), {
+            .args = { column_expr_t(std::forward<Args>(args)).expr... }
+        }));
     }
 
-    template<ers::fixed_string Fn>
-    Expr agg_distinct(ColumnExpr what) {
-        return make_aggregate(Fn.to_sv(), {
-            .args     = { std::move(what.expr) },
+    template<ers::fixed_string Name, typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto agg_distinct(T&& what) {
+        return retype<needs_of<T>()>(make_aggregate(Name.to_sv(), {
+            .args     = { column_expr_t(std::forward<T>(what)).expr },
             .distinct = true
-        });
+        }));
     }
 
 
-    FLUXMT_EXPORT Expr count_all();
-    FLUXMT_EXPORT Expr count_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr count_distinct(ColumnExpr what);
+    inline auto count_all() {
+        return retype<no_needs>(make_aggregate("count", { .args = { make_const("*") } }));
+    }
 
-    FLUXMT_EXPORT Expr min_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr max_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr sum_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr avg_of(ColumnExpr what);
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto count_of(T&& what) {
+        return agg<"count">(std::forward<T>(what));
+    }
 
-    FLUXMT_EXPORT Expr array_agg_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr bool_and_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr bool_or_of(ColumnExpr what);
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto count_distinct(T&& what) {
+        return agg_distinct<"count">(std::forward<T>(what));
+    }
 
-    FLUXMT_EXPORT Expr stddev_of(ColumnExpr what);
-    FLUXMT_EXPORT Expr variance_of(ColumnExpr what);
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto min_of(T&& what) {
+        return agg<"min">(std::forward<T>(what));
+    }
 
-    FLUXMT_EXPORT Expr corr_of(ColumnExpr y, ColumnExpr x);
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto max_of(T&& what) {
+        return agg<"max">(std::forward<T>(what));
+    }
 
-    // The delimiter is a value.
-    FLUXMT_EXPORT Expr string_agg(ColumnExpr what, Expr delimiter);
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto sum_of(T&& what) {
+        return agg<"sum">(std::forward<T>(what));
+    }
 
-    FLUXMT_EXPORT Expr percentile_cont(double fraction, std::vector<ColumnExpr> order_by);
-    FLUXMT_EXPORT Expr percentile_disc(double fraction, std::vector<ColumnExpr> order_by);
-    FLUXMT_EXPORT Expr mode_of(std::vector<ColumnExpr> order_by);
-
-    // json_agg(row_to_json(<table>) ORDER BY ...)
-    FLUXMT_EXPORT Expr json_rows(std::string table, std::vector<ColumnExpr> order_by = {});
+    template<typename T>
+        requires std::constructible_from<column_expr_t, T>
+    auto avg_of(T&& what) {
+        return agg<"avg">(std::forward<T>(what));
+    }
 }

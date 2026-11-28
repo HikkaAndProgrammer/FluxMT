@@ -10,11 +10,10 @@
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/expr/node.hpp>
-#include <fluxmt/sql/query/query.hpp>
+#include <fluxmt/query/query.hpp>
 
 
 namespace flux::impl::nodes {
-    // x IN (SELECT ...)
     class InQueryNode final : public IExprNode {
     public:
         // Member functions
@@ -32,7 +31,7 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             ERS_TRY(_operand.render(ctx, EPrecedence::Other));
 
             return append_subquery(ctx, _query, " IN (");

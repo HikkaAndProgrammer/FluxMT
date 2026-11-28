@@ -30,25 +30,24 @@ namespace {
     rendered_t render(const flux::sql::Expr& expr) {
         static const test::AntiDialect dialect;
 
-        flux::sql::Context ctx(dialect);
+        flux::ext::SqlContext ctx(dialect);
 
         if (!expr.render(ctx))
             return { "<error>", {} };
 
         auto statement = std::move(ctx).finish();
 
-        return { std::move(statement.sql), std::move(statement.params) };
+        return { std::move(statement.text), std::move(statement.params) };
     }
 
     std::string sql_of(const flux::sql::Expr& expr) {
         return render(expr).sql;
     }
 
-    constexpr flux::ext::fn_t<"lower"> lower {};
-    constexpr flux::ext::fn_t<"date_trunc"> date_trunc {};
-    constexpr flux::ext::binary_op_t<"%"> similar {};
+    constexpr flux::sql::named_fn<"lower"> lower {};
+    constexpr flux::sql::named_fn<"date_trunc"> date_trunc {};
+    constexpr flux::sql::binary_op_fn<"%"> similar {};
 
-    // Anything with to_expr() joins in: it gets the builder methods from ExprMethods.
     struct NameColumn : flux::sql::ExprMethods {
         flux::sql::Expr to_expr() const { return col("name"); }
     };
@@ -105,15 +104,12 @@ FLUXMT_TEST_CASE("expr in and between", "[sql]") {
 }
 
 FLUXMT_TEST_CASE("expr follows the dialect capabilities", "[sql]") {
-    // no ILIKE
     CHECK(sql_of(col("a").ilike("x%")) == "lower(a) LIKE lower(?1)");
 
-    // no native arrays: a bound array is spread
     CHECK(sql_of(col("a").any(std::vector<int>{ 1, 2 })) == "a IN (?1, ?2)");
     CHECK(sql_of(col("a").any(std::vector<int>{})) == "FALSE");
     CHECK(sql_of(col("a").any(col("b"))) == "<error>");
 
-    // CAST() instead of ::
     CHECK(sql_of(col("a").cast("uuid") == col("b")) == "CAST(a AS uuid) = b");
     CHECK(sql_of((col("a") + col("b")).cast("int") > 1) == "CAST(a + b AS int) > ?1");
 }
@@ -158,15 +154,15 @@ FLUXMT_TEST_CASE("expr custom node", "[sql]") {
 
         explicit ZeroLess(flux::sql::Expr v) : value(std::move(v)) {}
 
-        ers::Status render(flux::ext::Context& ctx) const override {
-            ctx.query += "0 < ";
-            return value.render(ctx, flux::ext::EPrecedence::Comparison);
+        ers::Status render(flux::ext::SqlContext& ctx) const override {
+            ctx.text += "0 < ";
+            return value.render(ctx, flux::sql::EPrecedence::Comparison);
         }
 
-        flux::ext::EPrecedence precedence() const noexcept override { return flux::ext::EPrecedence::Comparison; }
+        flux::sql::EPrecedence precedence() const noexcept override { return flux::sql::EPrecedence::Comparison; }
     };
 
-    const auto custom = flux::ext::make_expr<ZeroLess>(col("x") + col("y"));
+    const auto custom = flux::sql::make_expr<ZeroLess>(col("x") + col("y"));
 
     CHECK(sql_of(custom && col("z") == 1) == "0 < x + y AND z = ?1");
 }
@@ -195,12 +191,6 @@ FLUXMT_TEST_CASE("expr param is bound once", "[sql]") {
 FLUXMT_TEST_CASE("expr aggregates", "[sql]") {
     CHECK(sql_of(count_all()) == "count(*)");
     CHECK(sql_of(count_distinct("a")) == "count(DISTINCT a)");
-    CHECK(sql_of(corr_of("y", "x")) == "corr(y, x)");
     CHECK(sql_of(agg<"regr_slope">("y", col("x") * 2)) == "regr_slope(y, x * ?1)");
     CHECK(sql_of(coalesce(max_of("total"), 0)) == "coalesce(max(total), ?1)");
-    CHECK(sql_of(string_agg("name", ", ")) == "string_agg(name, ?1)");
-    CHECK(sql_of(percentile_cont(0.5, { "price" })) == "percentile_cont(?1) WITHIN GROUP (ORDER BY price)");
-    CHECK(sql_of(mode_of({ "a" })) == "mode() WITHIN GROUP (ORDER BY a)");
-    CHECK(sql_of(json_rows("items", { "position" })) == "json_agg(row_to_json(items) ORDER BY position)");
-    CHECK(sql_of(mode_of({})) == "<error>");
 }

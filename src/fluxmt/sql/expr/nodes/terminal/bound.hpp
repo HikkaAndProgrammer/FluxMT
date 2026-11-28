@@ -9,7 +9,6 @@
 
 
 namespace flux::impl::nodes {
-    // A node that carries a value: ANY() looks into it when the dialect has no arrays.
     class BoundNode : public IExprNode {
     public:
         // Member functions

@@ -51,7 +51,7 @@ namespace test {
 
 
 template<>
-struct flux::impl::backend_traits<test::fake_backend> {
+struct flux::ext::backend_traits<test::fake_backend> {
     using connection = test::fake_connection;
     using options = test::fake_options;
     using default_tx = test::fake_tx;

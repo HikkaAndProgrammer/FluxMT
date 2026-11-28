@@ -32,7 +32,7 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             if (!is_valid_name(_name)) {
                 return ers::make_error(ESqlError::InvalidName, "aggregate '{}'",
                     _name);
@@ -43,25 +43,25 @@ namespace flux::impl::nodes {
                     _name);
             }
 
-            ctx.query += _name;
-            ctx.query += '(';
+            ctx.text += _name;
+            ctx.text += '(';
 
             if (_what.distinct)
-                ctx.query += "DISTINCT ";
+                ctx.text += "DISTINCT ";
 
             ERS_TRY(render_list(ctx, _what.args));
 
             if (!_what.order_by.empty()) {
-                ctx.query += " ORDER BY ";
+                ctx.text += " ORDER BY ";
                 ERS_TRY(render_list(ctx, _what.order_by));
             }
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             if (_what.ordered_set) {
-                ctx.query += " WITHIN GROUP (ORDER BY ";
+                ctx.text += " WITHIN GROUP (ORDER BY ";
                 ERS_TRY(render_list(ctx, _what.within_group));
-                ctx.query += ')';
+                ctx.text += ')';
             }
 
             return ers::ok;

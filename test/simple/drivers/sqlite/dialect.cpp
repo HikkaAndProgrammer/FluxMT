@@ -13,9 +13,9 @@
 
 
 using backend = flux::sqlite::backend;
-using traits = flux::impl::backend_traits<backend>;
+using traits = flux::ext::backend_traits<backend>;
 
-static_assert(flux::sql::SqlBackend<backend>);
+static_assert(flux::sql::IsSqlBackend<backend>);
 
 
 FLUXMT_TEST_CASE("sqlite placeholders are numbered", "[sqlite]") {
@@ -36,15 +36,15 @@ FLUXMT_TEST_CASE("sqlite knows its reserved words", "[sqlite]") {
 }
 
 FLUXMT_TEST_CASE("sqlite quotes only what needs it", "[sqlite]") {
-    flux::sql::Context ctx(flux::sqlite::dialect());
+    flux::ext::SqlContext ctx(flux::sqlite::dialect());
 
     REQUIRE(ctx.append_identifier("main.order"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("Account"));
-    ctx.query += ' ';
+    ctx.text += ' ';
     REQUIRE(ctx.append_identifier("created_at"));
 
-    REQUIRE(ctx.query == "main.\"order\" \"Account\" created_at");
+    REQUIRE(ctx.text == "main.\"order\" \"Account\" created_at");
     REQUIRE(ctx.bind("x") == "?1");
 }
 

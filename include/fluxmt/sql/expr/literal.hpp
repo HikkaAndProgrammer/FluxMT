@@ -5,7 +5,6 @@
 
 
 namespace flux::impl {
-    // Only a literal converts, so the text never comes from a runtime string.
     struct sql_text {
         std::string_view text;
 

@@ -8,20 +8,28 @@
 
 // fluxmt
 #include <fluxmt/sql/dialect.hpp>
+#include <fluxmt/sql/syntax.hpp>
 
 // export
 #include <fluxmt/export.hpp>
 
 
 namespace flux::impl::psql {
-    class FLUXMT_EXPORT postgres_dialect final : public Dialect {
+    inline constexpr syntax_t postgres_syntax {
+        .cast     = &syntax::cast_postfix,
+        .ilike    = &syntax::ilike_operator,
+        .any      = &syntax::any_native,
+        .excluded = &syntax::excluded_table,
+    };
+
+
+    class FLUXMT_EXPORT postgres_dialect final : public SqlDialect {
     public:
         postgres_dialect() noexcept;
 
         std::string_view name() const noexcept override;
         std::string placeholder(size_t index) const override;
         bool is_reserved(std::string_view word) const noexcept override;
-        LayoutView layout(KindRef kind) const noexcept override;
     };
 
 

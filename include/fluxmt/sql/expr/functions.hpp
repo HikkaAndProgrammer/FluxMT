@@ -7,11 +7,11 @@
 // Implementation --------------------------------------------------------------
 
 namespace flux::impl::clauses {
-    inline constexpr fn_t<"coalesce"> coalesce {};
-    inline constexpr fn_t<"nullif"> nullif {};
-    inline constexpr fn_t<"greatest"> greatest {};
-    inline constexpr fn_t<"least"> least {};
-    inline constexpr fn_t<"now"> now {};
+    inline constexpr named_fn<"coalesce"> coalesce {};
+    inline constexpr named_fn<"nullif"> nullif {};
+    inline constexpr named_fn<"greatest"> greatest {};
+    inline constexpr named_fn<"least"> least {};
+    inline constexpr named_fn<"now"> now {};
 
-    inline constexpr binary_op_t<"||"> concat {};
+    inline constexpr binary_op_fn<"||"> concat {};
 }

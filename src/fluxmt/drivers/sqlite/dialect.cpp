@@ -8,7 +8,6 @@
 // fluxmt
 #include <fluxmt/sql/context.hpp>
 #include <fluxmt/sql/error.hpp>
-#include <fluxmt/sql/syntax.hpp>
 
 
 // Details ---------------------------------------------------------------------
@@ -36,29 +35,6 @@ namespace {
 
     static_assert(std::ranges::is_sorted(reserved));
 
-
-    ers::Result<flux::impl::function_spelling_t> spell_function(std::string_view name, size_t arity) {
-        using flux::impl::ESqlError;
-        using flux::impl::function_spelling_t;
-
-        if (name == "now") {
-            if (arity != 0)
-                return ers::make_error(ESqlError::Unsupported, "now() takes no arguments");
-
-            return function_spelling_t { .name = "CURRENT_TIMESTAMP", .call = false };
-        }
-
-        if (name == "greatest" || name == "least") {
-            if (arity < 2) {
-                return ers::make_error(ESqlError::Unsupported,
-                    "{}() needs two arguments or more, max() and min() of one are aggregates", name);
-            }
-
-            return function_spelling_t { .name = name == "greatest" ? "max" : "min" };
-        }
-
-        return function_spelling_t {};
-    }
 }
 
 
@@ -67,13 +43,7 @@ namespace {
 // sqlite_dialect
 
 flux::impl::sqlite::sqlite_dialect::sqlite_dialect() noexcept :
-    Dialect(syntax_t {
-        .cast     = syntax::cast_function,
-        .ilike    = syntax::ilike_via_lower,
-        .any      = syntax::any_as_in_list,
-        .excluded = syntax::excluded_table,
-        .function = &spell_function,
-    }) {
+    SqlDialect(sqlite_syntax) {
 }
 
 

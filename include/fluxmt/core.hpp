@@ -5,8 +5,8 @@
 #include <fluxmt/core/error.hpp>
 #include <fluxmt/core/info.hpp>
 #include <fluxmt/core/pool.hpp>
+#include <fluxmt/core/try_invoke.hpp>
 #include <fluxmt/core/tx.hpp>
-#include <fluxmt/core/tx_try.hpp>
 #include <fluxmt/core/value.hpp>
 #include <fluxmt/core/value_text.hpp>
 #include <fluxmt/core/value_traits.hpp>

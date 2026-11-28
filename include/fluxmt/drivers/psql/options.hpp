@@ -19,8 +19,6 @@ namespace flux::impl::psql {
         std::string password;
 
 
-        // libpq key/value connection string built from the fields above.
-        [[nodiscard]]
         std::string connection_string() const;
     };
 }

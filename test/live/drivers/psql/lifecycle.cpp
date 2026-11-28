@@ -21,7 +21,7 @@ namespace {
     using Sandbox = test::live::Sandbox;
 
     void create_tables(Sandbox& sb) {
-        psql::with_tx(sb.db(), [&](pqxx::work& tx) {
+        flux::with_tx(sb.db(), [&](pqxx::work& tx) {
             tx.exec(sb.sql(R"(
                 CREATE TABLE @.account (
                     id      int    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -40,7 +40,7 @@ namespace {
     }
 
     void seed(Sandbox& sb) {
-        psql::with_tx(sb.db(), [&](pqxx::work& tx) {
+        flux::with_tx(sb.db(), [&](pqxx::work& tx) {
             const auto insert = sb.sql("INSERT INTO @.account (email, balance) VALUES ($1, $2)");
             tx.exec(insert, pqxx::params { "alice.example", 100 });
             tx.exec(insert, pqxx::params { "bob.example", 50 });
@@ -65,7 +65,7 @@ FLUXMT_TEST_CASE("psql live: create, fill, read, update, delete", "[psql]") {
     REQUIRE(accounts(sb) == 2);
     REQUIRE(balance_of(sb, "alice.example") == 100);
 
-    psql::with_tx(sb.db(), [&](pqxx::work& tx) {
+    flux::with_tx(sb.db(), [&](pqxx::work& tx) {
         tx.exec(sb.sql("UPDATE @.account SET balance = balance - 30 WHERE email = 'alice.example'"));
         tx.exec(sb.sql("UPDATE @.account SET balance = balance + 30 WHERE email = 'bob.example'"));
     }, "transfer");
@@ -73,7 +73,7 @@ FLUXMT_TEST_CASE("psql live: create, fill, read, update, delete", "[psql]") {
     REQUIRE(balance_of(sb, "alice.example") == 70);
     REQUIRE(balance_of(sb, "bob.example") == 80);
 
-    psql::with_tx(sb.db(), [&](pqxx::work& tx) {
+    flux::with_tx(sb.db(), [&](pqxx::work& tx) {
         tx.exec(sb.sql("DELETE FROM @.account WHERE email = 'bob.example'"));
     }, "delete");
 
@@ -87,7 +87,7 @@ FLUXMT_TEST_CASE("psql live: failed transactions leave no trace", "[psql]") {
     seed(sb);
 
     SECTION("an error result aborts") {
-        auto result = psql::try_with_tx(sb.db(), [&](pqxx::work& tx) -> ers::Result<int> {
+        auto result = flux::try_with_tx(sb.db(), [&](pqxx::work& tx) -> ers::Result<int> {
             tx.exec(sb.sql("INSERT INTO @.account (email) VALUES ('carol.example')"));
             return ers::make_error(flux::EDbError::Other, "changed my mind");
         }, "abort");
@@ -98,7 +98,7 @@ FLUXMT_TEST_CASE("psql live: failed transactions leave no trace", "[psql]") {
     }
 
     SECTION("an exception aborts") {
-        auto result = psql::try_with_tx(sb.db(), [&](pqxx::work& tx) {
+        auto result = flux::try_with_tx(sb.db(), [&](pqxx::work& tx) {
             tx.exec(sb.sql("INSERT INTO @.account (email) VALUES ('carol.example')"));
             throw std::runtime_error("boom");
         }, "throw");
@@ -117,7 +117,7 @@ FLUXMT_TEST_CASE("psql live: constraint violations are classified", "[psql]") {
     seed(sb);
 
     auto code_of = [&](std::string statement) -> std::error_code {
-        auto result = psql::try_with_tx(sb.db(), [&](pqxx::work& tx) {
+        auto result = flux::try_with_tx(sb.db(), [&](pqxx::work& tx) {
             tx.exec(sb.sql(statement));
         }, "constraint");
 
@@ -148,9 +148,9 @@ FLUXMT_TEST_CASE("psql live: concurrent updates through the pool", "[psql]") {
     for (int t = 0; t < threads; ++t) {
         workers.emplace_back([&] {
             for (int r = 0; r < rounds; ++r) {
-                auto result = psql::try_with_tx(sb.db(), [&](pqxx::work& tx) {
+                auto result = flux::try_with_tx(sb.db(), [&](pqxx::work& tx) {
                     tx.exec(sb.sql("UPDATE @.account SET balance = balance + 1 WHERE email = 'alice.example'"));
-                }, psql::tx_options_t {
+                }, flux::tx_options_t {
                     .label   = "increment",
                     .retries = 3
                 });

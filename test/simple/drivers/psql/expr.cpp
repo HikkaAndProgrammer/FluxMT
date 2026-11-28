@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 // std
+#include <concepts>
 #include <string>
 #include <vector>
 
@@ -18,9 +19,9 @@ using namespace flux::orm;
 
 namespace {
     std::string sql_of(const flux::sql::Expr& expr) {
-        flux::sql::Context ctx(flux::psql::dialect());
+        flux::ext::SqlContext ctx(flux::psql::dialect());
 
-        return expr.render(ctx) ? ctx.query : "<error>";
+        return expr.render(ctx) ? ctx.text : "<error>";
     }
 }
 
@@ -43,7 +44,7 @@ FLUXMT_TEST_CASE("psql expr keeps function names", "[psql]") {
 }
 
 FLUXMT_TEST_CASE("psql expr binds an array as one parameter", "[psql]") {
-    flux::sql::Context ctx(flux::psql::dialect());
+    flux::ext::SqlContext ctx(flux::psql::dialect());
 
     REQUIRE((col("a").any(std::vector<int>{ 1, 2 })).render(ctx));
     REQUIRE(ctx.params().size() == 1);
@@ -54,4 +55,21 @@ FLUXMT_TEST_CASE("psql expr quotes reserved words", "[psql]") {
     CHECK(sql_of(col("user") == 1) == "\"user\" = $1");
     CHECK(sql_of(col("t", "order") == 1) == "t.\"order\" = $1");
     CHECK(sql_of(col("created_at") == 1) == "created_at = $1");
+}
+
+FLUXMT_TEST_CASE("psql expr writes the aggregates only PostgreSQL has", "[psql]") {
+    namespace psql = flux::psql::orm;
+
+    CHECK(sql_of(psql::corr_of("y", "x")) == "corr(y, x)");
+    CHECK(sql_of(psql::string_agg("name", ", ")) == "string_agg(name, $1)");
+    CHECK(sql_of(psql::array_agg_of("id")) == "array_agg(id)");
+    CHECK(sql_of(psql::bool_and_of("ok")) == "bool_and(ok)");
+    CHECK(sql_of(psql::stddev_of("price")) == "stddev(price)");
+    CHECK(sql_of(psql::percentile_cont(0.5, { "price" })) == "percentile_cont($1) WITHIN GROUP (ORDER BY price)");
+    CHECK(sql_of(psql::percentile_disc(0.9, { "price" })) == "percentile_disc($1) WITHIN GROUP (ORDER BY price)");
+    CHECK(sql_of(psql::mode_of({ "a" })) == "mode() WITHIN GROUP (ORDER BY a)");
+    CHECK(sql_of(psql::json_rows("items", { "position" })) == "json_agg(row_to_json(items) ORDER BY position)");
+    CHECK(sql_of(psql::mode_of({})) == "<error>");
+
+    STATIC_REQUIRE(std::same_as<decltype(psql::percentile_cont(0.5, { "a" })), flux::sql::Expr>);
 }

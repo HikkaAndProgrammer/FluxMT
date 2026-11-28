@@ -13,20 +13,20 @@
 #include "support/test_case.hpp"
 
 
-using namespace flux::orm;
+using namespace flux::psql::orm;
 
 using std::string_literals::operator ""s;
 
 
 namespace {
-    ers::Result<flux::sql::Statement> statement_of(const flux::sql::Query& query) {
+    ers::Result<flux::statement_t> statement_of(const flux::Query& query) {
         return query.to_statement(flux::psql::dialect());
     }
 
-    std::string sql_of(const flux::sql::Query& query) {
+    std::string sql_of(const flux::Query& query) {
         const auto r = statement_of(query);
 
-        return r ? (*r).sql : std::string("<error>");
+        return r ? (*r).text : std::string("<error>");
     }
 }
 
@@ -74,7 +74,7 @@ FLUXMT_TEST_CASE("psql query binds an array as one parameter", "[psql]") {
     const auto r = statement_of(select_from("t") | where(col("id").any(std::vector<int>{ 1, 2 })));
 
     REQUIRE(r);
-    CHECK((*r).sql == "SELECT *\nFROM t\nWHERE id = ANY($1)");
+    CHECK((*r).text == "SELECT *\nFROM t\nWHERE id = ANY($1)");
     CHECK((*r).params == std::vector<flux::Value>{ flux::Value(flux::value_array_t{ 1, 2 }) });
 }
 
@@ -86,4 +86,19 @@ FLUXMT_TEST_CASE("psql query subquery numbers parameters through the whole state
         == "SELECT *\nFROM users"
            "\nWHERE active = $1 AND id IN (SELECT user_id\nFROM orders\nWHERE total > $2)"
            "\nLIMIT $3");
+}
+
+FLUXMT_TEST_CASE("psql query writes DISTINCT ON", "[psql]") {
+    CHECK(sql_of(select_from("t") | distinct_on("a", "b") | columns("a", "b", "c") | order_by("a"))
+        == "SELECT DISTINCT ON (a, b) a, b, c\nFROM t\nORDER BY a ASC");
+
+    CHECK(sql_of(select_from("t") | distinct_on(std::vector<std::string> { "user", "kind" }))
+        == "SELECT DISTINCT ON (\"user\", kind) *\nFROM t");
+}
+
+FLUXMT_TEST_CASE("psql query refuses DISTINCT together with DISTINCT ON", "[psql]") {
+    const auto r = statement_of(select_from("t") | distinct() | distinct_on("a"));
+
+    REQUIRE(!r);
+    CHECK(r.error().code() == flux::EQueryError::SlotConflict);
 }

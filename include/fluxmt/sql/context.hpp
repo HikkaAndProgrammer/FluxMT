@@ -1,56 +1,43 @@
 #pragma once
 
 // std
-#include <string>
+#include <cassert>
 #include <string_view>
-#include <unordered_map>
-#include <vector>
 
 // ers
 #include <erslib/core/type/result.hpp>
 
 // fluxmt
-#include <fluxmt/core/value.hpp>
+#include <fluxmt/query/context.hpp>
 #include <fluxmt/sql/dialect.hpp>
-#include <fluxmt/sql/statement.hpp>
 
 // export
 #include <fluxmt/export.hpp>
 
 
 namespace flux::impl {
-    class FLUXMT_EXPORT Context {
+    class FLUXMT_EXPORT SqlContext final : public Context {
     public:
         // Member functions
 
-        explicit Context(const Dialect& dialect) noexcept;
-        Context(const Dialect&&) = delete;
+        explicit SqlContext(const SqlDialect& dialect) noexcept;
+        SqlContext(const SqlDialect&&) = delete;
 
 
         // Observers
 
-        const Dialect& dialect() const noexcept;
-        const std::vector<Value>& params() const noexcept;
+        const SqlDialect& dialect() const noexcept override;
 
 
         // Modifiers
 
-        std::string bind(Value value);
-
-        std::string bind_once(const void* key, Value value);
-
-        // name[.name...]: a part stays bare when it is plain and not reserved, otherwise it is quoted.
         ers::Status append_identifier(std::string_view name);
-
-        Statement finish() &&;
-
-
-        std::string query;
-
-
-    private:
-        const Dialect* _dialect;
-        std::vector<Value> _params;
-        std::unordered_map<const void*, std::string> _bound;
     };
+
+
+    inline SqlContext& sql_of(Context& ctx) noexcept {
+        assert(dynamic_cast<SqlContext*>(&ctx));
+
+        return static_cast<SqlContext&>(ctx);
+    }
 }

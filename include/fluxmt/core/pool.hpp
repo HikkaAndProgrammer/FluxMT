@@ -162,7 +162,7 @@ namespace flux::impl {
 
     template<typename Traits>
     class Lease {
-        template<Connectable B>
+        template<IsConnectable Backend>
         friend class Pool;
 
 
@@ -223,9 +223,9 @@ namespace flux::impl {
 
 
 namespace flux::impl {
-    template<Connectable B>
+    template<IsConnectable Backend>
     class Pool {
-        using traits = backend_traits<B>;
+        using traits = ext::backend_traits<Backend>;
 
 
     public:

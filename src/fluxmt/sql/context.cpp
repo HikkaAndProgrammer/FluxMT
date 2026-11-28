@@ -1,54 +1,37 @@
 #include "fluxmt/sql/context.hpp"
 
 // std
+#include <memory>
 #include <ranges>
-#include <utility>
+#include <string>
 
 // fluxmt
+#include <fluxmt/sql/error.hpp>
 #include <fluxmt/sql/identifier.hpp>
-
-#include "fluxmt/sql/error.hpp"
 
 
 // Implementation --------------------------------------------------------------
 
-// Member functions
+// SqlDialect
 
-flux::impl::Context::Context(const Dialect& dialect) noexcept :
-    _dialect(&dialect) {
+std::unique_ptr<flux::impl::Context> flux::impl::SqlDialect::make_context() const {
+    return std::make_unique<SqlContext>(*this);
 }
 
 
-// Observers
+// SqlContext
 
-const flux::impl::Dialect& flux::impl::Context::dialect() const noexcept {
-    return *_dialect;
+flux::impl::SqlContext::SqlContext(const SqlDialect& dialect) noexcept :
+    Context(dialect) {
 }
 
-const std::vector<flux::Value>& flux::impl::Context::params() const noexcept {
-    return _params;
+const flux::impl::SqlDialect& flux::impl::SqlContext::dialect() const noexcept {
+    return static_cast<const SqlDialect&>(Context::dialect());
 }
 
-
-// Modifiers
-
-std::string flux::impl::Context::bind(Value value) {
-    _params.push_back(std::move(value));
-    return _dialect->placeholder(_params.size());
-}
-
-std::string flux::impl::Context::bind_once(const void* key, Value value) {
-    if (auto it = _bound.find(key); it != _bound.end())
-        return it->second;
-
-    return _bound.emplace(key, bind(std::move(value)))
-        .first->second;
-}
-
-ers::Status flux::impl::Context::append_identifier(std::string_view name) {
+ers::Status flux::impl::SqlContext::append_identifier(std::string_view name) {
     if (name.empty())
         return ers::make_error(ESqlError::InvalidIdentifier, "an empty name");
-
 
     std::string out;
     bool first = true;
@@ -65,21 +48,13 @@ ers::Status flux::impl::Context::append_identifier(std::string_view name) {
             out += '.';
         first = false;
 
-        if (is_plain_identifier(part) && !_dialect->is_reserved(part))
+        if (is_plain_identifier(part) && !dialect().is_reserved(part))
             out += part;
         else
             out += quote_identifier(part);
     }
 
-    query += out;
-
+    text += out;
 
     return ers::ok;
-}
-
-flux::impl::Statement flux::impl::Context::finish() && {
-    return {
-        .sql    = std::move(query),
-        .params = std::move(_params)
-    };
 }

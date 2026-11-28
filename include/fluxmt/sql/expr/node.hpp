@@ -49,6 +49,6 @@ namespace flux::impl {
 
         // Executors
 
-        virtual ers::Status render(Context& ctx) const = 0;
+        virtual ers::Status render(SqlContext& ctx) const = 0;
     };
 }

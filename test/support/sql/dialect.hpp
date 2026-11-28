@@ -14,7 +14,8 @@
 namespace test::anti {
     namespace shared = flux::impl::shared;
 
-    inline constexpr flux::ext::SlotBinding select_layout[] = {
+    inline constexpr flux::query::slot_info_t select_layout[] = {
+        shared::with,
         shared::select_keyword,
         shared::distinct,
         shared::select_columns,
@@ -26,9 +27,11 @@ namespace test::anti {
         shared::order,
         shared::limit,
         shared::offset,
+        shared::set_union,
     };
 
-    inline constexpr flux::ext::SlotBinding insert_layout[] = {
+    inline constexpr flux::query::slot_info_t insert_layout[] = {
+        shared::with,
         shared::insert_into,
         shared::set_as_values,
         shared::insert_columns,
@@ -39,32 +42,27 @@ namespace test::anti {
         shared::returning,
     };
 
-    inline constexpr flux::ext::SlotBinding update_layout[] = {
+    inline constexpr flux::query::slot_info_t update_layout[] = {
+        shared::with,
         shared::update_target,
         shared::set,
         shared::where,
         shared::returning,
     };
 
-    inline constexpr flux::ext::SlotBinding delete_layout[] = {
+    inline constexpr flux::query::slot_info_t delete_layout[] = {
+        shared::with,
         shared::delete_from,
         shared::where,
         shared::returning,
     };
 
-    inline constexpr flux::ext::SlotBinding exists_layout[] = {
+    inline constexpr flux::query::slot_info_t exists_layout[] = {
+        shared::with,
         shared::exists_target,
         shared::where,
         shared::exists_alias,
     };
-
-    inline constexpr auto layouts = std::to_array<flux::sql::layout_entry_t>({
-        { &flux::kinds::select, select_layout },
-        { &flux::kinds::insert, insert_layout },
-        { &flux::kinds::update, update_layout },
-        { &flux::kinds::erase,  delete_layout },
-        { &flux::kinds::exists, exists_layout },
-    });
 }
 
 
@@ -79,17 +77,12 @@ namespace test::anti {
 
 
 namespace test {
-    // Differs from PostgreSQL on purpose: "?N" placeholders and its own reserved words.
-    class AntiDialect final : public flux::sql::Dialect {
+    class AntiDialect final : public flux::ext::SqlDialect {
     public:
-        AntiDialect() noexcept : Dialect(anti::syntax) {}
+        AntiDialect() noexcept : SqlDialect(anti::syntax) {}
 
         std::string_view name() const noexcept override { return "anti"; }
         std::string placeholder(size_t index) const override { return "?" + std::to_string(index); }
         bool is_reserved(std::string_view word) const noexcept override { return word == "item" || word == "group"; }
-
-        flux::ext::LayoutView layout(flux::ext::KindRef kind) const noexcept override {
-            return flux::ext::find_layout(anti::layouts, kind);
-        }
     };
 }

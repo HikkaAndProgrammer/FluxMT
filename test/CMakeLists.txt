@@ -7,13 +7,13 @@ find_package(Catch2 3 CONFIG REQUIRED)
 include(Catch)
 
 
-# Command line of scripts/livedb.sh: live tests run "<command> up <pg|redis>" before the first connection
 set(FLUXMT_TEST_LIVEDB_COMMAND "" CACHE STRING "Starts the databases of live tests, empty to manage them by hand")
 
 add_library(test_support
 	STATIC
 		"support/fake_backend.cpp"
 		"support/livedb.cpp"
+		"support/sql/orm.cpp"
 		"support/test_case.cpp"
 )
 target_include_directories(test_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -41,17 +41,6 @@ if(TARGET fluxmt::psql)
     set_target_properties(test_support_psql PROPERTIES FOLDER "tests/support")
 endif()
 
-if(TARGET fluxmt::redis)
-    add_library(test_support_redis STATIC "support/drivers/redis/live.cpp")
-    target_link_libraries(test_support_redis PUBLIC test_support fluxmt::redis Catch2::Catch2)
-    target_compile_definitions(test_support_redis PRIVATE
-        FLUXMT_TEST_REDIS_HOST_DEFAULT="${FLUXMT_TEST_REDIS_HOST}"
-        FLUXMT_TEST_REDIS_PORT_DEFAULT="${FLUXMT_TEST_REDIS_PORT}"
-        FLUXMT_TEST_REDIS_DB_DEFAULT="${FLUXMT_TEST_REDIS_DB}"
-    )
-    set_target_properties(test_support_redis PROPERTIES FOLDER "tests/support")
-endif()
-
 if(TARGET fluxmt::sqlite)
     add_library(test_support_sqlite STATIC "support/drivers/sqlite/db.cpp")
     target_link_libraries(test_support_sqlite PUBLIC test_support fluxmt::sqlite)
@@ -69,7 +58,6 @@ option(FLUXMT_TESTS_PER_CASE "Register every test case as its own ctest entry" O
 add_library(test_simple_main OBJECT "simple.cpp")
 target_link_libraries(test_simple_main PUBLIC Catch2::Catch2WithMain test_support)
 
-# add_test_group(<kind> <module> SOURCES <...> LIBRARIES <...>) -> executable test_<kind>_<module>
 function(add_test_group KIND MODULE)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBRARIES" ${ARGN})
 
@@ -110,7 +98,6 @@ foreach(KIND IN ITEMS simple live)
 
     add_custom_target(test_${KIND})
 
-    # core, sql, ... lie directly in the kind directory, drivers in drivers/<name>
     file(GLOB KIND_GROUPS CONFIGURE_DEPENDS
         LIST_DIRECTORIES true
         RELATIVE "${KIND_DIR}"
@@ -163,7 +150,6 @@ endforeach()
 #----------------------------------------------------------------------------------------------------------------------
 
 
-# One translation unit per public header, so a header that misses its own includes fails the build.
 function(add_header_check MODULE)
     if(EXISTS "${PROJECT_SOURCE_DIR}/include/fluxmt/drivers/${MODULE}.hpp")
         set(HEADERS "fluxmt/drivers/${MODULE}.hpp")
@@ -191,7 +177,9 @@ endfunction()
 
 
 add_header_check(core)
+add_header_check(query)
 add_header_check(sql)
+add_header_check(executors)
 add_header_check(shared)
 
 if(TARGET fluxmt::psql)
@@ -200,10 +188,6 @@ endif()
 
 if(TARGET fluxmt::sqlite)
     add_header_check(sqlite)
-endif()
-
-if(TARGET fluxmt::redis)
-    add_header_check(redis)
 endif()
 
 
@@ -225,9 +209,18 @@ endfunction()
 
 add_layering_check(core pqxx "pqxx/")
 add_layering_check(core sqlite3 "sqlite3")
-add_layering_check(core hiredis "hiredis")
+add_layering_check(core query "fluxmt/query")
 add_layering_check(core sql "fluxmt/sql")
+add_layering_check(core executors "fluxmt/executors")
+
+add_layering_check(query pqxx "pqxx/")
+add_layering_check(query sqlite3 "sqlite3")
+add_layering_check(query sql "fluxmt/sql")
+add_layering_check(query executors "fluxmt/executors")
 
 add_layering_check(sql pqxx "pqxx/")
 add_layering_check(sql sqlite3 "sqlite3")
-add_layering_check(sql hiredis "hiredis")
+
+add_layering_check(executors pqxx "pqxx/")
+add_layering_check(executors sqlite3 "sqlite3")
+add_layering_check(executors sql "fluxmt/sql")

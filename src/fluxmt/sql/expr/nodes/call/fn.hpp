@@ -15,6 +15,7 @@
 #include <fluxmt/sql/expr/expr.hpp>
 #include <fluxmt/sql/expr/node.hpp>
 #include <fluxmt/sql/identifier.hpp>
+#include <fluxmt/sql/syntax.hpp>
 
 // nodes
 #include "../common.hpp"
@@ -33,28 +34,28 @@ namespace flux::impl::nodes {
 
         // Executors
 
-        ers::Status render(Context& ctx) const override {
+        ers::Status render(SqlContext& ctx) const override {
             if (!is_valid_name(_name)) {
                 return ers::make_error(ESqlError::InvalidName, "function '{}'",
                     _name);
             }
 
-            function_spelling_t spelling;
+            const auto spelling = spelling_of(ctx.dialect().syntax(), _name, _args.size());
 
-            if (const auto spell = ctx.dialect().syntax().function) {
-                const auto got = ERS_TRY(spell(_name, _args.size()));
-                spelling = got;
+            if (!spelling.supported) {
+                return ers::make_error(EQueryError::Unsupported, "{}() in '{}': {}",
+                    _name, ctx.dialect().name(), spelling.reason);
             }
 
-            ctx.query += spelling.name.empty() ? _name : spelling.name;
+            ctx.text += spelling.text.empty() ? _name : spelling.text;
 
             if (!spelling.call)
                 return ers::ok;
 
-            ctx.query += '(';
+            ctx.text += '(';
             ERS_TRY(render_list(ctx, _args));
 
-            ctx.query += ')';
+            ctx.text += ')';
 
             return ers::ok;
         }

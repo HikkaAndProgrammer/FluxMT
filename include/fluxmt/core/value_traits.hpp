@@ -15,19 +15,24 @@
 #include <fluxmt/core/value.hpp>
 
 
+// Extension points ------------------------------------------------------------
+
+namespace flux::ext {
+    template<typename T>
+    struct value_traits {};
+}
+
+
 // Details ---------------------------------------------------------------------
 
 namespace flux::impl {
     template<typename T>
-    struct value_traits {};
-
-    template<typename T>
     concept HasValueTraits = requires(const T& what) {
-        { value_traits<T>::to_value(what) } -> std::same_as<Value>;
+        { ext::value_traits<T>::to_value(what) } -> std::same_as<Value>;
     };
 
     template<typename T>
-    concept OptionalLike = !std::is_pointer_v<T> && requires(const T& what) {
+    concept IsOptionalLike = !std::is_pointer_v<T> && requires(const T& what) {
         static_cast<bool>(what);
         *what;
     };
@@ -42,7 +47,7 @@ namespace flux::impl {
         using U = std::remove_cvref_t<T>;
 
         if constexpr (HasValueTraits<U>)
-            return value_traits<U>::to_value(what);
+            return ext::value_traits<U>::to_value(what);
         else if constexpr (std::same_as<U, Value>)
             return what;
         else if constexpr (std::same_as<U, bool>)
@@ -60,7 +65,7 @@ namespace flux::impl {
             return Value(std::string(view));
         } else if constexpr (std::same_as<U, value_bytes_t>)
             return Value(what);
-        else if constexpr (OptionalLike<U>)
+        else if constexpr (IsOptionalLike<U>)
             return what ? to_value(*what) : Value();
         else if constexpr (std::ranges::input_range<U>) {
             value_array_t items;
@@ -79,5 +84,4 @@ namespace flux::impl {
 
 namespace flux {
     using impl::to_value;
-    using impl::value_traits;
 }
