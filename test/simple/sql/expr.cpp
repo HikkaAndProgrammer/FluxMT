@@ -191,12 +191,6 @@ FLUXMT_TEST_CASE("expr param is bound once", "[sql]") {
 FLUXMT_TEST_CASE("expr aggregates", "[sql]") {
     CHECK(sql_of(count_all()) == "count(*)");
     CHECK(sql_of(count_distinct("a")) == "count(DISTINCT a)");
-    CHECK(sql_of(corr_of("y", "x")) == "corr(y, x)");
     CHECK(sql_of(agg<"regr_slope">("y", col("x") * 2)) == "regr_slope(y, x * ?1)");
     CHECK(sql_of(coalesce(max_of("total"), 0)) == "coalesce(max(total), ?1)");
-    CHECK(sql_of(string_agg("name", ", ")) == "string_agg(name, ?1)");
-    CHECK(sql_of(percentile_cont(0.5, { "price" })) == "percentile_cont(?1) WITHIN GROUP (ORDER BY price)");
-    CHECK(sql_of(mode_of({ "a" })) == "mode() WITHIN GROUP (ORDER BY a)");
-    CHECK(sql_of(json_rows("items", { "position" })) == "json_agg(row_to_json(items) ORDER BY position)");
-    CHECK(sql_of(mode_of({})) == "<error>");
 }

@@ -117,7 +117,6 @@ static_assert(std::same_as<decltype(col("a") == std::declval<Expr>()), Expr>);
 static_assert(std::same_as<decltype(col("a").in({ col("b"), 1 })), Expr>);
 static_assert(std::same_as<decltype(col("a").in(std::declval<flux::Query>())), Expr>);
 static_assert(std::same_as<decltype(exists(std::declval<flux::Query>())), Expr>);
-static_assert(std::same_as<decltype(percentile_cont(0.5, { "a" })), Expr>);
 
 
 // Needs -----------------------------------------------------------------------

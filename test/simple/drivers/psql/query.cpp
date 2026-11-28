@@ -87,3 +87,18 @@ FLUXMT_TEST_CASE("psql query subquery numbers parameters through the whole state
            "\nWHERE active = $1 AND id IN (SELECT user_id\nFROM orders\nWHERE total > $2)"
            "\nLIMIT $3");
 }
+
+FLUXMT_TEST_CASE("psql query writes DISTINCT ON", "[psql]") {
+    CHECK(sql_of(select_from("t") | distinct_on("a", "b") | columns("a", "b", "c") | order_by("a"))
+        == "SELECT DISTINCT ON (a, b) a, b, c\nFROM t\nORDER BY a ASC");
+
+    CHECK(sql_of(select_from("t") | distinct_on(std::vector<std::string> { "user", "kind" }))
+        == "SELECT DISTINCT ON (\"user\", kind) *\nFROM t");
+}
+
+FLUXMT_TEST_CASE("psql query refuses DISTINCT together with DISTINCT ON", "[psql]") {
+    const auto r = statement_of(select_from("t") | distinct() | distinct_on("a"));
+
+    REQUIRE(!r);
+    CHECK(r.error().code() == flux::EQueryError::SlotConflict);
+}

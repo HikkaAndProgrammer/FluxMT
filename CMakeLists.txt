@@ -261,6 +261,7 @@ if(FLUXMT_BUILD_PSQL)
             "src/fluxmt/drivers/psql/dialect.cpp"
             "src/fluxmt/drivers/psql/error.cpp"
 			"src/fluxmt/drivers/psql/executor.cpp"
+            "src/fluxmt/drivers/psql/expressions/aggregate.cpp"
             "src/fluxmt/drivers/psql/options.cpp"
             "src/fluxmt/drivers/psql/orm.cpp"
             "src/fluxmt/drivers/psql/params.cpp"

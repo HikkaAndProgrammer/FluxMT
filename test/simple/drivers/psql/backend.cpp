@@ -58,3 +58,12 @@ FLUXMT_TEST_CASE("psql backend accepts typed clauses", "[psql]") {
     STATIC_REQUIRE(impl::AcceptsClause<B, impl::psql::insert_layout, decltype(do_update("a", "b"))>);
     STATIC_REQUIRE(!impl::AcceptsClause<B, impl::psql::select_layout, decltype(returning("id"))>);
 }
+
+FLUXMT_TEST_CASE("psql backend accepts DISTINCT ON in a select only", "[psql]") {
+    using B = flux::psql::backend;
+
+    namespace impl = flux::impl;
+
+    STATIC_REQUIRE(impl::AcceptsClause<B, impl::psql::select_layout, decltype(impl::psql::distinct_on("a"))>);
+    STATIC_REQUIRE(!impl::AcceptsClause<B, impl::psql::insert_layout, decltype(impl::psql::distinct_on("a"))>);
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 // fluxmt
+#include <fluxmt/drivers/psql/clauses/distinct_on.hpp>
 #include <fluxmt/drivers/shared.hpp>
 
 
@@ -9,6 +10,7 @@ namespace flux::impl::psql {
         shared::with,
         shared::select_keyword,
         shared::distinct,
+        distinct_on_fragment,
         shared::select_columns,
         shared::from,
         shared::join,

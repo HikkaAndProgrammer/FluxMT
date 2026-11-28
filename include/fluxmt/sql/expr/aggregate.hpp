@@ -2,7 +2,6 @@
 
 // std
 #include <concepts>
-#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -95,55 +94,4 @@ namespace flux::impl::clauses {
     auto avg_of(T&& what) {
         return agg<"avg">(std::forward<T>(what));
     }
-
-    template<typename T>
-        requires std::constructible_from<column_expr_t, T>
-    auto array_agg_of(T&& what) {
-        return agg<"array_agg">(std::forward<T>(what));
-    }
-
-    template<typename T>
-        requires std::constructible_from<column_expr_t, T>
-    auto bool_and_of(T&& what) {
-        return agg<"bool_and">(std::forward<T>(what));
-    }
-
-    template<typename T>
-        requires std::constructible_from<column_expr_t, T>
-    auto bool_or_of(T&& what) {
-        return agg<"bool_or">(std::forward<T>(what));
-    }
-
-    template<typename T>
-        requires std::constructible_from<column_expr_t, T>
-    auto stddev_of(T&& what) {
-        return agg<"stddev">(std::forward<T>(what));
-    }
-
-    template<typename T>
-        requires std::constructible_from<column_expr_t, T>
-    auto variance_of(T&& what) {
-        return agg<"variance">(std::forward<T>(what));
-    }
-
-    template<typename Dependent, typename Independent>
-        requires (std::constructible_from<column_expr_t, Dependent> && std::constructible_from<column_expr_t, Independent>)
-    auto corr_of(Dependent&& y, Independent&& x) {
-        return agg<"corr">(std::forward<Dependent>(y), std::forward<Independent>(x));
-    }
-
-    template<typename T, IsExprLike Delimiter>
-        requires std::constructible_from<column_expr_t, T>
-    auto string_agg(T&& what, Delimiter&& delimiter) {
-        return retype<needs_of<T, Delimiter>()>(make_aggregate("string_agg", {
-            .args = { column_expr_t(std::forward<T>(what)).expr, Expr(std::forward<Delimiter>(delimiter)) }
-        }));
-    }
-
-
-    FLUXMT_EXPORT Expr percentile_cont(double fraction, std::vector<column_expr_t> order_by);
-    FLUXMT_EXPORT Expr percentile_disc(double fraction, std::vector<column_expr_t> order_by);
-    FLUXMT_EXPORT Expr mode_of(std::vector<column_expr_t> order_by);
-
-    FLUXMT_EXPORT Expr json_rows(std::string table, std::vector<column_expr_t> order_by = {});
 }

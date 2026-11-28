@@ -137,7 +137,7 @@ FLUXMT_TEST_CASE("query select list", "[sql]") {
         "\nHAVING count(*) > ?2"
         "\nORDER BY sum(total) DESC");
 
-    CHECK(sql_of(select_from("t") | columns(count_distinct("a"), corr_of("y", "x"), agg<"regr_slope">("y", col("x") * 2)))
+    CHECK(sql_of(select_from("t") | columns(count_distinct("a"), agg<"corr">("y", "x"), agg<"regr_slope">("y", col("x") * 2)))
         == "SELECT count(DISTINCT a), corr(y, x), regr_slope(y, x * ?1)\nFROM t");
 
     CHECK(sql_of(select_from("t") | order_by(col("a") + col("b")) | order_by("c", EOrder::Desc))
